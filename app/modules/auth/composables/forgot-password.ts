@@ -58,7 +58,7 @@ export const useForgotPassword = () => {
   }
   const changePassword = async () => {
     const { data, error } = await supabase.auth.resetPasswordForEmail(formData.value.email, {
-      redirectTo: runtimeConfig.public.BASE_URL + ROUTES.FORGOT_PASSWORD,
+      redirectTo: runtimeConfig.public.BASE_URL + ROUTES.RESET_PASSWORD,
     })
     console.log(data, error)
   }

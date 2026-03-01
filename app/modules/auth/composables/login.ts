@@ -104,7 +104,7 @@ export const useLogin = () => {
           formErrorMessage.value = error.message
         }
       } else {
-        userStore.setProfile(data.user)
+        userStore.setUser(data.user)
         navigateTo((useRoute().query.redirectTo as string) || ROUTES.HOME)
       }
     } finally {

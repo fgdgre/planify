@@ -4,4 +4,5 @@ export enum ROUTES {
   FORGOT_PASSWORD = '/forgot-password',
   CONFIRM = '/confirm',
   SIGNUP = '/signup',
+  RESET_PASSWORD = '/reset-password',
 }

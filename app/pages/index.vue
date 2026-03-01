@@ -2,14 +2,14 @@
 import { useLogout, useUserStore } from "@modules/auth";
 
 const userStore = useUserStore()
-const { profile } = storeToRefs(userStore)
+const { user } = storeToRefs(userStore)
 
 const { loading, logout } = useLogout()
 </script>
 
 <template>
   <div>
-    Hello {{ profile?.email }}!
+    Hello {{ user?.email }}!
 
     <SupaButton
       @click="logout"
