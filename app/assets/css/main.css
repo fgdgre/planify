@@ -1,0 +1,122 @@
+@import "tailwindcss";
+@import './global.css';
+
+html {
+    --primary: #fff500;
+    --primary-light: #facc15;
+    --primary-text: rgb(147, 99, 22);
+    --primary-dark: #a9a02d;
+
+    --error: rgb(243 18 96);
+    --modal: rgb(255, 255, 255);
+    --black: rgba(9, 9, 11, 1);
+
+    --background: rgb(255, 255, 255);
+    --background-muted: rgba(255, 255, 255, 0.9);
+    --foreground: rgb(9, 9, 11);
+    --foreground-muted: rgba(9, 9, 11, 0.9);
+    --border: rgb(228, 228, 231);
+    --border-focus: rgb(161 161 170);
+    --placeholder: rgb(113 113 122);
+    --card: rgba(253, 224, 71, 0.03);
+
+    --menu-item-hover: rgb(253 223 71 / 11%);
+    --skeleton: rgb(227, 228, 231);
+    --switch: rgb(235 230 231);
+    --switch-checked: rgb(129 129 130);
+    --table-hover: rgb(249 249 250);
+    --link: rgb(68 147 248);
+
+    --sidebar-background: rgb(24 24 27);
+    --sidebar-foreground: rgb(244 244 245);
+    --sidebar-scrollbar: rgb(228 228 231);
+
+    --badge-green: rgb(0 193 106);
+    --badge-error: rgb(251 44 54);
+    --badge-blue: rgb(81 162 255);
+
+    --badge-bg-green: rgb(0 193 106 / 10%);
+    --badge-bg-error: rgb(251 44 54 / 10%);
+    --badge-bg-blue: rgb(81 162 255 / 10%);
+
+    --controls: rgb(134 134 136);
+
+    --table-row-selected: #fff8e2;
+
+    --muted-background: rgb(245, 245, 244);
+
+    --budge-tile: rgb(246 246 246);
+
+    --highlight-error-cell: rgb(208, 208, 208);
+
+    --budge-success: rgb(0 220 130);
+    --budge-error: rgb(255 100 103);
+    --budge-violet: rgb(81 162 255);
+    --primary-border: rgb(71, 61, 11);
+
+    --table-header: rgba(255, 245, 0, 0.5);
+}
+
+@theme {
+    --breakpoint-xs: 400px;
+    --breakpoint-tablet: 750px;
+    --breakpoint-desk: 1150px;
+
+    --color-modal: var(--modal);
+    --color-black: var(--black);
+    --color-primary: var(--primary);
+    --color-primary-light: var(--primary-light);
+    --color-error: var(--error);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-foreground-muted: var(--foreground-muted);
+    --color-border: var(--border);
+    --color-border-focus: var(--border-focus);
+    --color-placeholder: var(--placeholder);
+    --color-card: var(--card);
+    --color-menu-item-hover: var(--menu-item-hover);
+    --color-skeleton: var(--skeleton);
+    --color-switch: var(--switch);
+    --color-switch-checked: var(--switch-checked);
+    --color-table-hover: var(--table-hover);
+    --color-link: var(--link);
+    --color-primary-text: var(--primary-text);
+
+    --color-sidebar-background: var(--sidebar-background);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-scrollbar: var(--sidebar-scrollbar);
+
+    --color-badge-green: var(--badge-green);
+    --color-badge-error: var(--badge-error);
+    --color-badge-blue: var(--badge-blue);
+
+    --color-badge-bg-green: var(--badge-bg-green);
+    --color-badge-bg-error: var(--badge-bg-error);
+    --color-badge-bg-blue: var(--badge-bg-blue);
+
+    --color-controls: var(--controls);
+
+    --color-table-row-selected: var(--table-row-selected);
+
+    --color-muted-background: var(--muted-background);
+
+    --color-budge-tile: var(--budge-tile);
+    --color-highlight-error-cell: var(--highlight-error-cell);
+    --color-primary-dark: var(--primary-dark);
+
+    --color-budge-success: var(--budge-success);
+    --color-budge-error: var(--budge-error);
+    --color-budge-violet: var(--budge-violet);
+    --color-primary-border: var(--primary-border);
+
+    --color-table-header: var(--table-header);
+}
+
+@layer utilities {
+    .scrollbar-thin {
+        scrollbar-width: thin;
+    }
+    .scrollbar-muted {
+        scrollbar-color: var(--sidebar-scrollbar) transparent;
+    }
+}

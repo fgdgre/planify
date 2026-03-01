@@ -1,6 +1,11 @@
+<script setup lang="ts">
+import { useNotification } from '~/notification'
+
+const { toasts, removeToast } = useNotification()
+</script>
+
 <template>
-  <div>
-    <NuxtRouteAnnouncer />
-    <NuxtWelcome />
-  </div>
+  <NuxtPage />
+
+  <SupaToastsGroup :toasts @close-toast="(id: string) => removeToast(id)" />
 </template>
