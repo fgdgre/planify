@@ -10,8 +10,8 @@ const userStore = useUserStore()
 
 const loading = ref(false)
 const formData = ref({
-  email: 'ddemin20052016@gmail.com',
-  password: 'password',
+  email: '',
+  password: '',
 })
 
 const formErrorMessage = ref('')
