@@ -24,13 +24,12 @@ export default defineNuxtConfig({
     },
   ],
   runtimeConfig: {
-    public: {
-      supabaseUrl: 'https://piqouitlhtmlnvyzvftd.supabase.co',
-      supabaseAnonKey: 'sb_publishable_EQJgRCTmvKOr8-92aWX6AA_BA8W09oa',
-    },
+    public: {},
   },
 
   supabase: {
+    url: 'https://piqouitlhtmlnvyzvftd.supabase.co',
+    key: 'sb_publishable_EQJgRCTmvKOr8-92aWX6AA_BA8W09oa',
     types: '~~/shared/types/database.types.ts',
     redirect: false,
   },
