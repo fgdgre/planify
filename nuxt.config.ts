@@ -5,7 +5,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   ssr: false,
   css: ['~/assets/css/main.css'],
-  modules: ['@nuxt/icon', '@pinia/nuxt', '@nuxtjs/supabase'],
+  modules: ['@nuxt/icon', '@pinia/nuxt', '@nuxtjs/supabase', '@vueuse/nuxt'],
   vite: {
     plugins: [tailwindcss()],
   },
