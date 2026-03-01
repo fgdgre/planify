@@ -4,7 +4,7 @@ import { useInitApp } from "~/auth/composables/init";
 
 const { toasts, removeToast } = useNotification()
 
-const { initializeApp, isInitializing, isInitialized } = useInitApp()
+const { isInitializing } = useInitApp()
 </script>
 
 <template>

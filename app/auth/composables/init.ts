@@ -11,19 +11,19 @@ export const useInitApp = () => {
     store.setLoading(true)
     try {
       const { data: userData, error: userError } = await getUser()
+      store.setAuthReady(true)
+
       if(userError) {
         notifications.showErrorToast({
           title: "Error",
-          description: 'userError.message',
+          description: userError.message,
         })
 
-        if(useRoute().path !== ROUTES.LOGIN) {
-          await navigateTo(ROUTES.LOGIN, { replace: true })
-        }
+        navigateTo(ROUTES.LOGIN)
         return
+      } else if (userData) {
+        store.setProfile(userData)
       }
-
-      store.setProfile(userData)
     } finally {
       store.setLoading(false)
     }

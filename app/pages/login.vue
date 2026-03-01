@@ -8,6 +8,7 @@ definePageMeta({
 })
 
 const client = useSupabaseClient()
+const user = useSupabaseUser()
 
 const loading = ref(false)
 
@@ -93,7 +94,6 @@ const login = async () => {
     })
 
     if (error) {
-
       console.error(error)
       if (error.message === 'Invalid login credentials') {
         formErrorMessage.value = AUTH_VALIDATION_MESSAGES.form.invalidLoginData

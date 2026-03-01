@@ -6,14 +6,11 @@ import { useUserStore } from "~/auth/stores/user";
 export default defineNuxtRouteMiddleware(async (to) => {
   const user = useSupabaseUser()
 
-  console.log(user.value)
   const {
-    initializeApp,
-    isInitialized,
+    initializeApp
   } = useInitApp()
 
-  if (!user.value && !isInitialized.value) {
-    console.log('init')
+  if (!user.value) {
     await initializeApp()
   }
 
@@ -22,7 +19,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return navigateTo(`/login?redirectTo=${encodeURIComponent(to.fullPath)}`)
   }
 
-  if (user.value && (to.path === ROUTES.LOGIN || to.path === ROUTES.SIGNUP)) {
+  if (user.value && (to.path === ROUTES.LOGIN || to.path === ROUTES.SIGNUP || to.path === ROUTES.FORGOT_PASSWORD || to.path === ROUTES.CONFIRM)) {
     return navigateTo(ROUTES.HOME)
   }
 })

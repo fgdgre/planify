@@ -93,10 +93,10 @@ const signup = async () => {
 
     if (!data.session) {
       useNotification().showSuccessToast({ title: "Success", description: "Account created. Check your email to confirm, then come back to sign in." })
+      navigateTo(ROUTES.CONFIRM)
       return
     }
 
-    navigateTo(ROUTES.CONFIRM)
   } finally {
     loading.value = false
   }
