@@ -1,18 +1,12 @@
 export const getUser = async () => {
-  const client = useSupabaseClient()
+  const supabase = useSupabaseClient()
 
-  const { data: sessionData, error: sessionError } = await client.auth.getSession()
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
 
   if(sessionError) {
     return { data: null, error: sessionError }
   } else if (sessionData.session) {
-    const { data, error } = await client
-      .from("profiles")
-      .select("*")
-      .eq("id", sessionData.session.user.id)
-      .single()
-
-    return { data, error }
+    return await supabase.auth.getUser()
   }
 
   return { data: null, error: null }

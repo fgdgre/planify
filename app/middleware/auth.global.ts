@@ -4,22 +4,24 @@ import { useInitApp } from "~/auth/composables/init";
 import { useUserStore } from "~/auth/stores/user";
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  const user = useSupabaseUser()
+  const userStore = useUserStore()
 
   const {
     initializeApp
   } = useInitApp()
 
-  if (!user.value) {
+  console.log('user', userStore.profile)
+  if (!userStore.profile && !userStore.authReady) {
+    console.log('initializeApp')
     await initializeApp()
   }
 
   const isPublic = publicRoutes.includes(to.path as (typeof publicRoutes)[number])
-  if (!user.value && !isPublic) {
+  if (!userStore.profile && !isPublic) {
     return navigateTo(`/login?redirectTo=${encodeURIComponent(to.fullPath)}`)
   }
 
-  if (user.value && (to.path === ROUTES.LOGIN || to.path === ROUTES.SIGNUP || to.path === ROUTES.FORGOT_PASSWORD || to.path === ROUTES.CONFIRM)) {
+  if (userStore.profile && (to.path === ROUTES.LOGIN || to.path === ROUTES.SIGNUP || to.path === ROUTES.FORGOT_PASSWORD || to.path === ROUTES.CONFIRM)) {
     return navigateTo(ROUTES.HOME)
   }
 })

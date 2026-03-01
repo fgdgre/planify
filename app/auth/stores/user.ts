@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 
 export const useUserStore = defineStore("user", () => {
+  // FIXME: type this with tyoes from supabase
   const authUser = ref<any | null>(null)
   const profile = ref<any | null>(null)
 

@@ -2,16 +2,13 @@
 import { AUTH_VALIDATION_MESSAGES } from "~/shared/constants/auth-error-messages";
 import { ROUTES } from "~/shared/constants/routes";
 import { validateField, validateForm, type ValidationSchema } from "~/shared/validation";
+import { useUserStore } from "~/auth/stores/user";
 
-definePageMeta({
-  name: 'login',
-})
+const supabase = useSupabaseClient()
 
-const client = useSupabaseClient()
-const user = useSupabaseUser()
+const userStore = useUserStore()
 
 const loading = ref(false)
-
 const formData = ref({
   email: 'ddemin20052016@gmail.com',
   password: 'password',
@@ -88,10 +85,12 @@ const login = async () => {
   try {
     loading.value = true
 
-    const { data, error } = await client.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: loginData.email,
       password: loginData.password,
     })
+
+    console.log(data)
 
     if (error) {
       console.error(error)
@@ -101,6 +100,7 @@ const login = async () => {
         formErrorMessage.value = error.message
       }
     } else {
+      userStore.setProfile(data.user)
       navigateTo((useRoute().query.redirectTo as string) || ROUTES.HOME)
     }
   } finally {

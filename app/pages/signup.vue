@@ -6,7 +6,7 @@ import { useNotification } from "~/notification";
 
 definePageMeta({ name: 'signup' })
 
-const client = useSupabaseClient()
+const supabase = useSupabaseClient()
 const loading = ref(false)
 
 const formData = ref({
@@ -19,7 +19,6 @@ const formSuccessMessage = ref('')
 
 const passwordInputType = ref<'password' | 'text'>('password')
 
-// Validation (same pattern as login)
 const touchedFields = ref({
   email: false,
   password: false,
@@ -78,7 +77,7 @@ const signup = async () => {
   try {
     loading.value = true
 
-    const { data, error } = await client.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: signupData.email,
       password: signupData.password,
       options: {

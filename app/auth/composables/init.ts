@@ -4,6 +4,7 @@ import { getUser } from "~/auth/composables/user";
 import { ROUTES } from "~/shared/constants/routes";
 
 export const useInitApp = () => {
+  const supabase = useSupabaseClient()
   const store = useUserStore()
   const notifications = useNotificationsStore()
 
@@ -12,7 +13,7 @@ export const useInitApp = () => {
     try {
       const { data: userData, error: userError } = await getUser()
       store.setAuthReady(true)
-
+      console.log('userData', userData)
       if(userError) {
         notifications.showErrorToast({
           title: "Error",
@@ -21,8 +22,8 @@ export const useInitApp = () => {
 
         navigateTo(ROUTES.LOGIN)
         return
-      } else if (userData) {
-        store.setProfile(userData)
+      } else if (userData?.user) {
+        store.setProfile(userData?.user)
       }
     } finally {
       store.setLoading(false)

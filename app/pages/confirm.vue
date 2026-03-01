@@ -1,28 +1,17 @@
 <script setup lang="ts">
 import { ROUTES } from "~/shared/constants/routes";
+import { useUserStore } from "~/auth/stores/user";
 
-definePageMeta({ name: 'confirm' })
+const userStore = useUserStore()
 
-const user = useSupabaseUser()
 const supabase = useSupabaseClient()
 
+// FIXME: refactor
 const { data } = supabase.auth.onAuthStateChange((event, session) => {
-  console.log(event, session)
-  if (event === 'INITIAL_SESSION') {
-    console.log('INITIAL_SESSION')
-  } else if (event === 'SIGNED_IN') {
-    console.log('SIGNED_IN')
-    return navigateTo('/')
-  } else if (event === 'SIGNED_OUT') {
-    console.log('SIGNED_OUT')
-    return navigateTo('/login')
-  } else if (event === 'PASSWORD_RECOVERY') {
-    console.log('PASSWORD_RECOVERY')
-  } else if (event === 'TOKEN_REFRESHED') {
-    console.log('TOKEN_REFRESHED')
-  } else if (event === 'USER_UPDATED') {
-    console.log('USER_UPDATED')
-    return navigateTo('/')
+  console.log(event)
+  if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+    userStore.setProfile(session?.user)
+    return navigateTo(ROUTES.HOME)
   }
 })
 </script>
