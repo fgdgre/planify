@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useNotification } from '~/notification'
-import { useInitApp } from "~/auth/composables/init";
+import { useNotification } from '@modules/notification'
+import { useInitApp } from "@modules/auth";
 
 const { toasts, removeToast } = useNotification()
 
@@ -11,7 +11,10 @@ const { isInitializing } = useInitApp()
   <div v-if="isInitializing">
     init...
   </div>
-  <NuxtPage v-else />
+
+  <NuxtLayout v-else>
+    <NuxtPage />
+  </NuxtLayout>
 
   <SupaToastsGroup :toasts @close-toast="(id: string) => removeToast(id)" />
 </template>

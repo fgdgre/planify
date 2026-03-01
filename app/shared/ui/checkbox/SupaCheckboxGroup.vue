@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { errorMessage } from '~/components/ui/input/input'
+import { errorMessage } from '~/shared/ui/input/input'
 
 withDefaults(
   defineProps<{

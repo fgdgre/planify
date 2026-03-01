@@ -1,5 +1,5 @@
 import { tv } from 'tailwind-variants'
-import * as inputVariants from '~/components/ui/input/input'
+import * as inputVariants from '~/shared/ui/input/input'
 
 export const wrapper = tv({
   base: 'flex flex-col relative w-full',

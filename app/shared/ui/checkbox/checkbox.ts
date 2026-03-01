@@ -1,5 +1,5 @@
-import { label as inputLabel } from '~/components/ui/input/input'
 import { tv } from 'tailwind-variants'
+export { label } from '~/shared/ui/radio/radio'
 
 export const wrapper = tv({
   base: 'flex items-center',
@@ -11,17 +11,21 @@ export const wrapper = tv({
   },
 })
 
-export const radio = tv({
-  base: 'flex appearance-none items-center justify-center rounded-full cursor-pointer',
+export const checkbox = tv({
+  base: 'flex appearance-none items-center justify-center rounded-[4px] cursor-pointer',
   variants: {
     checked: {
       true: '',
       false: 'border border-controls',
       indeterminate: '',
     },
+    size: {
+      sm: 'size-4',
+      md: 'size-5',
+      lg: 'size-6',
+    },
     disabled: {
       true: 'cursor-not-allowed',
-      false: '',
     },
     color: {
       default: 'bg-foreground',
@@ -31,11 +35,6 @@ export const radio = tv({
     isError: {
       true: 'border-error',
       false: '',
-    },
-    size: {
-      sm: 'size-4',
-      md: 'size-5',
-      lg: 'size-6',
     },
   },
 
@@ -53,29 +52,8 @@ export const radio = tv({
   },
 })
 
-export const label = tv({
-  extend: inputLabel,
-  base: 'mb-0! ml-2',
-  variants: {
-    size: {
-      md: 'text-[14px]',
-    },
-    disabled: {
-      true: 'cursor-not-allowed',
-      false: '',
-    },
-    isError: {
-      true: 'text-error',
-      false: '',
-    },
-  },
-  defaultVariants: {
-    size: 'md',
-  },
-})
-
 export const icon = tv({
-  base: 'absolute top-[50%] translate-y-[-50%] left-[50%] translate-x-[-50%] text-background pointer-events-none',
+  base: 'size-5 absolute top-[50%] translate-y-[-50%] left-[50%] translate-x-[-50%] text-background pointer-events-none',
   variants: {
     color: {
       default: 'text-background',
@@ -83,9 +61,9 @@ export const icon = tv({
       error: 'text-black',
     },
     size: {
-      sm: 'size-5',
-      md: 'size-6',
-      lg: 'size-7',
+      sm: 'size-4',
+      md: 'size-5',
+      lg: 'size-6',
     },
   },
   defaultVariants: {

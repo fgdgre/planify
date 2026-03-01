@@ -1,7 +1,7 @@
 import { publicRoutes } from "~/shared/constants/pablic-routes";
 import { ROUTES } from "~/shared/constants/routes";
-import { useInitApp } from "~/auth/composables/init";
-import { useUserStore } from "~/auth/stores/user";
+import { useInitApp } from "~/modules/auth/composables/init";
+import { useUserStore } from "~/modules/auth/stores/user";
 
 export default defineNuxtRouteMiddleware(async (to) => {
   const userStore = useUserStore()

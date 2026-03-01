@@ -14,7 +14,7 @@ import {
   CalendarRoot,
 } from 'reka-ui'
 import { CalendarDate, type DateValue } from '@internationalized/date'
-import { errorMessage as errorMessageVariants, label as labelVariants } from '~/components/ui/input/input'
+import { errorMessage as errorMessageVariants, label as labelVariants } from '~/shared/ui/input/input'
 
 defineProps<{
   label?: string

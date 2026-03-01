@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { label as inputLabel } from '~/components/ui/input/input'
+import { label as inputLabel } from '~/shared/ui/input/input'
 
 withDefaults(
   defineProps<{

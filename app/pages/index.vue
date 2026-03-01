@@ -1,18 +1,20 @@
 <script setup lang="ts">
-import { logout } from "~/auth/composables/logout";
-import { useUserStore } from "~/auth/stores/user";
+import { useLogout, useUserStore } from "@modules/auth";
 
 const userStore = useUserStore()
-const {
-  profile,
-} = storeToRefs(userStore)
+const { profile } = storeToRefs(userStore)
+
+const { loading, logout } = useLogout()
 </script>
 
 <template>
   <div>
     Hello {{ profile?.email }}!
 
-    <SupaButton @click="logout">
+    <SupaButton
+      @click="logout"
+      :loading="loading"
+    >
       logout
     </SupaButton>
   </div>

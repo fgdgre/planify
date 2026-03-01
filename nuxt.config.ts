@@ -1,4 +1,14 @@
 import tailwindcss from "@tailwindcss/vite";
+import { resolve } from "path";
+
+
+const alias = {
+  "@modules": resolve(__dirname, "app/modules"),
+  "@ui": resolve(__dirname, "app/shared/ui"),
+  "@constants": resolve(__dirname, "app/shared/constants"),
+  "@css": resolve(__dirname, "app/assets/css"),
+  "@images": resolve(__dirname, "app/assets/images"),
+}
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
@@ -6,25 +16,22 @@ export default defineNuxtConfig({
   ssr: false,
   css: ['~/assets/css/main.css'],
   modules: ['@nuxt/icon', '@pinia/nuxt', '@nuxtjs/supabase', '@vueuse/nuxt'],
+  alias,
   vite: {
     plugins: [tailwindcss()],
   },
   components: [
     {
-      path: '~/components/ui',
-      pathPrefix: false,
-      global: true,
-      extensions: ['.vue'],
-    },
-    {
-      path: '~/components/app',
+      path: '~/shared/ui',
       pathPrefix: false,
       global: true,
       extensions: ['.vue'],
     },
   ],
   runtimeConfig: {
-    public: {},
+    public: {
+      BASE_URL: process.env.NUXT_PUBLIC_API_BASE,
+    },
   },
 
   supabase: {

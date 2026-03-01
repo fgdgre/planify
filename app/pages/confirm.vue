@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ROUTES } from "~/shared/constants/routes";
-import { useUserStore } from "~/auth/stores/user";
+import { ROUTES } from "@constants/routes";
+import { useUserStore } from "@modules/auth";
 
 const userStore = useUserStore()
 

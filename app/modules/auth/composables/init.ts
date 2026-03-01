@@ -1,13 +1,11 @@
-import { useUserStore } from "~/auth/stores/user";
-import { useNotificationsStore } from "~/notification/stores/notificationStore";
-import { getUser } from "~/auth/composables/user";
-import { ROUTES } from "~/shared/constants/routes";
+import { useUserStore } from "../stores/user";
+import { getUser } from "./user";
+import { useNotification } from "@modules/notification";
+import { ROUTES } from "@constants/routes";
 
 export const useInitApp = () => {
-  const supabase = useSupabaseClient()
   const store = useUserStore()
-  const notifications = useNotificationsStore()
-
+  const { showErrorToast } = useNotification()
   const initializeApp = async () => {
     store.setLoading(true)
     try {
@@ -15,7 +13,7 @@ export const useInitApp = () => {
       store.setAuthReady(true)
       console.log('userData', userData)
       if(userError) {
-        notifications.showErrorToast({
+        showErrorToast({
           title: "Error",
           description: userError.message,
         })

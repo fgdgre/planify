@@ -31,7 +31,7 @@ export type RuleMap = {
     message?: string;
     rules?: {
       extensions?: { message: string; value: FilesMimeType[] };
-      /* max value set in bytes */
+      /* max value in bytes */
       maxSize?: { message: string; value: number };
     };
   };
@@ -40,7 +40,7 @@ export type RuleMap = {
     message?: string;
     rules?: {
       extensions?: { message: string; value: FilesMimeType[] };
-      /* max value set in bytes */
+      /* max value in bytes */
       maxSize?: { message: string; value: number };
       maxCount?: { message: string; value: number };
     };

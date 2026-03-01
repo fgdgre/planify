@@ -1,6 +1,6 @@
 import { tv } from 'tailwind-variants'
 import { sizeVariants } from '~/shared/variants/size'
-export { label, errorMessage } from '~/components/ui/input/input'
+export { label, errorMessage } from '~/shared/ui/input/input'
 
 export const wrapper = tv({
   base: 'h-min',
