@@ -86,7 +86,7 @@ watchEffect(() => {
     <div
       v-if="$slots.footer"
       :data-testid="testId ? testId + '-footer-wrapper' : 'sidebar-footer-wrapper'"
-      :class="[sidebarStyles.footerWrapper({ self: $slots.content ? false : true })]"
+      :class="[sidebarStyles.footerWrapper({ self: !!$slots.content })]"
     >
       <div :class="[sidebarStyles.footer({ class: ui?.footer })]">
         <slot name="footer" />

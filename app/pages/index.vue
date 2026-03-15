@@ -17,5 +17,6 @@ const { loading, logout } = useLogout()
     >
       logout
     </SupaButton>
+
   </div>
 </template>

@@ -40,7 +40,7 @@ onUnmounted(() => {
       ref="target"
       v-bind="$attrs"
       :class="[
-        modalVariants.wrapper({ fullscreen, withCloseButton: showCloseButton && !(props.title || $slots.title) }),
+        modalVariants.wrapper({ fullscreen, withCloseButton: showCloseButton && !(props.title || $slots.title), class: ui?.wrapper }),
       ]"
     >
       <SupaButton

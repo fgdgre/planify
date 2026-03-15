@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Toast } from '~/modules/notifications'
+import type { Toast } from '@modules/notification'
 
 defineProps<{
   toasts: Toast[]

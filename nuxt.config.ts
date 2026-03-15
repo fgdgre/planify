@@ -4,6 +4,7 @@ import { resolve } from "path";
 
 const alias = {
   "@modules": resolve(__dirname, "app/modules"),
+  "@integrations": resolve(__dirname, "app/modules/integrations"),
   "@ui": resolve(__dirname, "app/shared/ui"),
   "@constants": resolve(__dirname, "app/shared/constants"),
   "@css": resolve(__dirname, "app/assets/css"),
@@ -31,6 +32,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       BASE_URL: process.env.NUXT_PUBLIC_API_BASE,
+      supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL,
+      supabaseAnonKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
     },
   },
 

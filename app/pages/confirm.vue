@@ -2,6 +2,10 @@
 import { ROUTES } from "@constants/routes";
 import { useUserStore } from "@modules/auth";
 
+definePageMeta({
+  layout: 'login',
+})
+
 const userStore = useUserStore()
 
 const supabase = useSupabaseClient()
@@ -10,7 +14,7 @@ const supabase = useSupabaseClient()
 const { data } = supabase.auth.onAuthStateChange((event, session) => {
   console.log(event)
   if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
-    userStore.setProfile(session?.user)
+    userStore.setUser(session?.user)
     return navigateTo(ROUTES.HOME)
   }
 })

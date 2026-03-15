@@ -1,7 +1,7 @@
 import { tv } from 'tailwind-variants'
 
 export const wrapper = tv({
-  base: 'flex flex-col bg-modal text-sidebar-foreground w-[80%] max-w-[370px] h-[100dvh] box-border fixed top-0 z-30 border-r border-border',
+  base: 'flex flex-col bg-modal text-sidebar-foreground w-[80%] max-w-[370px] h-[100dvh] box-border fixed top-0 z-30 border-r border-border text-sidebar-foreground',
   variants: {
     open: {
       true: '',
