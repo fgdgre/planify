@@ -1,6 +1,6 @@
-import { publicRoutes } from "@constants/public-routes";
-import { ROUTES } from "@constants/routes";
-import { useUserStore, useInitApp } from "@modules/auth";
+import { publicRoutes } from "@shared/constants/public-routes";
+import { ROUTES } from "@shared/constants/routes";
+import { useUserStore, useInitApp } from "@features/auth";
 
 export default defineNuxtRouteMiddleware(async (to) => {
   const userStore = useUserStore()
@@ -13,7 +13,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (!userStore.user && !userStore.initPromise) {
     console.log('initializeApp')
     userStore.setInitPromise(initializeApp())
-    await userStore.initPromise
+    await userStore.initPromise!
     userStore.setInitPromise(null)
   }
 

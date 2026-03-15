@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useForgotPassword } from "@modules/auth";
+import { useForgotPassword } from "@features/auth";
 
 definePageMeta({
   layout: 'login',

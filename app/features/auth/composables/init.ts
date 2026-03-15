@@ -1,11 +1,12 @@
 import { useUserStore } from "../stores/user";
 import { getUser } from "./user";
-import { useNotification } from "@modules/notification";
-import { ROUTES } from "@constants/routes";
+import { useNotification } from "@features/notification";
+import { ROUTES } from "@shared/constants/routes";
 
 export const useInitApp = () => {
   const userStore = useUserStore()
   const { showErrorToast } = useNotification()
+  const isInitializing = computed(() => userStore.loading && userStore.initPromise != null)
   const initializeApp = async () => {
     userStore.setLoading(true)
     try {
@@ -20,7 +21,7 @@ export const useInitApp = () => {
         navigateTo(ROUTES.LOGIN)
         return
       } else if (userData?.user) {
-        userStore.setUser(userData?.user)
+        userStore.setUser(userData.user)
       }
     } finally {
       userStore.setLoading(false)
@@ -29,5 +30,6 @@ export const useInitApp = () => {
 
   return {
     initializeApp,
+    isInitializing,
   }
 }

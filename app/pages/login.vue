@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useLogin } from "@modules/auth";
+import { useLogin } from "@features/auth";
 import { ROUTES } from "~/shared/constants/routes";
 
 

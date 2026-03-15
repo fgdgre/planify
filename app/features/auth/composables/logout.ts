@@ -1,4 +1,4 @@
-import { useNotification } from "@modules/notification"
+import { useNotification } from "@features/notification"
 import { useUserStore } from "../stores/user";
 
 export const useLogout = () => {

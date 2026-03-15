@@ -18,12 +18,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@modules/*": ["app/modules/*"],
-      "@integrations/*": ["app/modules/integrations/*"],
-      "@ui/*": ["app/shared/ui/*"],
-      "@constants/*": ["app/shared/constants/*"],
-      "@css/*": ["app/assets/css/*"],
-      "@images/*": ["app/assets/images/*"],
+      "@features/*": ["app/modules/*"],
+      "@shared/*": ["app/shared/*"],
+      "@assets/*": ["app/assets/*"],
     },
     "allowImportingTsExtensions": true
   }

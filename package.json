@@ -5,11 +5,12 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
-    "generate": "nuxt generate",
-    "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "prepare": "nuxt prepare",
+    "typecheck": "nuxt typecheck",
+    "db:types": "supabase gen types typescript --project-id piqouitlhtmlnvyzvftd --schema public > shared/api/supabase/database.types.ts"
   },
   "dependencies": {
+    "@internationalized/date": "^3.12.0",
     "@nuxt/icon": "2.2.1",
     "@nuxtjs/supabase": "^2.0.4",
     "@nuxtjs/tailwindcss": "6.14.0",

@@ -2,10 +2,10 @@ import {
   validateField,
   validateForm,
   type ValidationSchema
-} from "@modules/validation";
-import { useNotification } from "@modules/notification";
-import { AUTH_VALIDATION_MESSAGES } from "@constants/auth-error-messages";
-import { ROUTES } from "@constants/routes";
+} from "@features/validation";
+import { useNotification } from "@features/notification";
+import { AUTH_VALIDATION_MESSAGES } from "@shared/constants/auth-error-messages";
+import { ROUTES } from "@shared/constants/routes";
 
 export const useSignup = () => {
   const supabase = useSupabaseClient()

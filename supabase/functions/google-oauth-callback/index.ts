@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     }
 
     const appBaseUrl = getEnv('APP_BASE_URL')
-    return Response.redirect(`${appBaseUrl}/integrations?google_connected=1`, 302)
+    return Response.redirect(`${appBaseUrl}/settings?google_connected=1`, 302)
   } catch (error) {
     return new Response(error instanceof Error ? error.message : 'Unknown error', {
       status: 500,

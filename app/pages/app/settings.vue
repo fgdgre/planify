@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ConnectGoogleCalendarModal from "@integrations/google-calendar/components/ConnectGoogleCalendarModal.vue";
+import ConnectGoogleCalendarModal from "@features/integrations/google-calendar/components/ConnectGoogleCalendarModal.vue";
 
 const isGoogleCalendarModalOpen = ref(false)
 

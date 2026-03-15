@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useLogout, useUserStore } from "@modules/auth";
+import { useLogout, useUserStore } from "@features/auth";
 
 const userStore = useUserStore()
 const { user } = storeToRefs(userStore)

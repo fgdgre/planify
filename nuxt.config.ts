@@ -1,15 +1,10 @@
 import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "path";
-import type { NuxtApp } from "nuxt/app";
-
 
 const alias = {
-  "@modules": resolve(__dirname, "app/modules"),
-  "@integrations": resolve(__dirname, "app/modules/integrations"),
-  "@ui": resolve(__dirname, "app/shared/ui"),
-  "@constants": resolve(__dirname, "app/shared/constants"),
-  "@css": resolve(__dirname, "app/assets/css"),
-  "@images": resolve(__dirname, "app/assets/images"),
+  "@features": resolve(__dirname, "app/features"),
+  "@assets": resolve(__dirname, "app/assets"),
+  "@shared": resolve(__dirname, "app/shared"),
 }
 
 export default defineNuxtConfig({
@@ -30,6 +25,7 @@ export default defineNuxtConfig({
   },
   alias,
   vite: {
+    // @ts-expect-error
     plugins: [tailwindcss()],
   },
   components: [

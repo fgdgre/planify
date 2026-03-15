@@ -1,9 +1,9 @@
 import {
   validateField,
   type ValidationSchema
-} from "@modules/validation";
-import { AUTH_VALIDATION_MESSAGES } from "@constants/auth-error-messages";
-import { ROUTES } from "@constants/routes";
+} from "@features/validation";
+import { AUTH_VALIDATION_MESSAGES } from "@shared/constants/auth-error-messages";
+import { ROUTES } from "@shared/constants/routes";
 
 export const useForgotPassword = () => {
   const supabase = useSupabaseClient()

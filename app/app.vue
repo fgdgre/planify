@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useNotification } from '@modules/notification'
-import { useInitApp } from "@modules/auth";
+import { useNotification } from '@features/notification'
+import { useInitApp } from "@features/auth";
 
 const { toasts, removeToast } = useNotification()
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ROUTES } from "@constants/routes";
-import { useUserStore } from "@modules/auth";
+import { ROUTES } from "@shared/constants/routes";
+import { useUserStore } from "@features/auth";
 
 definePageMeta({
   layout: 'login',

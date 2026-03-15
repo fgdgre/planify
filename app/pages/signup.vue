@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useSignup } from "@modules/auth";
+import { useSignup } from "@features/auth";
 
 definePageMeta({
   layout: 'login',

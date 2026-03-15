@@ -42,6 +42,7 @@ const props = withDefaults(
       menuItem?: string
       empty?: string
       loading?: string
+      itemsList?: string
     }
   }>(),
   {
