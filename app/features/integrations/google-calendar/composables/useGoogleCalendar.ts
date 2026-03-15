@@ -132,7 +132,8 @@ export const useGoogleCalendar = () => {
       const json = await response.json()
 
       if (!response.ok) {
-        throw new Error(json.error || 'Failed to sync events')
+        showErrorToast({ title: 'Error', description: 'Failed to sync events' })
+        return
       }
 
       console.log('Synced events:', json)

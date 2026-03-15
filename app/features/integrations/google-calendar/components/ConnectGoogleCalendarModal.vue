@@ -60,21 +60,12 @@ onMounted(fetchConnectedAccounts)
             <p class="text-sm text-gray-500">{{ account.email }}</p>
           </div>
 
-          <div class="flex gap-3">
-            <button
-              class="rounded border px-3 py-2"
-              @click="fetchCalendarEvents(account.id)"
-            >
-              Load calendars
-            </button>
-
-            <button
-              class="rounded border px-3 py-2"
-              @click="syncEvents(account.id)"
-            >
-              Sync events
-            </button>
-          </div>
+          <SupaButton
+            class="rounded border px-3 py-2"
+            @click="fetchCalendarEvents(account.id)"
+          >
+            Load calendars
+          </SupaButton>
 
           <div v-if="getCalendarEvents?.[account.id]?.length" class="space-y-2">
             <p class="font-medium">Calendars:</p>
