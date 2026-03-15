@@ -1,5 +1,6 @@
 import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "path";
+import type { NuxtApp } from "nuxt/app";
 
 
 const alias = {
@@ -17,6 +18,16 @@ export default defineNuxtConfig({
   ssr: false,
   css: ['~/assets/css/main.css'],
   modules: ['@nuxt/icon', '@pinia/nuxt', '@nuxtjs/supabase', '@vueuse/nuxt'],
+  app: {
+    head: {
+      meta: [
+        {
+          name: 'google-site-verification',
+          content: 'IG630_HjEFWJwVk3O8kXHLBU2lWa9Z9GOulS6xGfpWw'
+        }
+      ]
+    }
+  },
   alias,
   vite: {
     plugins: [tailwindcss()],
@@ -38,8 +49,8 @@ export default defineNuxtConfig({
   },
 
   supabase: {
-    url: 'https://piqouitlhtmlnvyzvftd.supabase.co',
-    key: 'sb_publishable_EQJgRCTmvKOr8-92aWX6AA_BA8W09oa',
+    url: process.env.NUXT_PUBLIC_SUPABASE_URL,
+    key: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
     types: '~~/shared/types/database.types.ts',
     redirect: false,
   },

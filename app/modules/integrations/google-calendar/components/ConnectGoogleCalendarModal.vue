@@ -63,6 +63,7 @@ onMounted(fetchAccounts)
 <template>
   <SupaModal
     :ui="{ wrapper: 'max-w-[450px]' }"
+    :scrollable-content="true"
     @close="$emit('close')"
   >
     <div class="p-6 space-y-6">

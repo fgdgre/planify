@@ -1,4 +1,4 @@
-import { publicRoutes } from "@constants/pablic-routes";
+import { publicRoutes } from "@constants/public-routes";
 import { ROUTES } from "@constants/routes";
 import { useUserStore, useInitApp } from "@modules/auth";
 
