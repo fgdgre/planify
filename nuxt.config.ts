@@ -23,7 +23,7 @@ export default defineNuxtConfig({
       meta: [
         {
           name: 'google-site-verification',
-          content: 'IG630_HjEFWJwVk3O8kXHLBU2lWa9Z9GOulS6xGfpWw'
+          content: 'hK8Q58PtqRswdFTHd_O41F8N2hRr0FEbJp4GMWquTv8'
         }
       ]
     }
