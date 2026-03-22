@@ -16,6 +16,7 @@ const props = defineProps<{
     mainContent?: string
     actions?: string
     closeButton?: string
+    backdrop?: string
   }
 }>()
 
@@ -34,7 +35,7 @@ onUnmounted(() => {
 
 <template>
   <Teleport to="body">
-    <div :class="[modalVariants.backdrop()]" test-id="supa-modal-backdrop" @click="$emit('close')" />
+    <div :class="[modalVariants.backdrop({ class: ui?.backdrop })]" test-id="supa-modal-backdrop" @click="$emit('close')" />
 
     <div
       ref="target"

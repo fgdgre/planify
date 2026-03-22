@@ -31,7 +31,7 @@ definePageMeta({
 })
 
 const googleCalendarStore = useGoogleCalendarStore()
-const { getAllEvents } = storeToRefs(googleCalendarStore)
+const { getAllEvents, selectedEvent, isEventModalOpen } = storeToRefs(googleCalendarStore)
 const { loadEventsFromDb } = useGoogleCalendar()
 
 const parseTemporalStart = (dateString: string, allDay: boolean) => {
@@ -39,8 +39,6 @@ const parseTemporalStart = (dateString: string, allDay: boolean) => {
     return Temporal.PlainDate.from(dateString.slice(0, 10))
   }
 
-  // Google returns ISO strings like "2024-03-22T10:00:00+02:00"
-  // Convert via Instant to avoid offset/timezone annotation conflicts
   const instant = Temporal.Instant.from(dateString)
   return instant.toZonedDateTimeISO('UTC')
 }
@@ -53,7 +51,7 @@ const mapToScheduleXEvent = (event: CalendarEvent): CalendarEventExternal => {
     title: event.title ?? '(No title)',
     description: event.description ?? undefined,
     location: event.location ?? undefined,
-    calendarId: event.calendar_id,
+    calendarId: event.google_account_id,
   }
 }
 
@@ -73,10 +71,49 @@ const loadViewEvents = (range: { start: Temporal.ZonedDateTime, end: Temporal.Zo
   fetchEvents()
 }
 
+const ACCOUNT_COLORS = [
+  {
+    colorName: 'red',
+    lightColors: {
+      main: 'rgb(255, 0, 0)',
+      container: 'rgba(255, 0, 0, 0.2)',
+      onContainer: 'rgb(255, 0, 0)',
+    },
+  },
+  {
+    colorName: 'green',
+    lightColors: {
+      main: 'rgb(0, 180, 0)',
+      container: 'rgba(0, 180, 0, 0.2)',
+      onContainer: 'rgb(0, 180, 0)',
+    },
+  },
+  {
+    colorName: 'blue',
+    lightColors: {
+      main: 'rgb(0, 110, 255)',
+      container: 'rgba(0, 110, 255, 0.2)',
+      onContainer: 'rgb(0, 110, 255)',
+    },
+  },
+]
+
+const buildCalendarsConfig = () => {
+  const accounts = googleCalendarStore.getAccounts
+
+  return Object.fromEntries(
+    accounts.map((account, index) => [
+      account.id,
+      ACCOUNT_COLORS[index % ACCOUNT_COLORS.length],
+    ])
+  )
+}
+
 // Do not use a ref here, as the calendar instance is not reactive, and doing so might cause issues
 // For updating events, use the events facade
 const calendarApp = createCalendar({
   selectedDate: Temporal.PlainDate.from(Temporal.Now.plainDateISO().toString()),
+  calendars: buildCalendarsConfig(),
   views: [
     createViewDay(),
     createViewWeek(),
@@ -89,6 +126,19 @@ const calendarApp = createCalendar({
     // and once on initial render
     onRangeUpdate(range) {
       loadViewEvents(range)
+    },
+    onClickPlusEvents(some) {
+      console.log('Clicked plus events', some)
+    },
+    onDoubleClickEvent(event) {
+      console.log('Double clicked event', event)
+    },
+    onEventClick(event) {
+      googleCalendarStore.setSelectedEvent(event)
+      googleCalendarStore.setEventModal(true)
+    },
+    onSelectedDateUpdate(event) {
+      console.log('onSelectedDateUpdate', event)
     },
   },
 })
@@ -112,5 +162,19 @@ onMounted(() => {
 <template>
   <div class="flex-1 overflow-auto">
     <ScheduleXCalendar :calendar-app="calendarApp" />
+
+    <SupaModal
+      v-if="isEventModalOpen"
+      @close="googleCalendarStore.setEventModal(false)"
+      scrollable-content
+      show-close-button
+      :title="selectedEvent?.title || 'Event details'"
+    >
+      <template #default>
+        <p>{{ selectedEvent?.creator_email }} - {{ selectedEvent?.end_at }}</p>
+        <p>{{ selectedEvent?.location }}</p>
+        <p>{{ selectedEvent?.description }}</p>
+      </template>
+    </SupaModal>
   </div>
 </template>

@@ -11,7 +11,7 @@ const { user } = storeToRefs(userStore)
 </script>
 
 <template>
-  <div>
+  <div class="p-4">
     Hello {{ user?.email }}!
   </div>
 </template>

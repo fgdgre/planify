@@ -13,6 +13,8 @@ export const useGoogleCalendarStore = defineStore('google-calendar', () => {
   const calendarEvents = ref<UserCalendarEvents>({})
   const loading = ref<boolean>(false)
   const viewRange = ref<ViewDateRange | null>(null)
+  const selectedEvent = ref<CalendarEvent | null>(null)
+  const isEventModalOpen = ref(false)
 
   // getters
   const getAccounts = computed(() => accounts.value)
@@ -36,6 +38,12 @@ export const useGoogleCalendarStore = defineStore('google-calendar', () => {
   const setViewRange = (range: ViewDateRange) => {
     viewRange.value = range
   }
+  const setEventModal = (state: boolean) => {
+    isEventModalOpen.value = state
+  }
+  const setSelectedEvent = (event: CalendarEvent) => {
+    selectedEvent.value = event
+  }
 
   return {
     getAccounts,
@@ -43,9 +51,13 @@ export const useGoogleCalendarStore = defineStore('google-calendar', () => {
     getAllEvents,
     isLoading,
     viewRange,
+    selectedEvent,
+    isEventModalOpen,
     setLoading,
     setAccounts,
     setCalendarEvents,
     setViewRange,
+    setEventModal,
+    setSelectedEvent,
   }
 })

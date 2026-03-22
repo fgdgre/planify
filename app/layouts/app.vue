@@ -18,7 +18,7 @@ const { isSidebarCollapsed } = storeToRefs(sidebarStore)
 
     <main class="main pl-[var(--sidebar-width)]">
       <h1 class="text-2xl font-medium p-4 pb-4 border-b border-border">{{ layoutTitle }}</h1>
-      <div class="p-4 overflow-hidden flex flex-col flex-1">
+      <div class="overflow-hidden flex flex-col flex-1">
         <slot />
       </div>
     </main>
