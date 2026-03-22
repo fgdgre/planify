@@ -3,8 +3,9 @@ import { resolve } from "path";
 
 const alias = {
   "@features": resolve(__dirname, "app/features"),
-  "@assets": resolve(__dirname, "app/assets"),
+  "@entities": resolve(__dirname, "app/entities"),
   "@shared": resolve(__dirname, "app/shared"),
+  "@assets": resolve(__dirname, "app/assets"),
 }
 
 export default defineNuxtConfig({

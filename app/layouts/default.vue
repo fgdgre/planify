@@ -1,25 +1,16 @@
 <script setup lang="ts">
+import { useAppSidebar, AppSidebar } from "@entities/sidebar";
+
+const route = useRoute()
+
+const layoutTitle = computed(() => route.meta.title)
+
+const sidebarStore = useAppSidebar()
+const { isSidebarCollapsed } = storeToRefs(sidebarStore)
 </script>
 
 <template>
-<div>
-<!--  <SupaSidebar-->
-<!--    :overlay="false"-->
-<!--    :model-value="true"-->
-<!--  >-->
-<!--    <template #title>-->
-<!--      Planifyy-->
-<!--    </template>-->
-<!--    <template #content>-->
-<!--      <p class="text-foreground">sadsqweqwa</p>-->
-<!--      asdsad-->
-<!--    </template>-->
-<!--   <template #footer>-->
-<!--     <div class="flex justify-between items-center p-4">-->
-<!--      sadsa-->
-<!--     </div>-->
-<!--   </template>-->
-<!--  </SupaSidebar>-->
-  <slot />
-</div>
+  <main class="main pl-[var(--sidebar-width)]">
+    <slot />
+  </main>
 </template>

@@ -39,9 +39,9 @@ const sizeClass = computed(() => {
 })
 
 const addExpectedStyles = (el: Element) => {
-  el.classList.add(sizeClass.value, 'text-foreground')
+  el.classList.add(sizeClass.value, 'stroke-foreground')
   if (props.ui?.icon) {
-    el.classList.add(...props.ui?.icon.split(' '))
+    el.classList.add(...props.ui.icon.trim().split(/\s+/))
   }
 }
 

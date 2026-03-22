@@ -2,7 +2,6 @@ import { defineStore } from "pinia";
 import type { User } from "@shared/types/user";
 
 export const useUserStore = defineStore("user", () => {
-  // FIXME: type this with tyoes from supabase
   const user = ref<User | null>(null)
   const loading = ref(false)
   const isAuthenticated = computed(() => !!user.value)

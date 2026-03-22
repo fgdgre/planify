@@ -1,22 +1,17 @@
 <script setup lang="ts">
 import { useLogout, useUserStore } from "@features/auth";
 
+definePageMeta({
+  title: 'Settings',
+  layout: 'app',
+})
+
 const userStore = useUserStore()
 const { user } = storeToRefs(userStore)
-
-const { loading, logout } = useLogout()
 </script>
 
 <template>
   <div>
     Hello {{ user?.email }}!
-
-    <SupaButton
-      @click="logout"
-      :loading="loading"
-    >
-      logout
-    </SupaButton>
-
   </div>
 </template>

@@ -1,7 +1,7 @@
 import { tv } from 'tailwind-variants'
 
 export const wrapper = tv({
-  base: 'flex flex-col bg-modal text-sidebar-foreground w-[80%] max-w-[370px] h-[100dvh] box-border fixed top-0 z-30 border-r border-border text-sidebar-foreground',
+  base: 'flex flex-col bg-sidebar-background text-sidebar-foreground w-[80%] max-w-[370px] h-[100dvh] box-border fixed top-0 z-30 border-r border-border text-sidebar-foreground',
   variants: {
     open: {
       true: '',
@@ -72,4 +72,22 @@ export const footerWrapper = tv({
 
 export const footer = tv({
   base: 'flex items-center text-foreground h-8 p-2 box-content overflow-hidden w-full',
+})
+
+export const groupItem = tv({
+  base: 'flex items-center hover:bg-sidebar-foreground/10 rounded-md cursor-pointer select-none transition-colors pointer-events-auto font-display w-full bg-transparent text-sidebar-foreground p-2 hover:bg-sidebar-foreground/10 justify-start text-sm gap-2 outline-none focus-visible:[box-shadow:inset_0_0_0_1px] mt-1',
+  variants: {
+    subListItem: {
+      true: 'py-0 h-[28px]',
+      false: '',
+    },
+    activeItem: {
+      true: 'bg-sidebar-foreground/20 text-white  hover:bg-sidebar-foreground/20',
+      false: '',
+    },
+    wrap: {
+      true: '',
+      false: 'text-nowrap h-8 py-1',
+    },
+  },
 })
