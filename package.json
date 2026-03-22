@@ -7,7 +7,7 @@
     "dev": "nuxt dev",
     "prepare": "nuxt prepare",
     "typecheck": "nuxt typecheck",
-    "db:types": "supabase gen types typescript --project-id piqouitlhtmlnvyzvftd --schema public > shared/api/supabase/database.types.ts"
+    "db:types": "supabase gen types typescript --project-id piqouitlhtmlnvyzvftd --schema public > app/shared/api/supabase/types/database.ts"
   },
   "dependencies": {
     "@internationalized/date": "^3.12.0",
@@ -15,6 +15,9 @@
     "@nuxtjs/supabase": "^2.0.4",
     "@nuxtjs/tailwindcss": "6.14.0",
     "@pinia/nuxt": "0.11.3",
+    "@schedule-x/calendar": "^4.3.1",
+    "@schedule-x/theme-default": "^4.3.1",
+    "@schedule-x/vue": "^4.1.0",
     "@supabase/supabase-js": "^2.97.0",
     "@tailwindcss/vite": "^4.2.0",
     "@vueuse/core": "^14.2.1",
@@ -27,6 +30,7 @@
     "tailwind-merge": "^3.5.0",
     "tailwind-variants": "^3.2.2",
     "tailwindcss": "^4.2.0",
+    "temporal-polyfill": "^0.3.2",
     "vue": "^3.5.28",
     "vue-router": "^4.6.4",
     "zod": "^4.3.6"

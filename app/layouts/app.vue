@@ -18,7 +18,7 @@ const { isSidebarCollapsed } = storeToRefs(sidebarStore)
 
     <main class="main pl-[var(--sidebar-width)]">
       <h1 class="text-2xl font-medium p-4 pb-4 border-b border-border">{{ layoutTitle }}</h1>
-      <div class="p-4">
+      <div class="p-4 overflow-hidden flex flex-col flex-1">
         <slot />
       </div>
     </main>
@@ -45,6 +45,9 @@ const { isSidebarCollapsed } = storeToRefs(sidebarStore)
 .main {
   transition: padding 0.25s ease-in-out;
   will-change: transform, padding;
+  display: flex;
+  flex-direction: column;
+  height: 100svh;
 }
 
 .sidebar {
@@ -58,22 +61,5 @@ const { isSidebarCollapsed } = storeToRefs(sidebarStore)
 
 .data-\[state\=closed\]\:animate-slideUp[data-state='closed'] {
   animation: slideUp 0.25s ease;
-}
-
-@keyframes slideDown {
-  0% {
-    height: 0;
-  }
-  100% {
-    height: var(--radix-collapsible-content-height);
-  }
-}
-@keyframes slideUp {
-  100% {
-    height: 0;
-  }
-  0% {
-    height: var(--radix-collapsible-content-height);
-  }
 }
 </style>

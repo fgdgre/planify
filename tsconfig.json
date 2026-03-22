@@ -21,6 +21,7 @@
       "@features/*": ["app/modules/*"],
       "@shared/*": ["app/shared/*"],
       "@assets/*": ["app/assets/*"],
+      "@entities/*": ["app/entities/*"],
     },
     "allowImportingTsExtensions": true
   }
