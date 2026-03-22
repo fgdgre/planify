@@ -1,5 +1,5 @@
 import type { Database } from "@shared/api/supabase/types/database";
 
-export type GoogleCalendarEvent = Database['public']['Tables']['google_calendars']['Row']
+export type CalendarEvent = Database['public']['Tables']['calendar_events']['Row']
 
-export type UserCalendarEvents = Record<string, GoogleCalendarEvent[]>
+export type UserCalendarEvents = Record<string, CalendarEvent[]>

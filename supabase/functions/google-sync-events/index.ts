@@ -36,10 +36,14 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization')
+
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
         status: 401,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        },
       })
     }
 
@@ -129,7 +133,19 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ synced: allRows.length }), {
+    const { data: events, error: selectError } = await admin
+      .from('calendar_events')
+      .select('*')
+      .eq('google_account_id', googleAccountId)
+      .gte('start_at', timeMin)
+      .lte('end_at', timeMax)
+      .order('start_at', { ascending: true })
+
+    if (selectError) {
+      throw new Error(selectError.message)
+    }
+
+    return new Response(JSON.stringify({ synced: allRows.length, events: events ?? [] }), {
       headers: { 'Content-Type': 'application/json', ...corsHeaders },
     })
   } catch (error) {

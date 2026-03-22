@@ -1,44 +1,24 @@
 
 [functions.google-oauth-start]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/google-oauth-start/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
 entrypoint = "./functions/google-oauth-start/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/google-oauth-start/*.html" ]
 
 [functions.google-oauth-callback]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/google-oauth-callback/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
 entrypoint = "./functions/google-oauth-callback/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/google-oauth-callback/*.html" ]
 
 [functions.google-list-calendars]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/google-list-calendars/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
 entrypoint = "./functions/google-list-calendars/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/google-list-calendars/*.html" ]
 
 [functions.google-sync-events]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/google-sync-events/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
 entrypoint = "./functions/google-sync-events/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/google-sync-events/*.html" ]
