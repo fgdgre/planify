@@ -153,8 +153,14 @@ export const useGoogleCalendar = () => {
   }
 
   const loadEventsFromDb = async (googleAccountId: string) => {
-    const timeMin = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-    const timeMax = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString()
+    const range = googleCalendarStore.viewRange
+
+    // Only load events when we know the current calendar view range.
+    // The range is set by the Schedule-X watcher in calendar.vue.
+    if (!range) return
+
+    const timeMin = range.start
+    const timeMax = range.end
 
     const { data, error } = await supabase
       .from('calendar_events')
@@ -164,7 +170,7 @@ export const useGoogleCalendar = () => {
       .lte('end_at', timeMax)
       .order('start_at', { ascending: true })
 
-    console.log('loadEventsFromDb:', { googleAccountId, error, count: data?.length })
+    console.log('loadEventsFromDb:', { googleAccountId, error, count: data?.length, timeMin, timeMax })
 
     if (error) {
       showErrorToast({ title: 'Error', description: error.message })

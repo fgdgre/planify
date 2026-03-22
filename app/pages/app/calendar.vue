@@ -8,6 +8,9 @@ import type { CalendarEvent } from '@features/integrations/google-calendar'
 // stores
 import { useGoogleCalendarStore } from "@features/integrations/google-calendar/stores/google-calendar";
 
+// composables
+import { useGoogleCalendar } from "@features/integrations/google-calendar";
+
 // components
 import { ScheduleXCalendar } from '@schedule-x/vue'
 
@@ -29,6 +32,7 @@ definePageMeta({
 
 const googleCalendarStore = useGoogleCalendarStore()
 const { getAllEvents } = storeToRefs(googleCalendarStore)
+const { loadEventsFromDb } = useGoogleCalendar()
 
 const parseTemporalStart = (dateString: string, allDay: boolean) => {
   if (allDay) {
@@ -53,6 +57,22 @@ const mapToScheduleXEvent = (event: CalendarEvent): CalendarEventExternal => {
   }
 }
 
+const fetchEvents = async () => {
+  const accounts = googleCalendarStore.getAccounts
+  accounts.forEach((account) => {
+    loadEventsFromDb(account.id)
+  })
+}
+
+const loadViewEvents = (range: { start: Temporal.ZonedDateTime, end: Temporal.ZonedDateTime }) => {
+  const start = range.start.toInstant().toString()
+  const end = range.end.toInstant().toString()
+
+  googleCalendarStore.setViewRange({ start, end })
+
+  fetchEvents()
+}
+
 // Do not use a ref here, as the calendar instance is not reactive, and doing so might cause issues
 // For updating events, use the events facade
 const calendarApp = createCalendar({
@@ -64,13 +84,29 @@ const calendarApp = createCalendar({
     createViewMonthAgenda(),
   ],
   events: [],
+  callbacks: {
+    // Called by Schedule-X every time the visible range changes (navigation, view switch)
+    // and once on initial render
+    onRangeUpdate(range) {
+      loadViewEvents(range)
+    },
+  },
 })
 
+// Reactively push events from the store into the Schedule-X calendar
 watch(getAllEvents, (events) => {
-  console.log('events', events)
   const mapped = events.map(mapToScheduleXEvent)
   calendarApp.events.set(mapped)
 }, { immediate: true })
+
+onMounted(() => {
+  // onRangeUpdate may not have fired yet on initial render,
+  // so read the range directly from the calendar instance
+  const range = calendarApp.$app?.calendarState.range.value
+  if (range) {
+    loadViewEvents(range)
+  }
+})
 </script>
 
 <template>
