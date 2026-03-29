@@ -48,7 +48,7 @@ const {
   events,
 } = storeToRefs(calendarStore)
 
-const { loadViewEvents, fetchEvents } = useCalendar()
+const { loadViewEvents } = useCalendar()
 const { updateEvent } = useInternalEvents()
 
 const buildCalendarsConfig = () => {
@@ -87,19 +87,20 @@ const calendarApp = createCalendar({
     },
     onEventClick(event) {
       const storeEvent = events.value.find((e) => e.id === String(event.id))
+      console.log(storeEvent)
       if (storeEvent) {
         calendarStore.setSelectedEvent(storeEvent)
         calendarStore.setEventModalOpen(true)
       }
     },
     onClickDateTime(dateTime) {
-      const start = dateTime.toInstant().toString()
-      const end = dateTime.add({ hours: 1 }).toInstant().toString()
-      calendarStore.openCreateModal({ start_at: start, end_at: end, all_day: false })
+      const start = new Date(dateTime.toInstant().epochMilliseconds)
+      const end = new Date(dateTime.add({ hours: 1 }).toInstant().epochMilliseconds)
+      calendarStore.openCreateModal({ date: { start, end }, all_day: false })
     },
     onClickDate(date) {
-      const iso = date.toString()
-      calendarStore.openCreateModal({ start_at: iso, end_at: iso, all_day: true })
+      const d = new Date(date.toString())
+      calendarStore.openCreateModal({ date: { start: d, end: d }, all_day: true })
     },
     onBeforeEventUpdate(oldEvent) {
       // Only allow drag/resize on internal events
@@ -110,19 +111,31 @@ const calendarApp = createCalendar({
       const storeEvent = events.value.find((e) => e.id === String(updatedEvent.id))
       if (!storeEvent || storeEvent.source !== 'internal') return
 
-      // Convert ScheduleX Temporal values back to ISO strings
-      const startStr = typeof updatedEvent.start === 'string'
-        ? updatedEvent.start
-        : updatedEvent.start.toString().replace(/\[.*\]$/, '')
-      const endStr = typeof updatedEvent.end === 'string'
-        ? updatedEvent.end
-        : updatedEvent.end.toString().replace(/\[.*\]$/, '')
+      const toMs = (v: unknown): number => {
+        if (typeof v === 'string') return new Date(v.replace(/\[.*\]$/, '')).getTime()
+        if (v && typeof v === 'object' && 'epochMilliseconds' in v) return (v as any).epochMilliseconds
+        return new Date(String(v)).getTime()
+      }
 
-      await updateEvent(storeEvent.id, {
-        start_at: new Date(startStr).toISOString(),
-        end_at: new Date(endStr).toISOString(),
+      const newStartMs = toMs(updatedEvent.start)
+      const newEndMs = toMs(updatedEvent.end)
+      const oldStartMs = new Date(storeEvent.start_at.replace(/\[.*\]$/, '')).getTime()
+      const oldEndMs = new Date(storeEvent.end_at.replace(/\[.*\]$/, '')).getTime()
+
+      if (newStartMs === oldStartMs && newEndMs === oldEndMs) return
+
+      const result = await updateEvent(storeEvent.id, {
+        start_at: new Date(newStartMs).toISOString(),
+        end_at: new Date(newEndMs).toISOString(),
       })
-      await fetchEvents()
+
+      // Update the store event in-place instead of refetching everything
+      if (result) {
+        const idx = events.value.findIndex((e) => e.id === storeEvent.id)
+        if (idx !== -1) {
+          events.value[idx] = { ...events.value[idx], start_at: result.start_at, end_at: result.end_at }
+        }
+      }
     },
   },
 }, [createDragAndDropPlugin(), createResizePlugin()])

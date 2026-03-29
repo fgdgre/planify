@@ -116,6 +116,10 @@ const handleDelete = async () => {
           <span>{{ selectedEvent.creator_email }}</span>
         </div>
 
+        <div v-if="selectedEvent?.html_link" class="flex items-start gap-2 text-blue-600">
+          <a :href="selectedEvent?.html_link">Link to original event</a>
+        </div>
+
         <!-- Description -->
         <div v-if="selectedEvent?.description" class="border-t pt-3 mt-3">
           <div class="prose prose-sm max-w-none text-gray-700" v-html="sanitize(selectedEvent.description)" />

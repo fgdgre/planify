@@ -11,6 +11,8 @@ export const parseTemporalStart = (dateString: string, allDay: boolean) => {
 }
 
 export const mapToScheduleXEvent = (event: CalendarEventDisplay): CalendarEventExternal => {
+  const isReadOnly = event.source !== 'internal'
+
   return {
     id: event.id,
     start: parseTemporalStart(event.start_at, event.all_day),
@@ -19,5 +21,9 @@ export const mapToScheduleXEvent = (event: CalendarEventDisplay): CalendarEventE
     description: event.description,
     location: event.location,
     calendarId: event.sourceAccountId,
+    _options: {
+      disableDND: isReadOnly,
+      disableResize: isReadOnly,
+    },
   }
 }

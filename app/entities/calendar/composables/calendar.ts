@@ -14,6 +14,7 @@ const mapEventToDisplay = (event: CalendarEvent): CalendarEventDisplay => ({
   description: event.description ?? undefined,
   location: event.location ?? undefined,
   creator_email: event.creator_email ?? undefined,
+  html_link: event.html_link ?? undefined,
   sourceAccountId: event.is_internal ? `internal_${event.user_id}` : event.google_account_id,
   source: event.is_internal ? 'internal' : 'google',
 })

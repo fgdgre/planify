@@ -16,6 +16,7 @@ export interface CalendarEventDisplay {
   description?: string
   location?: string
   creator_email?: string
+  html_link?: string
   /** Identifier used to assign per-account colors in ScheduleX */
   sourceAccountId?: string
   /** Discriminator for event origin */
@@ -28,7 +29,6 @@ export interface EventFormData {
   title: string
   description: string
   location: string
-  start_at: string
-  end_at: string
+  date: { start: Date | undefined; end: Date | undefined }
   all_day: boolean
 }
