@@ -1,10 +1,11 @@
 import { useCalendarStore } from '../stores/calendar'
 import { useGoogleCalendarStore } from '@features/integrations/google-calendar'
 import { useGoogleCalendar } from '@features/integrations/google-calendar'
+import { useInternalEvents } from './useInternalEvents'
 import type { CalendarEventDisplay } from '../types'
 import type { CalendarEvent } from '@features/integrations/google-calendar'
 
-const mapGoogleEventToDisplay = (event: CalendarEvent): CalendarEventDisplay => ({
+const mapEventToDisplay = (event: CalendarEvent): CalendarEventDisplay => ({
   id: event.id,
   title: event.title ?? '(No title)',
   start_at: event.start_at,
@@ -13,7 +14,8 @@ const mapGoogleEventToDisplay = (event: CalendarEvent): CalendarEventDisplay => 
   description: event.description ?? undefined,
   location: event.location ?? undefined,
   creator_email: event.creator_email ?? undefined,
-  sourceAccountId: event.google_account_id,
+  sourceAccountId: event.is_internal ? `internal_${event.user_id}` : event.google_account_id,
+  source: event.is_internal ? 'internal' : 'google',
 })
 
 export const useCalendar = () => {
@@ -21,16 +23,20 @@ export const useCalendar = () => {
   const googleCalendarStore = useGoogleCalendarStore()
   const { accounts, allEvents } = storeToRefs(googleCalendarStore)
   const { loadEventsFromDb } = useGoogleCalendar()
+  const { loadEvents: loadInternalEvents } = useInternalEvents()
 
   const fetchEvents = async () => {
     const range = calendarStore.viewRange
     if (!range) return
 
-    await Promise.allSettled(
-      accounts.value.map((account) => loadEventsFromDb(account.id, range))
-    )
+    // Load google + internal events in parallel
+    await Promise.allSettled([
+      ...accounts.value.map((account) => loadEventsFromDb(account.id, range)),
+      loadInternalEvents(range),
+    ])
 
-    const mapped = allEvents.value.map(mapGoogleEventToDisplay)
+    // All events (google + internal) are now in the google calendar store, mapped uniformly
+    const mapped = allEvents.value.map(mapEventToDisplay)
     calendarStore.setEvents(mapped)
   }
 

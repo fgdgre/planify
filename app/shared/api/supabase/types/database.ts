@@ -17,15 +17,16 @@ export type Database = {
       calendar_events: {
         Row: {
           all_day: boolean
-          calendar_id: string
+          calendar_id: string | null
           creator_email: string | null
           description: string | null
           end_at: string
           etag: string | null
-          external_event_id: string
-          google_account_id: string
+          external_event_id: string | null
+          google_account_id: string | null
           html_link: string | null
           id: string
+          is_internal: boolean
           location: string | null
           organizer_email: string | null
           start_at: string
@@ -37,15 +38,16 @@ export type Database = {
         }
         Insert: {
           all_day?: boolean
-          calendar_id: string
+          calendar_id?: string | null
           creator_email?: string | null
           description?: string | null
           end_at: string
           etag?: string | null
-          external_event_id: string
-          google_account_id: string
+          external_event_id?: string | null
+          google_account_id?: string | null
           html_link?: string | null
           id?: string
+          is_internal?: boolean
           location?: string | null
           organizer_email?: string | null
           start_at: string
@@ -57,15 +59,16 @@ export type Database = {
         }
         Update: {
           all_day?: boolean
-          calendar_id?: string
+          calendar_id?: string | null
           creator_email?: string | null
           description?: string | null
           end_at?: string
           etag?: string | null
-          external_event_id?: string
-          google_account_id?: string
+          external_event_id?: string | null
+          google_account_id?: string | null
           html_link?: string | null
           id?: string
+          is_internal?: boolean
           location?: string | null
           organizer_email?: string | null
           start_at?: string
@@ -254,6 +257,7 @@ export type Database = {
         Row: {
           created_at: string
           email: string | null
+          events_colors: Json
           first_name: string | null
           id: string
           last_name: string | null
@@ -261,6 +265,7 @@ export type Database = {
         Insert: {
           created_at?: string
           email?: string | null
+          events_colors?: Json
           first_name?: string | null
           id: string
           last_name?: string | null
@@ -268,6 +273,7 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string | null
+          events_colors?: Json
           first_name?: string | null
           id?: string
           last_name?: string | null

@@ -1,4 +1,4 @@
-import type { CalendarEventDisplay, ViewDateRange } from '../types'
+import type { CalendarEventDisplay, ViewDateRange, EventFormMode, EventFormData } from '../types'
 
 export const ACCOUNT_COLORS = [
   {
@@ -27,12 +27,26 @@ export const ACCOUNT_COLORS = [
   },
 ]
 
+export const INTERNAL_CALENDAR_COLOR = {
+  colorName: 'gray',
+  lightColors: {
+    main: 'rgb(120, 120, 120)',
+    container: 'rgba(120, 120, 120, 0.2)',
+    onContainer: 'rgb(120, 120, 120)',
+  },
+}
+
 export const useCalendarStore = defineStore('calendar', () => {
   // state
   const events = ref<CalendarEventDisplay[]>([])
   const viewRange = ref<ViewDateRange | null>(null)
   const selectedEvent = ref<CalendarEventDisplay | null>(null)
   const isEventModalOpen = ref(false)
+
+  // event form modal state
+  const isEventFormModalOpen = ref(false)
+  const eventFormMode = ref<EventFormMode>('create')
+  const eventFormPrefill = ref<Partial<EventFormData> | null>(null)
 
   // actions
   const setEvents = (value: CalendarEventDisplay[]) => {
@@ -48,14 +62,37 @@ export const useCalendarStore = defineStore('calendar', () => {
     isEventModalOpen.value = state
   }
 
+  const openCreateModal = (prefill?: Partial<EventFormData>) => {
+    eventFormPrefill.value = prefill ?? null
+    eventFormMode.value = 'create'
+    isEventFormModalOpen.value = true
+  }
+
+  const openEditModal = (event: CalendarEventDisplay) => {
+    selectedEvent.value = event
+    eventFormMode.value = 'edit'
+    isEventFormModalOpen.value = true
+  }
+
+  const closeFormModal = () => {
+    isEventFormModalOpen.value = false
+    eventFormPrefill.value = null
+  }
+
   return {
     events,
     viewRange,
     selectedEvent,
     isEventModalOpen,
+    isEventFormModalOpen,
+    eventFormMode,
+    eventFormPrefill,
     setEvents,
     setViewRange,
     setSelectedEvent,
     setEventModalOpen,
+    openCreateModal,
+    openEditModal,
+    closeFormModal,
   }
 })

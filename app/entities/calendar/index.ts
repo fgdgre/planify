@@ -1,3 +1,4 @@
 export { useCalendarStore } from './stores/calendar'
 export { useCalendar } from './composables/calendar'
-export type { CalendarEventDisplay, ViewDateRange } from './types'
+export { useInternalEvents } from './composables/useInternalEvents'
+export type { CalendarEventDisplay, ViewDateRange, EventFormMode, EventFormData } from './types'

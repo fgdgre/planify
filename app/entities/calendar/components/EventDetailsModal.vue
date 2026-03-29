@@ -1,15 +1,25 @@
 <script lang="ts" setup>
 import DOMPurify from 'dompurify'
 import type { CalendarEventDisplay } from '@entities/calendar'
+import { useCalendarStore } from '@entities/calendar/stores/calendar'
+import { useInternalEvents } from '@entities/calendar/composables/useInternalEvents'
+import { useCalendar } from '@entities/calendar/composables/calendar'
 
 const props = defineProps<{
-  title?: string
   selectedEvent?: CalendarEventDisplay
 }>()
 
-defineEmits<{
-  close: [],
+const emit = defineEmits<{
+  close: []
 }>()
+
+const calendarStore = useCalendarStore()
+const { deleteEvent } = useInternalEvents()
+const { fetchEvents } = useCalendar()
+
+const deleting = ref(false)
+
+const isInternal = computed(() => props.selectedEvent?.source === 'internal')
 
 const sanitize = (html: string) => DOMPurify.sanitize(html, {
   ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'br', 'p', 'ul', 'ol', 'li', 'u'],
@@ -40,20 +50,17 @@ const formatDate = (isoString: string, allDay: boolean) => {
 
 const formattedTime = computed(() => {
   const event = props.selectedEvent
-  console.log(event)
   if (!event) return ''
 
   const start = formatDate(event.start_at, event.all_day)
   const end = formatDate(event.end_at, event.all_day)
-  console.log(event.start_at)
-  console.log(start, end)
 
   if (event.all_day) {
     return start === end ? start : `${start} – ${end}`
   }
 
-  const startDate = new Date(event.start_at)
-  const endDate = new Date(event.end_at)
+  const startDate = new Date(event.start_at.replace(/\[.*\]$/, ''))
+  const endDate = new Date(event.end_at.replace(/\[.*\]$/, ''))
   const sameDay = startDate.toDateString() === endDate.toDateString()
 
   if (sameDay) {
@@ -63,6 +70,23 @@ const formattedTime = computed(() => {
 
   return `${start} – ${end}`
 })
+
+const handleEdit = () => {
+  if (!props.selectedEvent) return
+  emit('close')
+  calendarStore.openEditModal(props.selectedEvent)
+}
+
+const handleDelete = async () => {
+  if (!props.selectedEvent) return
+  deleting.value = true
+  const success = await deleteEvent(props.selectedEvent.id)
+  deleting.value = false
+  if (success) {
+    emit('close')
+    await fetchEvents()
+  }
+}
 </script>
 
 <template>
@@ -96,6 +120,17 @@ const formattedTime = computed(() => {
         <div v-if="selectedEvent?.description" class="border-t pt-3 mt-3">
           <div class="prose prose-sm max-w-none text-gray-700" v-html="sanitize(selectedEvent.description)" />
         </div>
+      </div>
+    </template>
+
+    <template v-if="isInternal" #actions>
+      <div class="flex gap-2 w-full">
+        <SupaButton color="primary" @click="handleEdit">
+          Edit
+        </SupaButton>
+        <SupaButton color="error" :loading="deleting" @click="handleDelete">
+          Delete
+        </SupaButton>
       </div>
     </template>
   </SupaModal>

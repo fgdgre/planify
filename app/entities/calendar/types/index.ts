@@ -18,4 +18,17 @@ export interface CalendarEventDisplay {
   creator_email?: string
   /** Identifier used to assign per-account colors in ScheduleX */
   sourceAccountId?: string
+  /** Discriminator for event origin */
+  source: 'internal' | 'google'
+}
+
+export type EventFormMode = 'create' | 'edit'
+
+export interface EventFormData {
+  title: string
+  description: string
+  location: string
+  start_at: string
+  end_at: string
+  all_day: boolean
 }
