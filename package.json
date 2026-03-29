@@ -23,6 +23,7 @@
     "@vueuse/core": "^14.2.1",
     "@vueuse/nuxt": "14.2.1",
     "deno": "^2.7.5",
+    "dompurify": "^3.3.3",
     "lodash": "^4.17.23",
     "nuxt": "^4.3.1",
     "pinia": "^3.0.4",

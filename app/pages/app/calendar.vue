@@ -20,6 +20,7 @@ import {
 } from '@schedule-x/calendar'
 import '@schedule-x/theme-default/dist/index.css'
 import 'temporal-polyfill/global'
+import EventDetailsModal from "@entities/calendar/components/EventDetailsModal.vue";
 
 definePageMeta({
   layout: 'app',
@@ -27,8 +28,8 @@ definePageMeta({
   middleware: ['google-calendar-events'],
 })
 
-const calendarStore = useCalendarStore()
 const googleCalendarStore = useGoogleCalendarStore()
+const calendarStore = useCalendarStore()
 const { selectedEvent, isEventModalOpen, events } = storeToRefs(calendarStore)
 const { loadViewEvents } = useCalendar()
 
@@ -57,18 +58,11 @@ const calendarApp = createCalendar({
       loadViewEvents(range)
     },
     onEventClick(event) {
-      calendarStore.setSelectedEvent({
-        id: String(event.id),
-        title: event.title ?? '(No title)',
-        start_at: String(event.start),
-        end_at: String(event.end),
-        all_day: false,
-        description: event.description,
-        location: event.location,
-        creator_email: (event as any).creator_email,
-        sourceAccountId: event.calendarId,
-      })
-      calendarStore.setEventModalOpen(true)
+      const storeEvent = events.value.find((e) => e.id === String(event.id))
+      if (storeEvent) {
+        calendarStore.setSelectedEvent(storeEvent)
+        calendarStore.setEventModalOpen(true)
+      }
     },
   },
 })
@@ -90,18 +84,11 @@ onMounted(() => {
   <div class="flex-1 overflow-auto">
     <ScheduleXCalendar :calendar-app="calendarApp" />
 
-    <SupaModal
+
+    <EventDetailsModal
       v-if="isEventModalOpen"
+      :selected-event="selectedEvent"
       @close="calendarStore.setEventModalOpen(false)"
-      scrollable-content
-      show-close-button
-      :title="selectedEvent?.title || 'Event details'"
-    >
-      <template #default>
-        <p>{{ selectedEvent?.creator_email }} - {{ selectedEvent?.end_at }}</p>
-        <p>{{ selectedEvent?.location }}</p>
-        <p>{{ selectedEvent?.description }}</p>
-      </template>
-    </SupaModal>
+    />
   </div>
 </template>
