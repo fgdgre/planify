@@ -23,8 +23,7 @@ const {
 const googleCalendarStore = useGoogleCalendarStore()
 
 const {
-  getAccounts,
-  getCalendarEvents,
+  accounts,
   isLoading,
 } = storeToRefs(googleCalendarStore)
 
@@ -42,7 +41,7 @@ onMounted(fetchConnectedAccounts)
         <div class="flex items-center gap-4">
           <h1 class="text-2xl font-bold">Google integrations</h1>
           <button
-            v-if="getAccounts.length < 3"
+            v-if="accounts.length < 3"
             class="rounded bg-black px-4 py-2 text-white"
             @click="connectGoogle"
           >
@@ -55,9 +54,9 @@ onMounted(fetchConnectedAccounts)
           {{ errorMessage }}
         </p>
 
-        <div v-if="getAccounts.length" class="flex gap-4 w-full">
+        <div v-if="accounts.length" class="flex gap-4 w-full">
           <div
-            v-for="account in getAccounts"
+            v-for="account in accounts"
             :key="account.id"
             class="rounded border p-4 space-y-3 flex-1"
           >
