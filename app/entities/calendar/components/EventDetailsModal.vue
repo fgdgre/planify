@@ -17,11 +17,10 @@ const sanitize = (html: string) => DOMPurify.sanitize(html, {
 })
 
 const formatDate = (isoString: string, allDay: boolean) => {
-  // Strip Temporal ZonedDateTime bracket annotation e.g. "[UTC]"
   const date = new Date(isoString.replace(/\[.*\]$/, ''))
 
   if (allDay) {
-    return date.toLocaleDateString(undefined, {
+    return date.toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
@@ -29,7 +28,7 @@ const formatDate = (isoString: string, allDay: boolean) => {
     })
   }
 
-  return date.toLocaleString(undefined, {
+  return date.toLocaleString('en-US', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
@@ -53,13 +52,12 @@ const formattedTime = computed(() => {
     return start === end ? start : `${start} – ${end}`
   }
 
-  // Same day: "Sat, Mar 29, 2026, 10:00 AM – 11:30 AM"
   const startDate = new Date(event.start_at)
   const endDate = new Date(event.end_at)
   const sameDay = startDate.toDateString() === endDate.toDateString()
 
   if (sameDay) {
-    const time = endDate.toLocaleString(undefined, { hour: 'numeric', minute: '2-digit' })
+    const time = endDate.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit' })
     return `${start} – ${time}`
   }
 
