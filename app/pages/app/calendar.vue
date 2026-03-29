@@ -70,6 +70,7 @@ const buildCalendarsConfig = () => {
 }
 
 // Do not use a ref — the calendar instance is stateful and not meant to be reactive.
+// v3: plugins are the second argument, not a config property.
 const calendarApp = createCalendar({
   selectedDate: Temporal.PlainDate.from(Temporal.Now.plainDateISO().toString()),
   calendars: buildCalendarsConfig(),
@@ -80,7 +81,6 @@ const calendarApp = createCalendar({
     createViewMonthAgenda(),
   ],
   events: [],
-  plugins: [createDragAndDropPlugin(), createResizePlugin()],
   callbacks: {
     onRangeUpdate(range) {
       loadViewEvents(range)
@@ -125,7 +125,7 @@ const calendarApp = createCalendar({
       await fetchEvents()
     },
   },
-})
+}, [createDragAndDropPlugin(), createResizePlugin()])
 
 // Reactively push events from the store into ScheduleX
 watch(events, (storeEvents) => {
