@@ -7,7 +7,7 @@ export const parseTemporalStart = (dateString: string, allDay: boolean) => {
   }
 
   const instant = Temporal.Instant.from(dateString)
-  return instant.toZonedDateTimeISO('UTC')
+  return instant.toZonedDateTimeISO(Temporal.Now.timeZoneId())
 }
 
 export const mapToScheduleXEvent = (event: CalendarEventDisplay): CalendarEventExternal => {

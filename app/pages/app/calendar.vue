@@ -22,6 +22,7 @@ import {
 } from '@schedule-x/calendar'
 import { createDragAndDropPlugin } from '@schedule-x/drag-and-drop'
 import { createResizePlugin } from '@schedule-x/resize'
+import { createCurrentTimePlugin } from '@schedule-x/current-time'
 import '@schedule-x/theme-default/dist/index.css'
 import 'temporal-polyfill/global'
 
@@ -51,6 +52,9 @@ const {
 const { loadViewEvents } = useCalendar()
 const { updateEvent } = useInternalEvents()
 
+// Drag-to-create state
+let dragStartDateTime: Temporal.ZonedDateTime | null = null
+
 const buildCalendarsConfig = () => {
   const accounts = googleCalendarStore.accounts
   const config: Record<string, any> = {}
@@ -74,6 +78,7 @@ const buildCalendarsConfig = () => {
 const calendarApp = createCalendar({
   selectedDate: Temporal.PlainDate.from(Temporal.Now.plainDateISO().toString()),
   calendars: buildCalendarsConfig(),
+  timezone: Temporal.Now.timeZoneId(),
   views: [
     createViewDay(),
     createViewWeek(),
@@ -87,15 +92,31 @@ const calendarApp = createCalendar({
     },
     onEventClick(event) {
       const storeEvent = events.value.find((e) => e.id === String(event.id))
-      console.log(storeEvent)
       if (storeEvent) {
         calendarStore.setSelectedEvent(storeEvent)
         calendarStore.setEventModalOpen(true)
       }
     },
+    onMouseDownDateTime(dateTime) {
+      dragStartDateTime = dateTime
+    },
     onClickDateTime(dateTime) {
-      const start = new Date(dateTime.toInstant().epochMilliseconds)
-      const end = new Date(dateTime.add({ hours: 1 }).toInstant().epochMilliseconds)
+      // If drag produced a range, use it; otherwise default to 1-hour event
+      let start: Date
+      let end: Date
+
+      if (dragStartDateTime && !dragStartDateTime.equals(dateTime)) {
+        // Ensure start < end regardless of drag direction
+        const a = dragStartDateTime.toInstant().epochMilliseconds
+        const b = dateTime.toInstant().epochMilliseconds
+        start = new Date(Math.min(a, b))
+        end = new Date(Math.max(a, b))
+      } else {
+        start = new Date(dateTime.toInstant().epochMilliseconds)
+        end = new Date(dateTime.add({ hours: 1 }).toInstant().epochMilliseconds)
+      }
+
+      dragStartDateTime = null
       calendarStore.openCreateModal({ date: { start, end }, all_day: false })
     },
     onClickDate(date) {
@@ -138,7 +159,7 @@ const calendarApp = createCalendar({
       }
     },
   },
-}, [createDragAndDropPlugin(), createResizePlugin()])
+}, [createDragAndDropPlugin(), createResizePlugin(), createCurrentTimePlugin()])
 
 // Reactively push events from the store into ScheduleX
 watch(events, (storeEvents) => {

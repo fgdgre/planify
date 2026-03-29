@@ -118,7 +118,6 @@ const uuid = self.crypto.randomUUID()
       v-model="date"
       :minValue="convertDateToCalendarDate(minValue)"
       :maxValue="convertDateToCalendarDate(maxValue)"
-      granularity="hour"
     >
       <!-- :isDateUnavailable="convertDateToCalendarDate(isDateUnavailable)"
       :defaultValue="convertDateToDateRange(defaultValue)" -->
