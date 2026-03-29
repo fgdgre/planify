@@ -6,7 +6,7 @@ export default defineNuxtRouteMiddleware(async () => {
 
   await fetchConnectedAccounts()
 
-  const accounts = googleCalendarStore.getAccounts
+  const accounts = googleCalendarStore.accounts
 
   // Each account: populate calendars table → sync events from Google → load from DB
   // Not awaited so navigation isn't blocked. The watch in calendar.vue picks up events reactively.

@@ -1,5 +1,6 @@
 import { useNotification } from "@features/notification";
 import { useGoogleCalendarStore } from "@features/integrations/google-calendar/stores/google-calendar";
+import { useCalendarStore } from "@entities/calendar";
 
 export const useGoogleCalendar = () => {
   const supabase = useSupabaseClient()
@@ -7,12 +8,9 @@ export const useGoogleCalendar = () => {
 
   const { showErrorToast } = useNotification()
   const googleCalendarStore = useGoogleCalendarStore()
+  const calendarStore = useCalendarStore()
 
   const getAccessToken = async () => {
-    // refreshSession() ensures we always have a fresh, non-expired JWT.
-    // getSession() returns a cached token that may be expired — edge functions
-    // with verify_jwt=true reject expired tokens (unlike PostgREST which
-    // auto-refreshes via the Supabase client).
     const { data, error } = await supabase.auth.refreshSession()
 
     if (error) {
@@ -153,10 +151,8 @@ export const useGoogleCalendar = () => {
   }
 
   const loadEventsFromDb = async (googleAccountId: string) => {
-    const range = googleCalendarStore.viewRange
+    const range = calendarStore.viewRange
 
-    // Only load events when we know the current calendar view range.
-    // The range is set by the Schedule-X watcher in calendar.vue.
     if (!range) return
 
     const timeMin = range.start
