@@ -1,5 +1,5 @@
-import type { CalendarEvent } from "@features/integrations/google-calendar";
-import type { CalendarEventExternal } from "@schedule-x/calendar";
+import type { CalendarEventDisplay } from '../types'
+import type { CalendarEventExternal } from '@schedule-x/calendar'
 
 export const parseTemporalStart = (dateString: string, allDay: boolean) => {
   if (allDay) {
@@ -10,14 +10,14 @@ export const parseTemporalStart = (dateString: string, allDay: boolean) => {
   return instant.toZonedDateTimeISO('UTC')
 }
 
-export const mapToScheduleXEvent = (event: CalendarEvent): CalendarEventExternal => {
+export const mapToScheduleXEvent = (event: CalendarEventDisplay): CalendarEventExternal => {
   return {
     id: event.id,
     start: parseTemporalStart(event.start_at, event.all_day),
     end: parseTemporalStart(event.end_at, event.all_day),
-    title: event.title ?? '(No title)',
-    description: event.description ?? undefined,
-    location: event.location ?? undefined,
-    calendarId: event.google_account_id,
+    title: event.title,
+    description: event.description,
+    location: event.location,
+    calendarId: event.sourceAccountId,
   }
 }

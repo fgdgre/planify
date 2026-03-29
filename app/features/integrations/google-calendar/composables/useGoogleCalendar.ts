@@ -1,6 +1,5 @@
 import { useNotification } from "@features/notification";
 import { useGoogleCalendarStore } from "@features/integrations/google-calendar/stores/google-calendar";
-import { useCalendarStore } from "@entities/calendar";
 
 export const useGoogleCalendar = () => {
   const supabase = useSupabaseClient()
@@ -8,7 +7,6 @@ export const useGoogleCalendar = () => {
 
   const { showErrorToast } = useNotification()
   const googleCalendarStore = useGoogleCalendarStore()
-  const calendarStore = useCalendarStore()
 
   const getAccessToken = async () => {
     const { data, error } = await supabase.auth.refreshSession()
@@ -88,8 +86,6 @@ export const useGoogleCalendar = () => {
     }
   }
 
-  // Populates the google_calendars DB table (needed before syncEvents).
-  // Does NOT store into the events store — these are calendar metadata, not events.
   const fetchCalendarEvents = async (googleAccountId: string) => {
     try {
       const accessToken = await getAccessToken()
@@ -119,10 +115,8 @@ export const useGoogleCalendar = () => {
     try {
       googleCalendarStore.setLoading(true)
 
-      // Always load existing events from DB first
       await loadEventsFromDb(googleAccountId)
 
-      // Then sync fresh data from Google
       const accessToken = await getAccessToken()
       const response = await fetch(
         `${config.public.supabaseUrl}/functions/v1/google-sync-events`,
@@ -141,7 +135,6 @@ export const useGoogleCalendar = () => {
         return
       }
 
-      // Reload events after successful sync
       await loadEventsFromDb(googleAccountId)
     } catch (error: any) {
       console.error('Error syncing events:', error)
@@ -150,23 +143,27 @@ export const useGoogleCalendar = () => {
     }
   }
 
-  const loadEventsFromDb = async (googleAccountId: string) => {
-    const range = calendarStore.viewRange
-
-    if (!range) return
-
-    const timeMin = range.start
-    const timeMax = range.end
-
-    const { data, error } = await supabase
+  /**
+   * Load events from DB for a given account.
+   * Accepts an optional range; if omitted, loads without date filtering (used during sync).
+   */
+  const loadEventsFromDb = async (
+    googleAccountId: string,
+    range?: { start: string; end: string },
+  ) => {
+    let query = supabase
       .from('calendar_events')
       .select('*')
       .eq('google_account_id', googleAccountId)
-      .gte('start_at', timeMin)
-      .lte('end_at', timeMax)
       .order('start_at', { ascending: true })
 
-    console.log('loadEventsFromDb:', { googleAccountId, error, count: data?.length, timeMin, timeMax })
+    if (range) {
+      query = query.gte('start_at', range.start).lte('end_at', range.end)
+    }
+
+    const { data, error } = await query
+
+    console.log('loadEventsFromDb:', { googleAccountId, error, count: data?.length })
 
     if (error) {
       showErrorToast({ title: 'Error', description: error.message })
