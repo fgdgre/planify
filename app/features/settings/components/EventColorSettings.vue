@@ -20,6 +20,7 @@ const {
   previewEventsForDay,
 } = useEventColorSettings()
 
+// FIXME: change to emits
 defineExpose({ isDirty, isSaving, save, discard })
 </script>
 
@@ -45,8 +46,17 @@ defineExpose({ isDirty, isSaving, save, discard })
           :key="source.key"
           class="space-y-3"
         >
-          <p class="text-sm font-medium truncate" :title="source.label">
+          <p
+            v-if="source.label"
+            class="text-sm font-medium truncate min-h-9"
+          >
             {{ source.label }}
+          <p
+            v-if="source.email"
+            class="text-xs truncate text-placeholder"
+          >
+            {{ source.email }}
+          </p>
           </p>
 
           <input

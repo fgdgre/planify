@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
       return new Response('Missing code or state', { status: 400 })
     }
 
-    let parsedState: { userId: string; nonce: string; ts: number }
+    let parsedState: { userId: string; nonce: string; ts: number; appOrigin?: string }
 
     try {
       parsedState = JSON.parse(atob(state))
@@ -63,8 +63,8 @@ Deno.serve(async (req) => {
       throw new Error(error.message)
     }
 
-    const appBaseUrl = getEnv('APP_BASE_URL')
-    return Response.redirect(`${appBaseUrl}/settings?google_connected=1`, 302)
+    const appBaseUrl = parsedState.appOrigin || getEnv('APP_BASE_URL')
+    return Response.redirect(`${appBaseUrl}/app/settings?google_connected=1`, 302)
   } catch (error) {
     return new Response(error instanceof Error ? error.message : 'Unknown error', {
       status: 500,

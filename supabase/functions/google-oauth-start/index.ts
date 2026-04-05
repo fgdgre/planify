@@ -1,4 +1,4 @@
-import { buildGoogleAuthUrl, requireUser } from '../_shared/google.ts'
+import { buildGoogleAuthUrl, requireUser, getEnv } from '../_shared/google.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 
 Deno.serve(async (req) => {
@@ -21,10 +21,16 @@ Deno.serve(async (req) => {
 
     const user = await requireUser(authHeader)
 
+    // Accept the app origin from the frontend so the callback can redirect back
+    // to the correct host (local dev vs production).
+    const reqUrl = new URL(req.url)
+    const appOrigin = reqUrl.searchParams.get('app_origin') || getEnv('APP_BASE_URL')
+
     const statePayload = {
       userId: user.id,
       nonce: crypto.randomUUID(),
       ts: Date.now(),
+      appOrigin,
     }
 
     const state = btoa(JSON.stringify(statePayload))

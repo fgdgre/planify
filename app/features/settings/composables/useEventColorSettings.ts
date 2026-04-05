@@ -17,7 +17,8 @@ export const useEventColorSettings = () => {
     { key: 'internal', label: 'Personal Events' },
     ...googleCalendarStore.accounts.map((account) => ({
       key: account.id,
-      label: account.display_name || account.email,
+      label: account.display_name,
+      email: account.email
     })),
   ])
 

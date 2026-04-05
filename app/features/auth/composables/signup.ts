@@ -13,6 +13,8 @@ export const useSignup = () => {
 
   const loading = ref(false)
   const formData = ref({
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
   })
@@ -22,11 +24,16 @@ export const useSignup = () => {
   const passwordInputType = ref<'password' | 'text'>('password')
 
   const touchedFields = ref({
+    firstName: false,
+    lastName: false,
     email: false,
     password: false,
   })
 
   const schema: ValidationSchema = {
+    firstName: {
+      required: { message: 'First name is required' },
+    },
     email: {
       required: { message: AUTH_VALIDATION_MESSAGES.email.required },
     },
@@ -35,26 +42,31 @@ export const useSignup = () => {
     },
   }
 
-  const errorMessages = ref<Record<keyof typeof schema, string>>({
+  const errorMessages = ref<Record<string, string>>({
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
   })
 
   const touchAllFields = () => {
+    touchedFields.value.firstName = true
+    touchedFields.value.lastName = true
     touchedFields.value.email = true
     touchedFields.value.password = true
   }
 
-  const _validateField = (value: string, key: 'email' | 'password') => {
+  const _validateField = (value: string, key: keyof typeof touchedFields.value) => {
+    if (!schema[key]) return
     const { error } = validateField(value, schema[key])
     errorMessages.value[key] = error || ''
   }
 
-  const handleFieldChange = (value: string, key: 'email' | 'password') => {
+  const handleFieldChange = (value: string, key: keyof typeof touchedFields.value) => {
     if (touchedFields.value[key]) _validateField(value, key)
   }
 
-  const handleFieldBlur = (key: 'password' | 'email') => {
+  const handleFieldBlur = (key: keyof typeof touchedFields.value) => {
     if (!touchedFields.value[key]) {
       touchedFields.value[key] = true
       _validateField(formData.value[key], key)
@@ -64,16 +76,22 @@ export const useSignup = () => {
   const signup = async () => {
     touchAllFields()
     formErrorMessage.value = ''
+    errorMessages.value = { firstName: '', lastName: '', email: '', password: '' }
 
     const signupData = {
+      firstName: formData.value.firstName.trim(),
+      lastName: formData.value.lastName.trim(),
       email: formData.value.email.trim(),
       password: formData.value.password.trim(),
     }
 
-    const { error: validationError } = validateForm(signupData, schema)
-    if (validationError) errorMessages.value = { ...validationError }
+    const { error: validationError } = validateForm(
+      { firstName: signupData.firstName, email: signupData.email, password: signupData.password },
+      schema
+    )
+    if (validationError) errorMessages.value = { ...errorMessages.value, ...validationError }
 
-    if (errorMessages.value.email || errorMessages.value.password) return
+    if (errorMessages.value.firstName || errorMessages.value.email || errorMessages.value.password) return
 
     try {
       loading.value = true
@@ -83,6 +101,10 @@ export const useSignup = () => {
         password: signupData.password,
         options: {
           emailRedirectTo: `${window.location.origin}/confirm`,
+          data: {
+            first_name: signupData.firstName,
+            last_name: signupData.lastName || null,
+          },
         },
       })
 

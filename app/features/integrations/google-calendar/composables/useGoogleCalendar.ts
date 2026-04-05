@@ -39,7 +39,8 @@ export const useGoogleCalendar = () => {
       throw new Error('No active session')
     }
 
-    const functionUrl = `${config.public.supabaseUrl}/functions/v1/google-oauth-start`
+    const appOrigin = window.location.origin
+    const functionUrl = `${config.public.supabaseUrl}/functions/v1/google-oauth-start?app_origin=${encodeURIComponent(appOrigin)}`
 
     const response = await fetch(functionUrl, {
       method: 'GET',
@@ -173,11 +174,36 @@ export const useGoogleCalendar = () => {
     googleCalendarStore.setCalendarEvents(googleAccountId, data ?? [])
   }
 
+  const deleteAccount = async (accountId: string) => {
+    try {
+      googleCalendarStore.setLoading(true)
+
+      const { error } = await supabase
+        .from('google_accounts')
+        .delete()
+        .eq('id', accountId)
+
+      if (error) {
+        showErrorToast({ title: 'Error', description: error.message })
+        return
+      }
+
+      googleCalendarStore.setAccounts(
+        googleCalendarStore.accounts.filter((a) => a.id !== accountId)
+      )
+    } catch (error: any) {
+      showErrorToast({ title: 'Error', description: error.message })
+    } finally {
+      googleCalendarStore.setLoading(false)
+    }
+  }
+
   return {
     connectGoogle,
     fetchConnectedAccounts,
     fetchCalendarEvents,
     syncEvents,
     loadEventsFromDb,
+    deleteAccount,
   }
 }

@@ -58,6 +58,30 @@ const {
           />
         </template>
       </SupaInput>
+
+      <SupaInput
+        v-model="formData.firstName"
+        label="First name"
+        :error-message="errorMessages.firstName"
+        autocomplete="given-name"
+        :disabled="loading"
+        @update:model-value="(v) => handleFieldChange(v, 'firstName')"
+        @blur="handleFieldBlur('firstName')"
+      />
+
+      <SupaInput
+        v-model="formData.lastName"
+        label="Last name"
+        :error-message="errorMessages.lastName"
+        autocomplete="family-name"
+        :disabled="loading"
+        @update:model-value="(v) => handleFieldChange(v, 'lastName')"
+        @blur="handleFieldBlur('lastName')"
+      >
+        <template #label>
+          <span class="text-xs text-placeholder ml-1">(optional)</span>
+        </template>
+      </SupaInput>
     </div>
 
     <div class="w-full flex flex-col gap-4">
