@@ -95,51 +95,6 @@ export type Database = {
           },
         ]
       }
-      event_overrides: {
-        Row: {
-          calendar_id: string | null
-          created_at: string
-          external_event_id: string | null
-          google_account_id: string | null
-          hidden: boolean
-          id: string
-          user_id: string
-        }
-        Insert: {
-          calendar_id?: string | null
-          created_at?: string
-          external_event_id?: string | null
-          google_account_id?: string | null
-          hidden?: boolean
-          id?: string
-          user_id: string
-        }
-        Update: {
-          calendar_id?: string | null
-          created_at?: string
-          external_event_id?: string | null
-          google_account_id?: string | null
-          hidden?: boolean
-          id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "event_overrides_google_account_id_fkey"
-            columns: ["google_account_id"]
-            isOneToOne: false
-            referencedRelation: "google_accounts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "event_overrides_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       google_accounts: {
         Row: {
           access_token: string
@@ -257,7 +212,6 @@ export type Database = {
         Row: {
           created_at: string
           email: string | null
-          events_colors: Json
           first_name: string | null
           id: string
           last_name: string | null
@@ -265,7 +219,6 @@ export type Database = {
         Insert: {
           created_at?: string
           email?: string | null
-          events_colors?: Json
           first_name?: string | null
           id: string
           last_name?: string | null
@@ -273,7 +226,6 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string | null
-          events_colors?: Json
           first_name?: string | null
           id?: string
           last_name?: string | null
