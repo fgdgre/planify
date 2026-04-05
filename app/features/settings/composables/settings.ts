@@ -1,9 +1,10 @@
 import { useSettingsStore } from "@features/settings/stores/settings";
-import type { EventColorConfig, EventsColorsMap, UserPreferences } from "@features/settings/types";
+import type { EventColorConfig, UserPreferences } from "@features/settings/types";
 import { PRESET_COLORS, INTERNAL_CALENDAR_COLOR } from '../constants/default-accounts-colors'
 import { userPreferencesSchema } from "@features/settings/schemas/preferences";
 import { defaultPreferences } from "@features/settings/constants/preferences";
 import { useNotification } from "@features/notification";
+import type { GoogleAccount } from "@shared/types/google";
 
 export const useSettings = () => {
   const settingsStore = useSettingsStore()
@@ -18,13 +19,15 @@ export const useSettings = () => {
       .eq('user_id', userId)
       .maybeSingle()
 
-    settingsStore.setLoading(true)
+    settingsStore.setLoading(false)
 
     if (error) {
       useNotification().showErrorToast({ title: 'Error', description: error.message })
+      return
     }
 
     if (!data) {
+      settingsStore.setUserPreferences(defaultPreferences)
       void setUserPreferences(userId, defaultPreferences)
       return
     }
@@ -33,7 +36,7 @@ export const useSettings = () => {
 
     if (!parsed.success) {
       useNotification().showErrorToast({ title: 'Error', description: 'Invalid preferences' })
-      return defaultPreferences
+      return
     }
 
     settingsStore.setUserPreferences(parsed.data)
@@ -51,11 +54,15 @@ export const useSettings = () => {
         updated_at: new Date().toISOString(),
       })
 
-    settingsStore.setLoading(true)
+    settingsStore.setLoading(false)
 
     if (error) {
       useNotification().showErrorToast({ title: 'Error', description: error.message })
+      return
     }
+
+    useNotification().showSuccessToast({ title: 'Success', description: 'Preferences updated successfully' })
+    settingsStore.setUserPreferences(parsed)
   }
 
   const setEventColor = (
@@ -72,9 +79,43 @@ export const useSettings = () => {
     })
   }
 
+  /**
+   * Ensures every Google account has a color in preferences.
+   * Assigns PRESET_COLORS by account creation order for new accounts.
+   */
+  const syncAccountColors = async (userId: string, accounts: GoogleAccount[]) => {
+    const current = settingsStore.preferences ?? { ...defaultPreferences }
+    const updatedColors = { ...current.eventsColors }
+
+    // Ensure internal is always set
+    if (!updatedColors['internal']) {
+      updatedColors['internal'] = INTERNAL_CALENDAR_COLOR
+    }
+
+    // Sort oldest first so color assignment is stable
+    const sorted = [...accounts].sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    )
+
+    let changed = false
+    sorted.forEach((account, index) => {
+      if (!updatedColors[account.id]) {
+        updatedColors[account.id] = PRESET_COLORS[index % PRESET_COLORS.length]
+        changed = true
+      }
+    })
+
+    if (changed) {
+      const updated: UserPreferences = { ...current, eventsColors: updatedColors }
+      settingsStore.setUserPreferences(updated)
+      await setUserPreferences(userId, updated)
+    }
+  }
+
   return {
     getUserPreferences,
     setUserPreferences,
     setEventColor,
+    syncAccountColors,
   }
 }

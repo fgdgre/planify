@@ -5,6 +5,7 @@ import { watch } from 'vue'
 import { useCalendarStore, ACCOUNT_COLORS, INTERNAL_CALENDAR_COLOR } from '@entities/calendar/stores/calendar'
 import { useGoogleCalendarStore } from '@features/integrations/google-calendar/stores/google-calendar'
 import { useUserStore } from '@features/auth/stores/user'
+import { useSettingsStore } from '@features/settings'
 
 // composables
 import { useCalendar } from '@entities/calendar'
@@ -39,6 +40,7 @@ definePageMeta({
 const googleCalendarStore = useGoogleCalendarStore()
 const calendarStore = useCalendarStore()
 const userStore = useUserStore()
+const settingsStore = useSettingsStore()
 
 const {
   selectedEvent,
@@ -57,17 +59,16 @@ let dragStartDateTime: Temporal.ZonedDateTime | null = null
 
 const buildCalendarsConfig = () => {
   const accounts = googleCalendarStore.accounts
+  const prefs = settingsStore.preferences
   const config: Record<string, any> = {}
 
-  // Internal events calendar (keyed with internal_ prefix to match sourceAccountId)
   const userId = userStore.user?.id
   if (userId) {
-    config[`internal_${userId}`] = INTERNAL_CALENDAR_COLOR
+    config[`internal_${userId}`] = prefs?.eventsColors['internal'] ?? INTERNAL_CALENDAR_COLOR
   }
 
-  // Google account calendars
   accounts.forEach((account, index) => {
-    config[account.id] = ACCOUNT_COLORS[index % ACCOUNT_COLORS.length]
+    config[account.id] = prefs?.eventsColors[account.id] ?? ACCOUNT_COLORS[index % ACCOUNT_COLORS.length]
   })
 
   return config
@@ -165,6 +166,18 @@ const calendarApp = createCalendar({
 watch(events, (storeEvents) => {
   calendarApp.events.set(storeEvents.map(mapToScheduleXEvent))
 }, { immediate: true })
+
+// Reactively update calendar colors when settings preferences change
+watch(
+  () => settingsStore.preferences,
+  () => {
+    const newConfig = buildCalendarsConfig()
+    const internalApp = (calendarApp as any).$app
+    if (internalApp?.calendarState?.calendars) {
+      internalApp.calendarState.calendars.value = newConfig
+    }
+  }
+)
 
 onMounted(() => {
   const range = calendarApp.$app?.calendarState.range.value

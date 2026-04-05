@@ -1,4 +1,8 @@
 import type { CalendarEventDisplay, ViewDateRange, EventFormMode, EventFormData } from '../types'
+import { PRESET_COLORS, INTERNAL_CALENDAR_COLOR } from '@features/settings/constants/default-accounts-colors'
+
+export const ACCOUNT_COLORS = PRESET_COLORS
+export { INTERNAL_CALENDAR_COLOR }
 
 export const useCalendarStore = defineStore('calendar', () => {
   // state
