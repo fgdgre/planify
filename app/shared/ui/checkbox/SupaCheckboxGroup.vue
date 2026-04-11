@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { errorMessage } from '~/shared/ui/input/input'
+import { errorMessage as errorMessageClass } from '~/shared/ui/input/input'
 
 withDefaults(
   defineProps<{
@@ -36,7 +36,7 @@ const updateChecked = ({ value, id }: { value: boolean; id: string }) => {
       />
     </div>
 
-    <p v-if="errorMessage" :class="errorMessage">
+    <p v-if="errorMessage" :class="errorMessageClass()">
       {{ errorMessage }}
     </p>
   </div>
