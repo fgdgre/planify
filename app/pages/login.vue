@@ -28,7 +28,7 @@ const {
     :message="formErrorMessage"
   />
   <form
-    class="flex flex-col gap-10 items-center justify-center w-full"
+    class="flex flex-col gap-10 items-center justify-center w-full bg-black"
     @submit.prevent="login"
   >
     <div class="flex flex-col gap-4 w-full">
