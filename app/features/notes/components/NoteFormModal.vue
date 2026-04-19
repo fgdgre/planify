@@ -18,22 +18,27 @@ const { createNote } = useNotes()
 const title = ref('')
 const content = ref('')
 const linkEvent = ref(false)
-const selectedDate = ref<Date | undefined>(undefined)
+const selectedDate = ref<Date | undefined>(new Date())
 const selectedEventId = ref<string | null>(null)
 const saving = ref(false)
-const events = ref<CalendarEventDisplay[]>([])
+const eventsCache = reactive<Record<string, CalendarEventDisplay[]>>({})
 
-// filter loaded events by selected date
+const monthKey = (year: number, month: number) => `${year}-${month}`
+
+// all cached events flattened
+const allEvents = computed(() => Object.values(eventsCache).flat())
+
+// filter cached events by selected date
 const eventsForSelectedDate = computed<CalendarEventDisplay[]>(() => {
   if (!selectedDate.value) return []
 
   const selected = new Date(selectedDate.value)
-  const dayStart = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate())
-  const dayEnd = new Date(dayStart)
-  dayEnd.setDate(dayEnd.getDate() + 1)
+  // SupaCalendar returns UTC dates — compare in UTC
+  const dayStart = Date.UTC(selected.getUTCFullYear(), selected.getUTCMonth(), selected.getUTCDate())
+  const dayEnd = dayStart + 86_400_000 // +24h
 
-  return events.value.filter((event) => {
-    const eventStart = new Date(event.start_at)
+  return allEvents.value.filter((event) => {
+    const eventStart = new Date(event.start_at).getTime()
     return eventStart >= dayStart && eventStart < dayEnd
   })
 })
@@ -51,13 +56,16 @@ const selectEvent = (event: CalendarEventDisplay) => {
   selectedEventId.value = selectedEventId.value === event.id ? null : event.id
 }
 const loadMonthEvents = async (year: number, month: number) => {
+  const key = monthKey(year, month)
   const start = new Date(year, month - 1, 1)
   const end = new Date(year, month, 0, 23, 59, 59)
 
-  events.value = await fetchEventsForRange({
+  const result = await fetchEventsForRange({
     start: start.toISOString(),
     end: end.toISOString(),
   })
+
+  eventsCache[key] = result
 }
 
 // load events for current month when toggle is enabled
@@ -65,7 +73,7 @@ watch(linkEvent, async (enabled) => {
   if (!enabled) {
     selectedEventId.value = null
     selectedDate.value = undefined
-    events.value = []
+    Object.keys(eventsCache).forEach((key) => delete eventsCache[key])
     return
   }
 
@@ -102,6 +110,7 @@ const handleSubmit = async () => {
   <SupaModal
     title="Create Note"
     show-close-button
+    scrollable-content
     @close="emit('close')"
   >
     <div class="flex flex-col gap-4">

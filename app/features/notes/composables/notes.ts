@@ -22,7 +22,6 @@ export const useNotes = () => {
       useNotification().showErrorToast({ title: 'Error', description: 'User not logged in' })
       return
     }
-    console.log(userId.value)
     notesStore.setLoading(true)
 
     const { data, error } = await supabase

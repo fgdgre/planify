@@ -51,10 +51,14 @@ export const useCalendar = () => {
   }
 
   const fetchEventsForRange = async (range: { start: string, end: string }) => {
+    console.log('[fetchEventsForRange] accounts:', accounts.value.length, 'range:', range)
+
     await Promise.allSettled([
       ...accounts.value.map((account) => loadEventsFromDb(account.id, range)),
       loadInternalEvents(range),
     ])
+
+    console.log('[fetchEventsForRange] allEvents after fetch:', allEvents.value.length, 'store keys:', Object.keys(googleCalendarStore.calendarEvents))
 
     return allEvents.value.map(mapEventToDisplay)
   }
