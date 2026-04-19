@@ -28,19 +28,15 @@ const monthKey = (year: number, month: number) => `${year}-${month}`
 // all cached events flattened
 const allEvents = computed(() => Object.values(eventsCache).flat())
 
-// filter cached events by selected date
-const eventsForSelectedDate = computed<CalendarEventDisplay[]>(() => {
+// filter cached events by selected date (SupaCalendar returns UTC dates)
+const eventsForSelectedDate = computed(() => {
   if (!selectedDate.value) return []
 
-  const selected = new Date(selectedDate.value)
-  // SupaCalendar returns UTC dates — compare in UTC
-  const dayStart = Date.UTC(selected.getUTCFullYear(), selected.getUTCMonth(), selected.getUTCDate())
-  const dayEnd = dayStart + 86_400_000 // +24h
+  const dateStr = selectedDate.value.toISOString().slice(0, 10)
 
-  return allEvents.value.filter((event) => {
-    const eventStart = new Date(event.start_at).getTime()
-    return eventStart >= dayStart && eventStart < dayEnd
-  })
+  return allEvents.value
+    .filter((e) => e.start_at.slice(0, 10) === dateStr)
+    .sort((a, b) => a.start_at.localeCompare(b.start_at))
 })
 
 const formatEventTime = (isoString: string, allDay: boolean) => {
