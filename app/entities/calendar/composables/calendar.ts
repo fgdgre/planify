@@ -50,8 +50,18 @@ export const useCalendar = () => {
     await fetchEvents()
   }
 
+  const fetchEventsForRange = async (range: { start: string, end: string }) => {
+    await Promise.allSettled([
+      ...accounts.value.map((account) => loadEventsFromDb(account.id, range)),
+      loadInternalEvents(range),
+    ])
+
+    return allEvents.value.map(mapEventToDisplay)
+  }
+
   return {
     loadViewEvents,
     fetchEvents,
+    fetchEventsForRange,
   }
 }

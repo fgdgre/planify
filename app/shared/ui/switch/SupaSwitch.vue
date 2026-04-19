@@ -21,7 +21,7 @@ withDefaults(
   <label :class="[switchVariants.wrapper({ disabled })]">
     <SwitchRoot
       id="airplane-mode"
-      v-model:checked="model"
+      v-model="model"
       :class="switchVariants.switchElement({ disabled, color })"
       :disabled
     >

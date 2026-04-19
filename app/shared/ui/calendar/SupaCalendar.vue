@@ -24,9 +24,14 @@ defineProps<{
   errorMessage?: string
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'update:modelValue', value: any): void
+  (e: 'monthChange', value: { year: number; month: number }): void
 }>()
+
+const onPlaceholderChange = (value: DateValue) => {
+  emit('monthChange', { year: value.year, month: value.month })
+}
 
 const convertDateToCalendarDate = (date?: Date): DateValue | undefined =>
   date ? new CalendarDate(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate()) : undefined
@@ -44,7 +49,7 @@ const date = defineModel({
   required: true,
 })
 
-const weekDays = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'нд']
+const weekDays = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su']
 </script>
 
 <template>
@@ -53,7 +58,6 @@ const weekDays = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'нд']
 
     <CalendarRoot
       :weekDays
-      locale="uk"
       class="rounded-md bg-modal p-4 shadow-sm border w-fit"
       v-slot="{ grid }"
       :class="[errorMessage ? 'border-error' : 'border-border']"
@@ -63,6 +67,7 @@ const weekDays = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'нд']
       :defaultValue="convertDateToCalendarDate(defaultValue)"
       v-model="date"
       :weekStartsOn="0"
+      @update:placeholder="onPlaceholderChange"
       :aria-invalid="Boolean(errorMessage)"
       :aria-describedby="errorMessage"
     >
