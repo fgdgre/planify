@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import DOMPurify from 'dompurify'
 import type { CalendarEventDisplay } from '@entities/calendar'
+import type { Note } from '@features/notes'
 import { useCalendarStore } from '@entities/calendar/stores/calendar'
 import { useInternalEvents } from '@entities/calendar/composables/useInternalEvents'
 import { useCalendar } from '@entities/calendar/composables/calendar'
@@ -13,11 +14,27 @@ const emit = defineEmits<{
   close: []
 }>()
 
+const supabase = useSupabaseClient()
 const calendarStore = useCalendarStore()
 const { deleteEvent } = useInternalEvents()
 const { fetchEvents } = useCalendar()
 
 const deleting = ref(false)
+const eventNotes = ref<Note[]>([])
+
+const fetchEventNotes = async () => {
+  if (!props.selectedEvent) return
+
+  const { data } = await supabase
+    .from('notes')
+    .select('*')
+    .eq('calendar_event_id', props.selectedEvent.id)
+    .order('created_at', { ascending: false })
+
+  if (data) eventNotes.value = data
+}
+
+fetchEventNotes()
 
 const isInternal = computed(() => props.selectedEvent?.source === 'internal')
 
@@ -123,6 +140,23 @@ const handleDelete = async () => {
         <!-- Description -->
         <div v-if="selectedEvent?.description" class="border-t pt-3 mt-3">
           <div class="prose prose-sm max-w-none text-gray-700" v-html="sanitize(selectedEvent.description)" />
+        </div>
+
+        <!-- Linked Notes -->
+        <div v-if="eventNotes.length" class="border-t pt-3 mt-3 space-y-2">
+          <div class="flex items-center gap-1.5 text-gray-500">
+            <Icon name="lucide:notebook-pen" class="size-4 shrink-0" />
+            <span class="font-medium">Notes</span>
+          </div>
+
+          <div
+            v-for="note in eventNotes"
+            :key="note.id"
+            class="rounded-md border border-border bg-placeholder/10 p-3 space-y-1"
+          >
+            <p class="text-sm font-medium text-foreground">{{ note.title }}</p>
+            <p v-if="note.content" class="text-xs text-placeholder line-clamp-3">{{ note.content }}</p>
+          </div>
         </div>
       </div>
     </template>

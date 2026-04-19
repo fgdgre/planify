@@ -2,7 +2,7 @@
 import { useNotes } from '@features/notes'
 import { useUserStore } from '@features/auth'
 import NotesForm from './NotesForm.vue'
-import type { NoteFormPayload } from '../composables/useNoteForm'
+import type { NoteFormPayload } from '../composables/notes-form'
 
 const emit = defineEmits<{
   close: []

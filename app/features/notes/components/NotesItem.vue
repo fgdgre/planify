@@ -1,12 +1,42 @@
 <script setup lang="ts">
 import type { Note } from '@features/notes'
-defineProps<{
+
+const props = defineProps<{
   item: Note
 }>()
 
 const emit = defineEmits<{
   delete: []
 }>()
+
+const supabase = useSupabaseClient()
+
+const linkedEvent = ref<{ title: string; start_at: string } | null>(null)
+
+const fetchLinkedEvent = async () => {
+  if (!props.item.calendar_event_id) return
+
+  const { data } = await supabase
+    .from('calendar_events')
+    .select('title, start_at')
+    .eq('id', props.item.calendar_event_id)
+    .single()
+
+  if (data) linkedEvent.value = data
+}
+
+fetchLinkedEvent()
+
+const formattedEventDate = computed(() => {
+  if (!linkedEvent.value?.start_at) return ''
+  return new Date(linkedEvent.value.start_at).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+})
 
 const cardItemActions = [
   {
@@ -54,7 +84,7 @@ const handleItemAction = (action: string) => {
 
         <p class="text-placeholder text-sm">{{ item.content }}</p>
 
-        <div class="flex gap-2 bg-[rgba(0,0,0,0.05)] p-2">
+        <div v-if="linkedEvent" class="flex gap-2 bg-[rgba(0,0,0,0.05)] rounded-md p-2">
             <SupaIcon>
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
                 <g clip-path="url(#clip0_1_1490)">
@@ -72,8 +102,14 @@ const handleItemAction = (action: string) => {
             </SupaIcon>
 
           <div class="w-full overflow-hidden">
-            <p class="truncate">{ { title } }</p>
-            <p class="truncate">{ { data } }</p>
+            <p class="truncate text-sm text-foreground">
+              {{ linkedEvent.title }}
+            </p>
+            <p
+              v-if="formattedEventDate"
+              class="truncate text-xs text-placeholder">
+              {{ formattedEventDate }}
+            </p>
           </div>
         </div>
         <p class="text-placeholder">{{ item.created_at }}</p>

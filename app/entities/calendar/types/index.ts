@@ -31,4 +31,8 @@ export interface EventFormData {
   location: string
   date: { start: Date | undefined; end: Date | undefined }
   all_day: boolean
+  note: {
+    title: string
+    content: string
+  } | null
 }
