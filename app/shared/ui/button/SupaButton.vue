@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import * as buttonVariants from './button'
+import { button } from './button'
 
 withDefaults(
   defineProps<{
-    color?: 'error' | 'theme' | 'primary' | 'edit-plan-table'
+    color?: 'error' | 'theme' | 'primary'
     size?: 'sm' | 'md' | 'lg' | 'xl'
     square?: boolean
     disabled?: boolean
@@ -14,10 +14,13 @@ withDefaults(
     loading?: boolean
     icon?: string
     testId?: string
+    rounded?: 'full' | 'default'
     ui?: { button?: string; icon?: string; loader?: string }
   }>(),
   {
     type: 'button',
+    color: 'primary',
+    rounded: 'default',
   }
 )
 
@@ -29,14 +32,15 @@ defineEmits<{
 <template>
   <button
     :class="[
-      buttonVariants.button({
-        color: outline ? color || false : color || 'theme',
+      button({
+        color: outline ? color || false : color,
         disabled: disabled || loading,
         stretch,
         variant,
         outline,
         square: !!(square || (icon && !$slots.default)),
         size,
+        rounded,
         class: ui?.button,
       }),
     ]"

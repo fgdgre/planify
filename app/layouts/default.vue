@@ -10,7 +10,7 @@ const { isSidebarCollapsed } = storeToRefs(sidebarStore)
 </script>
 
 <template>
-  <main class="main pl-[var(--sidebar-width)]">
+  <main class="flex flex-col h-full justify-center items-center">
     <slot />
   </main>
 </template>
