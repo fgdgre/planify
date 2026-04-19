@@ -52,9 +52,6 @@ export default defineNuxtConfig({
     redirect: false,
     clientOptions: {
       auth: {
-        // Implicit flow: confirmation emails carry ?token_hash= instead of ?code=,
-        // so no PKCE code verifier is needed in storage.
-        // This fixes confirmation links opened in Gmail webviews / new browser tabs.
         flowType: 'implicit',
       },
     },

@@ -1,16 +1,13 @@
 <script lang="ts" setup>
 import { watch } from 'vue'
-
 // stores
 import { useCalendarStore, ACCOUNT_COLORS, INTERNAL_CALENDAR_COLOR } from '@entities/calendar/stores/calendar'
 import { useGoogleCalendarStore } from '@features/integrations/google-calendar/stores/google-calendar'
 import { useUserStore } from '@features/auth/stores/user'
 import { useSettingsStore } from '@features/settings'
-
 // composables
 import { useCalendar } from '@entities/calendar'
 import { useInternalEvents } from '@entities/calendar/composables/useInternalEvents'
-
 // calendar
 import { mapToScheduleXEvent } from '@entities/calendar/helpers'
 import { ScheduleXCalendar } from '@schedule-x/vue'
@@ -54,13 +51,20 @@ const {
 const { loadViewEvents } = useCalendar()
 const { updateEvent } = useInternalEvents()
 
-// Drag-to-create state
 let dragStartDateTime: Temporal.ZonedDateTime | null = null
 
 const buildCalendarsConfig = () => {
   const accounts = googleCalendarStore.accounts
   const prefs = settingsStore.preferences
-  const config: Record<string, any> = {}
+  const config: Record<string, any> = {
+    dayBoundaries: {
+      start: '06:00',
+      end: '18:00',
+    },
+    weekOptions: {
+      eventWidth: 95,
+    }
+  }
 
   const userId = userStore.user?.id
   if (userId) {
@@ -74,11 +78,12 @@ const buildCalendarsConfig = () => {
   return config
 }
 
-// Do not use a ref — the calendar instance is stateful and not meant to be reactive.
-// v3: plugins are the second argument, not a config property.
 const calendarApp = createCalendar({
   selectedDate: Temporal.PlainDate.from(Temporal.Now.plainDateISO().toString()),
   calendars: buildCalendarsConfig(),
+  weekOptions: {
+    eventWidth: 95,
+  },
   timezone: Temporal.Now.timeZoneId(),
   views: [
     createViewDay(),
@@ -102,12 +107,10 @@ const calendarApp = createCalendar({
       dragStartDateTime = dateTime
     },
     onClickDateTime(dateTime) {
-      // If drag produced a range, use it; otherwise default to 1-hour event
       let start: Date
       let end: Date
 
       if (dragStartDateTime && !dragStartDateTime.equals(dateTime)) {
-        // Ensure start < end regardless of drag direction
         const a = dragStartDateTime.toInstant().epochMilliseconds
         const b = dateTime.toInstant().epochMilliseconds
         start = new Date(Math.min(a, b))
@@ -125,7 +128,6 @@ const calendarApp = createCalendar({
       calendarStore.openCreateModal({ date: { start: d, end: d }, all_day: true })
     },
     onBeforeEventUpdate(oldEvent) {
-      // Only allow drag/resize on internal events
       const storeEvent = events.value.find((e) => e.id === String(oldEvent.id))
       return storeEvent?.source === 'internal'
     },
@@ -151,7 +153,6 @@ const calendarApp = createCalendar({
         end_at: new Date(newEndMs).toISOString(),
       })
 
-      // Update the store event in-place instead of refetching everything
       if (result) {
         const idx = events.value.findIndex((e) => e.id === storeEvent.id)
         if (idx !== -1) {
@@ -162,12 +163,10 @@ const calendarApp = createCalendar({
   },
 }, [createDragAndDropPlugin(), createResizePlugin(), createCurrentTimePlugin()])
 
-// Reactively push events from the store into ScheduleX
 watch(events, (storeEvents) => {
   calendarApp.events.set(storeEvents.map(mapToScheduleXEvent))
 }, { immediate: true })
 
-// Reactively update calendar colors when settings preferences change
 watch(
   () => settingsStore.preferences,
   () => {
@@ -206,3 +205,21 @@ onMounted(() => {
     />
   </div>
 </template>
+
+<style scoped>
+:deep(.sx__calendar) {
+  border: 0 !important;
+}
+
+:deep(.sx__time-grid-event.is-event-copy),
+:deep(.sx__date-grid-event.sx__date-grid-event--copy) {
+  opacity: 0.92;
+  z-index: 20 !important;
+  pointer-events: none;
+}
+
+:deep(.sx__time-grid-event:not(.is-event-copy):has(+ .is-event-copy)),
+:deep(.sx__date-grid-event:not(.sx__date-grid-event--copy):has(+ .sx__date-grid-event--copy)) {
+  opacity: 0.2;
+}
+</style>
