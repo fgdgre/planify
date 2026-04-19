@@ -84,7 +84,7 @@ const handleItemAction = (action: string) => {
 
         <p class="text-placeholder text-sm">{{ item.content }}</p>
 
-        <div v-if="linkedEvent" class="flex gap-2 bg-[rgba(0,0,0,0.05)] rounded-md p-2">
+        <div v-if="linkedEvent" class="flex items-center gap-2 bg-[rgba(0,0,0,0.05)] rounded-md p-2">
             <SupaIcon>
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
                 <g clip-path="url(#clip0_1_1490)">
@@ -101,7 +101,7 @@ const handleItemAction = (action: string) => {
               </svg>
             </SupaIcon>
 
-          <div class="w-full overflow-hidden">
+          <div class="flex flex-col justify-center w-full overflow-hidden">
             <p class="truncate text-sm text-foreground">
               {{ linkedEvent.title }}
             </p>
@@ -116,7 +116,3 @@ const handleItemAction = (action: string) => {
       </div>
   </div>
 </template>
-
-<style scoped>
-
-</style>
