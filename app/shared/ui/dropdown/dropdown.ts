@@ -129,7 +129,7 @@ export const menuContent = tv({
       false: '',
     },
     menuStretch: {
-      true: 'w-[var(--radix-dropdown-menu-trigger-width)] min-w-max',
+      true: 'w-[var(--reka-dropdown-menu-trigger-width)] overflow-hidden',
       false: '',
     },
   },
