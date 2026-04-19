@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { useNotes, useNotesStore } from '@features/notes'
-import NoteFormModal from '@features/notes/components/NoteFormModal.vue'
+import { useNotes, useNotesStore, NotesItem } from '@features/notes'
+import NotesFormModal from '@features/notes/components/NotesFormModal.vue'
+import NotesList from "@features/notes/components/NotesList.vue";
 
 definePageMeta({
   layout: 'app',
@@ -17,21 +18,20 @@ await fetchNotes()
 const handleModalClose = () => {
   isCreateModalOpen.value = false
 }
+
 </script>
 
 <template>
-  <SupaButton color="primary" @click="isCreateModalOpen = true">
-    Create Note
-  </SupaButton>
+  <div class="flex flex-col flex-1 p-4 gap-4">
+    <SupaButton color="primary" @click="isCreateModalOpen = true">
+      Create Note
+    </SupaButton>
 
-  <NoteFormModal
-    v-if="isCreateModalOpen"
-    @close="handleModalClose"
-  />
+    <NotesFormModal
+      v-if="isCreateModalOpen"
+      @close="handleModalClose"
+    />
 
-  <pre>{{ notesStore.notes }}</pre>
+    <NotesList />
+  </div>
 </template>
-
-<style scoped>
-
-</style>

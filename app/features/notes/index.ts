@@ -1,3 +1,6 @@
 export { useNotes } from './composables/notes'
 export { useNotesStore } from './stores/notes'
 export type { Note } from './types'
+export { default as NotesItem } from './components/NotesItem.vue'
+export { default as NoteForm } from './components/NotesForm.vue'
+export { default as NoteFormModal } from './components/NotesFormModal.vue'
