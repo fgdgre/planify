@@ -53,12 +53,12 @@ const weekDays = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su']
 </script>
 
 <template>
-  <div>
+  <div class="w-full">
     <p v-if="label" :class="[labelVariants({ error: !!errorMessage })]">{{ label }}</p>
 
     <CalendarRoot
       :weekDays
-      class="rounded-md bg-modal p-4 shadow-sm border w-fit"
+      class="rounded-md bg-modal p-4 shadow-sm border w-full"
       v-slot="{ grid }"
       :class="[errorMessage ? 'border-error' : 'border-border']"
       fixed-weeks

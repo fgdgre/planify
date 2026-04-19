@@ -1,0 +1,119 @@
+import { useCalendar } from '@entities/calendar/composables/calendar'
+import { useGoogleCalendar } from '@features/integrations/google-calendar'
+import type { CalendarEventDisplay } from '@entities/calendar/types'
+
+export type NoteFormTab = 'details' | 'linked-event'
+
+export interface NoteFormPayload {
+  title: string
+  content: string
+  calendar_event_id: string | null
+}
+
+export const useNoteForm = () => {
+  const { fetchEventsForRange } = useCalendar()
+  const { fetchConnectedAccounts } = useGoogleCalendar()
+
+  // tabs
+  const activeTab = ref<NoteFormTab>('details')
+
+  // form fields
+  const title = ref('')
+  const content = ref('')
+
+  // event linking
+  const selectedDate = ref<Date | undefined>(new Date())
+  const selectedEventId = ref<string | null>(null)
+  const eventsCache = reactive<Record<string, CalendarEventDisplay[]>>({})
+  const eventsLoading = ref(false)
+
+  const monthKey = (year: number, month: number) => `${year}-${month}`
+
+  const allEvents = computed(() => Object.values(eventsCache).flat())
+
+  const eventsForSelectedDate = computed(() => {
+    if (!selectedDate.value) return []
+
+    const dateStr = selectedDate.value.toISOString().slice(0, 10)
+
+    return allEvents.value
+      .filter((e) => e.start_at.slice(0, 10) === dateStr)
+      .sort((a, b) => a.start_at.localeCompare(b.start_at))
+  })
+
+  const selectEvent = (event: CalendarEventDisplay) => {
+    selectedEventId.value = selectedEventId.value === event.id ? null : event.id
+  }
+
+  const loadMonthEvents = async (year: number, month: number) => {
+    const key = monthKey(year, month)
+    const start = new Date(year, month - 1, 1)
+    const end = new Date(year, month, 0, 23, 59, 59)
+
+    eventsLoading.value = true
+
+    const result = await fetchEventsForRange({
+      start: start.toISOString(),
+      end: end.toISOString(),
+    })
+
+    eventsCache[key] = result
+    eventsLoading.value = false
+  }
+
+  const initEventLinking = async () => {
+    await fetchConnectedAccounts()
+
+    const now = new Date()
+    await loadMonthEvents(now.getFullYear(), now.getMonth() + 1)
+  }
+
+  const onMonthChange = (value: { year: number; month: number }) => {
+    loadMonthEvents(value.year, value.month)
+  }
+
+  // tab filled state
+  const isDetailsFilled = computed(() => title.value.trim().length > 0)
+  const isLinkedEventFilled = computed(() => selectedEventId.value !== null)
+
+  // validation
+  const isValid = computed(() => isDetailsFilled.value)
+
+  const getPayload = (): NoteFormPayload => ({
+    title: title.value,
+    content: content.value,
+    calendar_event_id: selectedEventId.value,
+  })
+
+  const reset = () => {
+    activeTab.value = 'details'
+    title.value = ''
+    content.value = ''
+    selectedDate.value = new Date()
+    selectedEventId.value = null
+    Object.keys(eventsCache).forEach((key) => delete eventsCache[key])
+  }
+
+  return {
+    // tabs
+    activeTab,
+
+    // form
+    title,
+    content,
+    isValid,
+    isDetailsFilled,
+    isLinkedEventFilled,
+    getPayload,
+    reset,
+
+    // event linking
+    selectedDate,
+    selectedEventId,
+    eventsForSelectedDate,
+    eventsLoading,
+    selectEvent,
+    initEventLinking,
+    onMonthChange,
+  }
+}
