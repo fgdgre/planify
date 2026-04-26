@@ -564,7 +564,31 @@ export const useEventSidebar = () => {
 
   watch(
     () => [routeMode.value, queryValue('eventId'), queryValue('eventStart'), queryValue('eventEnd'), queryValue('eventAllDay')] as const,
-    async ([mode, eventId]) => {
+    async ([mode, eventId, eventStart, eventEnd, eventAllDay], prevValues) => {
+      const [prevMode, prevEventId, prevEventStart, prevEventEnd, prevEventAllDay] = prevValues ?? []
+
+      // When only secondary params changed (e.g. eventNoteId) and prevValues exists (not first run),
+      // skip the full reset to prevent sidebar flicker.
+      const coreParamsChanged = mode !== prevMode
+        || eventId !== prevEventId
+        || eventStart !== prevEventStart
+        || eventEnd !== prevEventEnd
+        || eventAllDay !== prevEventAllDay
+
+      if (!coreParamsChanged && prevValues !== undefined) {
+        if (mode === 'view') {
+          const noteId = queryValue('eventNoteId')
+          if (noteId) {
+            const note = eventNotes.value.find((n) => n.id === noteId)
+            if (note) applyNoteToPanel(note)
+          } else if (activeNoteId.value) {
+            formData.value.showNoteForm = false
+            activeNoteId.value = null
+          }
+        }
+        return
+      }
+
       if (!mode) {
         isOpen.value = false
         resetSidebarState()
