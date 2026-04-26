@@ -143,6 +143,7 @@ export const useEventSidebar = () => {
   const suppressDraftWrite = ref(false)
   const suppressNoteDraftWrite = ref(false)
   const closingFromRoute = ref(false)
+  const pendingNotePanel = ref<Note | null>(null)
 
   const queryValue = (key: string) => {
     const value = route.query[key]
@@ -520,6 +521,7 @@ export const useEventSidebar = () => {
 
       if (created) {
         clearCurrentDraft()
+        if (savedNote) pendingNotePanel.value = savedNote
         await fetchEvents()
         await replaceQuery({
           eventId: created.id,
@@ -550,6 +552,7 @@ export const useEventSidebar = () => {
 
     if (updated) {
       clearCurrentDraft()
+      if (savedNote) pendingNotePanel.value = savedNote
       await fetchEvents()
       await replaceQuery({
         eventId: selectedEvent.value.id,
@@ -623,6 +626,14 @@ export const useEventSidebar = () => {
       selectedEvent.value = event
       activeMode.value = mode === 'edit' && event.source !== 'internal' ? 'view' : mode
       setFormData(getInitialFormData(event, activeMode.value))
+
+      // If submit just completed with a note, apply it synchronously before any
+      // async fetch so Vue never flushes showNoteForm=false to the DOM.
+      if (pendingNotePanel.value) {
+        applyNoteToPanel(pendingNotePanel.value)
+        pendingNotePanel.value = null
+      }
+
       const notes = await fetchEventNotes(event.id)
       const selectedNoteId = queryValue('eventNoteId') || formData.value.noteId
       const selectedNote = selectedNoteId ? notes.find((note) => note.id === selectedNoteId) : null
