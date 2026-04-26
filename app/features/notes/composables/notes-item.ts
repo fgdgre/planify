@@ -46,6 +46,18 @@ export const useNotesItem = (note: Ref<Note>) => {
     })
   })
 
+  const formattedNoteDate = computed(() => {
+    if (!note.value.created_at) return ''
+
+    return new Date(note.value.created_at).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  })
+
   const cardItemActions = [
     {
       value: 'view',
@@ -62,6 +74,7 @@ export const useNotesItem = (note: Ref<Note>) => {
   return {
     linkedEvent,
     formattedEventDate,
+    formattedNoteDate,
     cardItemActions,
   }
 }

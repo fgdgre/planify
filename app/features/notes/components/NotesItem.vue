@@ -12,7 +12,7 @@ const emit = defineEmits<{
 }>()
 
 const itemRef = computed(() => props.item)
-const { linkedEvent, formattedEventDate, cardItemActions } = useNotesItem(itemRef)
+const { linkedEvent, formattedEventDate, formattedNoteDate, cardItemActions } = useNotesItem(itemRef)
 
 const handleItemAction = (action: unknown) => {
   if (typeof action !== 'string') return
@@ -64,7 +64,7 @@ const handleItemAction = (action: unknown) => {
       <div class="flex flex-col gap-2">
         <p class="text-foreground font-medium text-[18px]">{{ item.title }}</p>
 
-        <p class="text-placeholder text-sm">{{ item.content }}</p>
+        <p class="text-placeholder text-sm line-clamp-2">{{ item.content }}</p>
 
         <div v-if="linkedEvent" class="flex items-center gap-2 bg-[rgba(0,0,0,0.05)] rounded-md p-2">
             <SupaIcon>
@@ -94,7 +94,7 @@ const handleItemAction = (action: unknown) => {
             </p>
           </div>
         </div>
-        <p class="text-placeholder">{{ item.created_at }}</p>
+        <p class="text-placeholder">{{ formattedNoteDate }}</p>
       </div>
   </div>
 </template>
