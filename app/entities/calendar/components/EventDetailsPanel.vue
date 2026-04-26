@@ -9,6 +9,7 @@ const props = withDefaults(
     eventNotes?: Note[]
     showActions?: boolean
     showTitle?: boolean
+    clickableNotes?: boolean
     deleting?: boolean
   }>(),
   {
@@ -19,6 +20,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   edit: []
   delete: []
+  noteClick: [note: Note]
 }>()
 
 const isInternal = computed(() => props.selectedEvent?.source === 'internal')
@@ -114,14 +116,17 @@ const formattedTime = computed(() => {
           <span class="font-medium">Notes</span>
         </div>
 
-        <div
+        <button
           v-for="note in eventNotes"
           :key="note.id"
-          class="rounded-md border border-border bg-placeholder/10 p-3 space-y-1"
+          type="button"
+          class="w-full rounded-md border border-border bg-placeholder/10 p-3 space-y-1 text-left"
+          :class="clickableNotes && 'cursor-pointer transition-colors hover:border-primary/40 hover:bg-background'"
+          @click="clickableNotes && emit('noteClick', note)"
         >
           <p class="text-sm font-medium text-foreground">{{ note.title }}</p>
           <p v-if="note.content" class="text-xs text-placeholder line-clamp-3">{{ note.content }}</p>
-        </div>
+        </button>
       </div>
 
       <div v-if="showActions && isInternal" class="flex gap-2 w-full border-t pt-3 mt-3">

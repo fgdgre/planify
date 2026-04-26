@@ -24,10 +24,6 @@ import { createCurrentTimePlugin } from '@schedule-x/current-time'
 import '@schedule-x/theme-default/dist/index.css'
 import 'temporal-polyfill/global'
 
-// components
-import EventDetailsModal from '@entities/calendar/components/EventDetailsModal.vue'
-import EventFormModal from '@entities/calendar/components/EventFormModal.vue'
-
 definePageMeta({
   layout: 'app',
   title: 'Calendar',
@@ -38,20 +34,46 @@ const googleCalendarStore = useGoogleCalendarStore()
 const calendarStore = useCalendarStore()
 const userStore = useUserStore()
 const settingsStore = useSettingsStore()
+const route = useRoute()
+const router = useRouter()
 
-const {
-  selectedEvent,
-  isEventModalOpen,
-  isEventFormModalOpen,
-  eventFormMode,
-  eventFormPrefill,
-  events,
-} = storeToRefs(calendarStore)
+const { events } = storeToRefs(calendarStore)
 
 const { loadViewEvents } = useCalendar()
 const { updateEvent } = useInternalEvents()
 
 let dragStartDateTime: Temporal.ZonedDateTime | null = null
+
+const replaceCalendarQuery = async (updates: Record<string, string | null | undefined>) => {
+  const query = { ...route.query }
+
+  Object.entries(updates).forEach(([key, value]) => {
+    if (value === null || value === undefined || value === '') {
+      delete query[key]
+      return
+    }
+
+    query[key] = value
+  })
+
+  await router.replace({ query })
+}
+
+const openEventView = (event: { id: string }) => replaceCalendarQuery({
+  eventId: event.id,
+  action: null,
+  eventStart: null,
+  eventEnd: null,
+  eventAllDay: null,
+})
+
+const openEventCreate = (prefill: { date: { start: Date; end: Date }; all_day: boolean }) => replaceCalendarQuery({
+  eventId: null,
+  action: 'create',
+  eventStart: prefill.date.start.toISOString(),
+  eventEnd: prefill.date.end.toISOString(),
+  eventAllDay: String(prefill.all_day),
+})
 
 const buildCalendarsConfig = () => {
   const accounts = googleCalendarStore.accounts
@@ -99,8 +121,7 @@ const calendarApp = createCalendar({
     onEventClick(event) {
       const storeEvent = events.value.find((e) => e.id === String(event.id))
       if (storeEvent) {
-        calendarStore.setSelectedEvent(storeEvent)
-        calendarStore.setEventModalOpen(true)
+        openEventView(storeEvent)
       }
     },
     onMouseDownDateTime(dateTime) {
@@ -121,11 +142,11 @@ const calendarApp = createCalendar({
       }
 
       dragStartDateTime = null
-      calendarStore.openCreateModal({ date: { start, end }, all_day: false })
+      openEventCreate({ date: { start, end }, all_day: false })
     },
     onClickDate(date) {
       const d = new Date(date.toString())
-      calendarStore.openCreateModal({ date: { start: d, end: d }, all_day: true })
+      openEventCreate({ date: { start: d, end: d }, all_day: true })
     },
     onBeforeEventUpdate(oldEvent) {
       const storeEvent = events.value.find((e) => e.id === String(oldEvent.id))
@@ -151,12 +172,13 @@ const calendarApp = createCalendar({
       const result = await updateEvent(storeEvent.id, {
         start_at: new Date(newStartMs).toISOString(),
         end_at: new Date(newEndMs).toISOString(),
-      })
+      }) as { start_at: string; end_at: string } | null
 
       if (result) {
         const idx = events.value.findIndex((e) => e.id === storeEvent.id)
-        if (idx !== -1) {
-          events.value[idx] = { ...events.value[idx], start_at: result.start_at, end_at: result.end_at }
+        const currentEvent = events.value[idx]
+        if (currentEvent) {
+          events.value[idx] = { ...currentEvent, start_at: result.start_at, end_at: result.end_at }
         }
       }
     },
@@ -179,7 +201,7 @@ watch(
 )
 
 onMounted(() => {
-  const range = calendarApp.$app?.calendarState.range.value
+  const range = (calendarApp as any).$app?.calendarState.range.value
   if (range) {
     loadViewEvents(range)
   }
@@ -189,20 +211,6 @@ onMounted(() => {
 <template>
   <div class="flex-1 overflow-auto">
     <ScheduleXCalendar :calendar-app="calendarApp" />
-
-    <EventDetailsModal
-      v-if="isEventModalOpen"
-      :selected-event="selectedEvent"
-      @close="calendarStore.setEventModalOpen(false)"
-    />
-
-    <EventFormModal
-      v-if="isEventFormModalOpen"
-      :mode="eventFormMode"
-      :prefill="eventFormPrefill"
-      :event="selectedEvent"
-      @close="calendarStore.closeFormModal()"
-    />
   </div>
 </template>
 

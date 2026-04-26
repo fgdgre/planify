@@ -21,6 +21,7 @@ const {
   loading,
   onMonthChange,
   openEventPicker,
+  removeLinkedEvent,
   saving,
   selectedDate,
   selectedEventId,
@@ -84,23 +85,34 @@ const {
           <div class="flex items-center justify-between gap-2">
             <p class="text-sm font-medium text-foreground">Event</p>
 
-            <SupaButton
-              v-if="eventPickerOpen"
-              size="sm"
-              variant="transparent"
-              @click="discardEventPicker"
-            >
-              Discard
-            </SupaButton>
+            <div class="flex items-center gap-2">
+              <SupaButton
+                v-if="eventPickerOpen"
+                size="sm"
+                variant="transparent"
+                @click="discardEventPicker"
+              >
+                Discard
+              </SupaButton>
 
-            <SupaButton
-              v-else-if="linkedEvent && isEditable"
-              size="sm"
-              variant="transparent"
-              @click="openEventPicker"
-            >
-              Change event
-            </SupaButton>
+              <template v-else-if="linkedEvent && isEditable">
+                <SupaButton
+                  size="sm"
+                  variant="transparent"
+                  @click="removeLinkedEvent"
+                >
+                  Remove
+                </SupaButton>
+
+                <SupaButton
+                  size="sm"
+                  variant="transparent"
+                  @click="openEventPicker"
+                >
+                  Change event
+                </SupaButton>
+              </template>
+            </div>
           </div>
 
           <div v-if="linkedEventLoading" class="text-sm text-placeholder">

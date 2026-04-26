@@ -67,7 +67,7 @@ export const useNoteSidebar = () => {
     if (noteAction === 'create') return 'create'
 
     if (noteId) {
-      return noteAction === 'edit' || action === 'edit' ? 'edit' : 'view'
+      return noteAction === 'edit' || (route.path.includes('/notes') && action === 'edit') ? 'edit' : 'view'
     }
 
     if (action === 'create' && route.path.includes('/notes')) return 'create'
@@ -230,6 +230,14 @@ export const useNoteSidebar = () => {
     eventPickerOpen.value = false
   }
 
+  const removeLinkedEvent = () => {
+    formData.value.calendar_event_id = ''
+    selectedEventId.value = ''
+    linkedEvent.value = null
+    eventPickerOpen.value = false
+    eventPickerInitialEventId.value = ''
+  }
+
   const handleSubmit = async () => {
     if (!isEditable.value) return
 
@@ -375,6 +383,7 @@ export const useNoteSidebar = () => {
     loading,
     onMonthChange,
     openEventPicker,
+    removeLinkedEvent,
     saving,
     selectedDate,
     selectedEventId,
