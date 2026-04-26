@@ -18,6 +18,7 @@ interface EventSidebarFormData {
   startTime: string
   endTime: string
   showNoteForm: boolean
+  noteId: string
   noteTitle: string
   noteContent: string
 }
@@ -32,8 +33,14 @@ interface EventSidebarDraft {
   startTime: string
   endTime: string
   showNoteForm: boolean
+  noteId?: string
   noteTitle: string
   noteContent: string
+}
+
+interface EventSidebarNoteDraft {
+  title: string
+  content: string
 }
 
 const isoToDate = (iso?: string): Date | undefined => {
@@ -71,6 +78,7 @@ const defaultFormData = (start?: Date, end?: Date, allDay = false): EventSidebar
     startTime: dateToTimeStr(fallbackStart),
     endTime: dateToTimeStr(fallbackEnd),
     showNoteForm: false,
+    noteId: '',
     noteTitle: '',
     noteContent: '',
   }
@@ -86,6 +94,7 @@ const serializeFormData = (data: EventSidebarFormData): EventSidebarDraft => ({
   startTime: data.startTime,
   endTime: data.endTime,
   showNoteForm: data.showNoteForm,
+  noteId: data.noteId,
   noteTitle: data.noteTitle,
   noteContent: data.noteContent,
 })
@@ -102,6 +111,7 @@ const draftToFormData = (draft: EventSidebarDraft): EventSidebarFormData => ({
   startTime: draft.startTime,
   endTime: draft.endTime,
   showNoteForm: draft.showNoteForm,
+  noteId: draft.noteId ?? '',
   noteTitle: draft.noteTitle,
   noteContent: draft.noteContent,
 })
@@ -113,9 +123,10 @@ export const useEventSidebar = () => {
   const userStore = useUserStore()
   const { createEvent, updateEvent, deleteEvent } = useInternalEvents()
   const { fetchEvents } = useCalendar()
-  const { createNote } = useNotes()
+  const { createNote, updateNote } = useNotes()
 
   const drafts = useStorage<Record<string, EventSidebarDraft>>('planify:event-sidebar-drafts', {})
+  const noteDrafts = useStorage<Record<string, EventSidebarNoteDraft>>('planify:event-sidebar-note-drafts', {})
 
   const isOpen = ref(false)
   const loading = ref(false)
@@ -123,11 +134,14 @@ export const useEventSidebar = () => {
   const deleting = ref(false)
   const activeMode = ref<EventSidebarMode | null>(null)
   const activeEventId = ref<string | null>(null)
+  const activeNoteId = ref<string | null>(null)
   const selectedEvent = ref<CalendarEventDisplay | null>(null)
   const eventNotes = ref<Note[]>([])
   const formData = ref<EventSidebarFormData>(defaultFormData())
   const errorMessages = ref<Record<string, string>>({})
+  const noteTitleError = ref('')
   const suppressDraftWrite = ref(false)
+  const suppressNoteDraftWrite = ref(false)
   const closingFromRoute = ref(false)
 
   const queryValue = (key: string) => {
@@ -162,16 +176,26 @@ export const useEventSidebar = () => {
 
   const isNoteFilled = computed(() => formData.value.noteTitle.trim().length > 0)
 
-  const isNotePanelOpen = computed(() => isEditable.value && formData.value.showNoteForm)
+  const hasNoteInput = computed(() =>
+    !!activeNoteId.value || formData.value.noteTitle.trim().length > 0 || formData.value.noteContent.trim().length > 0
+  )
+
+  const isNotePanelOpen = computed(() => formData.value.showNoteForm)
+
+  const showFooter = computed(() => isEditable.value || isNotePanelOpen.value)
 
   const eventPreviewTitle = computed(() => formData.value.title.trim() || selectedEvent.value?.title || 'this event')
 
   const submitLabel = computed(() => {
+    if (activeMode.value === 'view' && isNotePanelOpen.value) {
+      return 'Save note'
+    }
+
     if (activeMode.value === 'create') {
       return isNoteFilled.value ? 'Create event and note' : 'Create event'
     }
 
-    return isNoteFilled.value ? 'Save event and note' : 'Save event'
+    return hasNoteInput.value ? 'Save event and note' : 'Save event'
   })
 
   const replaceQuery = async (updates: Record<string, string | null | undefined>) => {
@@ -197,9 +221,18 @@ export const useEventSidebar = () => {
     drafts.value = next
   }
 
+  const clearCurrentNoteDraft = () => {
+    if (!activeNoteId.value) return
+
+    const next = { ...noteDrafts.value }
+    delete next[`note:${activeNoteId.value}`]
+    noteDrafts.value = next
+  }
+
   const setFormData = (value: EventSidebarFormData) => {
     suppressDraftWrite.value = true
     formData.value = value
+    activeNoteId.value = value.noteId || null
     nextTick(() => {
       suppressDraftWrite.value = false
     })
@@ -225,6 +258,7 @@ export const useEventSidebar = () => {
       startTime: start ? dateToTimeStr(start) : '09:00',
       endTime: end ? dateToTimeStr(end) : '10:00',
       showNoteForm: false,
+      noteId: '',
       noteTitle: '',
       noteContent: '',
     }
@@ -261,14 +295,17 @@ export const useEventSidebar = () => {
       .order('created_at', { ascending: false })
 
     eventNotes.value = data ?? []
+    return eventNotes.value
   }
 
   const resetSidebarState = () => {
     activeMode.value = null
     activeEventId.value = null
+    activeNoteId.value = null
     selectedEvent.value = null
     eventNotes.value = []
     errorMessages.value = {}
+    noteTitleError.value = ''
     setFormData(defaultFormData())
   }
 
@@ -277,8 +314,12 @@ export const useEventSidebar = () => {
 
     closingFromRoute.value = true
     clearCurrentDraft()
+    clearCurrentNoteDraft()
     await replaceQuery({
       eventId: null,
+      eventNoteId: null,
+      noteId: null,
+      noteAction: null,
       action: routeMode.value === 'create' || routeMode.value === 'edit' ? null : queryValue('action'),
       eventStart: null,
       eventEnd: null,
@@ -301,21 +342,50 @@ export const useEventSidebar = () => {
     })
   }
 
+  const applyNoteToPanel = (note: Note) => {
+    suppressNoteDraftWrite.value = true
+    const draft = noteDrafts.value[`note:${note.id}`]
+
+    activeNoteId.value = note.id
+    formData.value.showNoteForm = true
+    formData.value.noteId = note.id
+    formData.value.noteTitle = draft?.title ?? note.title
+    formData.value.noteContent = draft?.content ?? note.content
+    noteTitleError.value = ''
+
+    nextTick(() => {
+      suppressNoteDraftWrite.value = false
+    })
+  }
+
   const openNote = async (note: Note) => {
+    applyNoteToPanel(note)
     await replaceQuery({
-      noteId: note.id,
+      eventNoteId: note.id,
+      noteId: null,
       noteAction: null,
     })
   }
 
-  const openNotePanel = () => {
+  const openNotePanel = async () => {
+    activeNoteId.value = null
     formData.value.showNoteForm = true
-  }
-
-  const discardNoteDraft = () => {
-    formData.value.showNoteForm = false
+    formData.value.noteId = ''
     formData.value.noteTitle = ''
     formData.value.noteContent = ''
+    noteTitleError.value = ''
+    await replaceQuery({ eventNoteId: null })
+  }
+
+  const discardNoteDraft = async () => {
+    clearCurrentNoteDraft()
+    activeNoteId.value = null
+    formData.value.showNoteForm = false
+    formData.value.noteId = ''
+    formData.value.noteTitle = ''
+    formData.value.noteContent = ''
+    noteTitleError.value = ''
+    await replaceQuery({ eventNoteId: null })
   }
 
   const handleDelete = async () => {
@@ -331,7 +401,79 @@ export const useEventSidebar = () => {
     }
   }
 
+  const validateNotePanel = () => {
+    if (!formData.value.showNoteForm || !hasNoteInput.value) {
+      noteTitleError.value = ''
+      return true
+    }
+
+    if (!formData.value.noteTitle.trim()) {
+      noteTitleError.value = 'Title is required'
+      return false
+    }
+
+    noteTitleError.value = ''
+    return true
+  }
+
+  const persistNoteForEvent = async (eventId: string) => {
+    if (!formData.value.showNoteForm || !hasNoteInput.value) return null
+
+    const title = formData.value.noteTitle.trim()
+    const payload = {
+      title,
+      content: formData.value.noteContent,
+      calendar_event_id: eventId,
+      updated_at: new Date().toISOString(),
+    }
+
+    if (activeNoteId.value) {
+      const updated = await updateNote(activeNoteId.value, payload) as Note | null
+
+      if (updated) {
+        clearCurrentNoteDraft()
+        formData.value.noteId = updated.id
+        formData.value.noteTitle = updated.title
+        formData.value.noteContent = updated.content
+      }
+
+      return updated
+    }
+
+    const created = await createNote({
+      user_id: userStore.user!.id,
+      title,
+      content: formData.value.noteContent,
+      calendar_event_id: eventId,
+    }) as Note | undefined
+
+    if (created) {
+      activeNoteId.value = created.id
+      formData.value.noteId = created.id
+      formData.value.noteTitle = created.title
+      formData.value.noteContent = created.content
+    }
+
+    return created ?? null
+  }
+
   const handleSubmit = async () => {
+    if (activeMode.value === 'view') {
+      if (!selectedEvent.value || !validateNotePanel()) return
+
+      saving.value = true
+      const savedNote = await persistNoteForEvent(selectedEvent.value.id)
+      saving.value = false
+
+      if (savedNote) {
+        await fetchEventNotes(selectedEvent.value.id)
+        applyNoteToPanel(savedNote)
+        await replaceQuery({ eventNoteId: savedNote.id })
+      }
+
+      return
+    }
+
     const title = formData.value.title.trim()
 
     if (!title) {
@@ -343,6 +485,8 @@ export const useEventSidebar = () => {
       errorMessages.value = { ...errorMessages.value, date: 'Start and end dates are required' }
       return
     }
+
+    if (!validateNotePanel()) return
 
     errorMessages.value = {}
     saving.value = true
@@ -366,14 +510,10 @@ export const useEventSidebar = () => {
 
     if (activeMode.value === 'create') {
       const created = await createEvent(payload) as { id: string } | null
+      let savedNote: Note | null = null
 
-      if (created && isNoteFilled.value) {
-        await createNote({
-          user_id: userStore.user!.id,
-          title: formData.value.noteTitle,
-          content: formData.value.noteContent,
-          calendar_event_id: created.id,
-        })
+      if (created) {
+        savedNote = await persistNoteForEvent(created.id)
       }
 
       saving.value = false
@@ -387,6 +527,7 @@ export const useEventSidebar = () => {
           eventStart: null,
           eventEnd: null,
           eventAllDay: null,
+          eventNoteId: savedNote?.id ?? null,
         })
       }
 
@@ -399,14 +540,10 @@ export const useEventSidebar = () => {
     }
 
     const updated = await updateEvent(selectedEvent.value.id, payload) as unknown
+    let savedNote: Note | null = null
 
-    if (updated && isNoteFilled.value) {
-      await createNote({
-        user_id: userStore.user!.id,
-        title: formData.value.noteTitle,
-        content: formData.value.noteContent,
-        calendar_event_id: selectedEvent.value.id,
-      })
+    if (updated) {
+      savedNote = await persistNoteForEvent(selectedEvent.value.id)
     }
 
     saving.value = false
@@ -420,6 +557,7 @@ export const useEventSidebar = () => {
         eventStart: null,
         eventEnd: null,
         eventAllDay: null,
+        eventNoteId: savedNote?.id ?? activeNoteId.value ?? null,
       })
     }
   }
@@ -436,9 +574,11 @@ export const useEventSidebar = () => {
       isOpen.value = true
       activeMode.value = mode
       activeEventId.value = eventId ?? null
+      activeNoteId.value = null
       selectedEvent.value = null
       eventNotes.value = []
       errorMessages.value = {}
+      noteTitleError.value = ''
 
       if (mode === 'create') {
         setFormData(getInitialFormData(null, mode))
@@ -459,7 +599,15 @@ export const useEventSidebar = () => {
       selectedEvent.value = event
       activeMode.value = mode === 'edit' && event.source !== 'internal' ? 'view' : mode
       setFormData(getInitialFormData(event, activeMode.value))
-      await fetchEventNotes(event.id)
+      const notes = await fetchEventNotes(event.id)
+      const selectedNoteId = queryValue('eventNoteId') || formData.value.noteId
+      const selectedNote = selectedNoteId ? notes.find((note) => note.id === selectedNoteId) : null
+
+      if (selectedNote) {
+        applyNoteToPanel(selectedNote)
+      } else if (queryValue('eventNoteId')) {
+        await replaceQuery({ eventNoteId: null })
+      }
 
       if (mode === 'edit' && event.source !== 'internal') {
         await replaceQuery({ action: null })
@@ -481,6 +629,21 @@ export const useEventSidebar = () => {
     { deep: true }
   )
 
+  watch(
+    () => [activeNoteId.value, formData.value.noteTitle, formData.value.noteContent, formData.value.showNoteForm] as const,
+    ([noteId, noteTitle, noteContent, showNoteForm]) => {
+      if (suppressNoteDraftWrite.value || !noteId || !showNoteForm) return
+
+      noteDrafts.value = {
+        ...noteDrafts.value,
+        [`note:${noteId}`]: {
+          title: noteTitle,
+          content: noteContent,
+        },
+      }
+    }
+  )
+
   watch(isOpen, (open) => {
     if (!open && activeMode.value) {
       closeSidebar()
@@ -498,16 +661,19 @@ export const useEventSidebar = () => {
     formData,
     handleDelete,
     handleSubmit,
+    hasNoteInput,
     isEditable,
     isNoteFilled,
     isNotePanelOpen,
     isOpen,
     loading,
+    noteTitleError,
     openEdit,
     openNote,
     openNotePanel,
     saving,
     selectedEvent,
+    showFooter,
     sidebarTitle,
     submitLabel,
   }
