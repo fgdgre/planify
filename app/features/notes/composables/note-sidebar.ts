@@ -360,6 +360,12 @@ export const useNoteSidebar = () => {
     formData.value.calendar_event_id = eventId
   })
 
+  watch(() => formData.value.title, (title) => {
+    if (titleError.value && title.trim()) {
+      titleError.value = ''
+    }
+  })
+
   watch(isOpen, (open) => {
     if (!open && activeMode.value) {
       closeSidebar()

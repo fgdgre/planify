@@ -192,7 +192,7 @@ export const useEventSidebar = () => {
     }
 
     if (activeMode.value === 'create') {
-      return isNoteFilled.value ? 'Create event and note' : 'Create event'
+      return isNotePanelOpen.value ? 'Create event and note' : 'Create event'
     }
 
     return hasNoteInput.value ? 'Save event and note' : 'Save event'
@@ -402,7 +402,7 @@ export const useEventSidebar = () => {
   }
 
   const validateNotePanel = () => {
-    if (!formData.value.showNoteForm || !hasNoteInput.value) {
+    if (!formData.value.showNoteForm) {
       noteTitleError.value = ''
       return true
     }
@@ -667,6 +667,26 @@ export const useEventSidebar = () => {
       }
     }
   )
+
+  watch(() => formData.value.title, (title) => {
+    if (errorMessages.value.title && title.trim()) {
+      const { title: _, ...rest } = errorMessages.value
+      errorMessages.value = rest
+    }
+  })
+
+  watch(() => formData.value.date, (date) => {
+    if (errorMessages.value.date && date.start && date.end) {
+      const { date: _, ...rest } = errorMessages.value
+      errorMessages.value = rest
+    }
+  }, { deep: true })
+
+  watch(() => formData.value.noteTitle, (noteTitle) => {
+    if (noteTitleError.value && noteTitle.trim()) {
+      noteTitleError.value = ''
+    }
+  })
 
   watch(isOpen, (open) => {
     if (!open && activeMode.value) {
