@@ -124,16 +124,8 @@ const {
       <div v-else class="flex flex-col gap-3 rounded-md border border-dashed border-border p-4">
         <p class="text-sm text-placeholder">No event linked to this note.</p>
         <SupaButton
-          v-if="isEditable"
-          color="primary"
-          stretch="width"
-          @click="openEventPicker"
-        >
-          Add event
-        </SupaButton>
-        <SupaButton
-          v-else
-          outline
+          :color="isEditable ? 'primary' : undefined"
+          :outline="!isEditable"
           stretch="width"
           @click="openEventPicker"
         >

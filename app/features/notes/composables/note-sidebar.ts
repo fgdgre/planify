@@ -56,7 +56,8 @@ export const useNoteSidebar = () => {
 
   const queryValue = (key: string) => {
     const value = route.query[key]
-    return Array.isArray(value) ? value[0] : value
+    if (Array.isArray(value)) return value.find((item): item is string => typeof item === 'string')
+    return typeof value === 'string' ? value : undefined
   }
 
   const routeMode = computed<NoteSidebarMode | null>(() => {

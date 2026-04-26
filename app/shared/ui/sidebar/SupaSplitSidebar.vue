@@ -18,6 +18,8 @@ withDefaults(
     mainClass?: string
     contextClass?: string
     compactClass?: string
+    /** Fixed width of the right context column when expanded. Defaults to 350px. */
+    contextWidth?: string
   }>(),
   {
     loadingText: 'Loading...',
@@ -28,6 +30,7 @@ withDefaults(
     mainClass: '',
     contextClass: '',
     compactClass: '',
+    contextWidth: '350px',
   }
 )
 
@@ -73,7 +76,8 @@ defineEmits<{
       <div
         v-else
         class="h-full overflow-hidden"
-        :class="expanded ? 'grid grid-cols-[minmax(0,1fr)_350px]' : 'flex flex-col'"
+        :class="expanded ? 'grid' : 'flex flex-col'"
+        :style="expanded ? { gridTemplateColumns: `minmax(0, 1fr) ${contextWidth}` } : {}"
       >
         <section
           v-if="expanded"

@@ -41,6 +41,7 @@ const {
     :show-footer="showFooter"
     :saving
     :submit-label="submitLabel"
+    context-width="520px"
     @submit="handleSubmit"
     @cancel="closeSidebar"
   >
