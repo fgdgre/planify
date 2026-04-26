@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useAppSidebar, AppSidebar } from "@entities/sidebar";
+import NoteSidebar from '@features/notes/components/NoteSidebar.vue'
 
 const route = useRoute()
 
@@ -15,6 +16,7 @@ const { isSidebarCollapsed } = storeToRefs(sidebarStore)
     :class="[isSidebarCollapsed && 'layout--collapsed']"
   >
     <AppSidebar />
+    <NoteSidebar />
 
     <main class="main pl-[var(--sidebar-width)]">
       <h1 class="text-2xl font-medium p-4 pb-4 border-b border-border">{{ layoutTitle }}</h1>

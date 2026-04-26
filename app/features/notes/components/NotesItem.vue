@@ -1,53 +1,26 @@
 <script setup lang="ts">
 import type { Note } from '@features/notes'
+import { useNotesItem } from '../composables/notes-item'
 
 const props = defineProps<{
   item: Note
 }>()
 
 const emit = defineEmits<{
+  view: []
   delete: []
 }>()
 
-const supabase = useSupabaseClient()
+const itemRef = computed(() => props.item)
+const { linkedEvent, formattedEventDate, cardItemActions } = useNotesItem(itemRef)
 
-const linkedEvent = ref<{ title: string; start_at: string } | null>(null)
+const handleItemAction = (action: unknown) => {
+  if (typeof action !== 'string') return
 
-const fetchLinkedEvent = async () => {
-  if (!props.item.calendar_event_id) return
-
-  const { data } = await supabase
-    .from('calendar_events')
-    .select('title, start_at')
-    .eq('id', props.item.calendar_event_id)
-    .single()
-
-  if (data) linkedEvent.value = data
-}
-
-fetchLinkedEvent()
-
-const formattedEventDate = computed(() => {
-  if (!linkedEvent.value?.start_at) return ''
-  return new Date(linkedEvent.value.start_at).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-})
-
-const cardItemActions = [
-  {
-    value: 'delete',
-    label: 'Delete',
-    icon: 'heroicons:trash',
-  },
-]
-
-const handleItemAction = (action: string) => {
   switch (action) {
+    case 'view':
+      emit('view')
+      break
     case 'delete':
       emit('delete')
   }
@@ -56,7 +29,14 @@ const handleItemAction = (action: string) => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-4 rounded-[14px] p-6 border border-border min-w-[300px] max-w-[400px]">
+  <div
+    class="flex flex-col gap-4 rounded-[14px] p-6 border border-border min-w-[300px] max-w-[400px] cursor-pointer transition-colors hover:border-primary/40"
+    role="button"
+    tabindex="0"
+    @click="emit('view')"
+    @keydown.enter.prevent="emit('view')"
+    @keydown.space.prevent="emit('view')"
+  >
     <div class="flex justify-between">
       <div class="bg-primary/10 rounded-[10px] p-2">
         <SupaIcon>
@@ -67,15 +47,17 @@ const handleItemAction = (action: string) => {
         </SupaIcon>
       </div>
 
-        <SupaDropdown
-          @update:model-value="handleItemAction"
-          :items="cardItemActions"
-          :ui="{ trigger: 'w-10 h-10 min-w-10 p-0 justify-center border-none shadow-none!' }"
-        >
-          <template #menuTrigger>
-            <SupaIcon size="sm" name="pepicons-pencil:dots-y" />
-          </template>
-        </SupaDropdown>
+        <div @click.stop>
+          <SupaDropdown
+            @update:model-value="handleItemAction"
+            :items="cardItemActions"
+            :ui="{ trigger: 'w-10 h-10 min-w-10 p-0 justify-center border-none shadow-none!' }"
+          >
+            <template #menuTrigger>
+              <SupaIcon size="sm" name="pepicons-pencil:dots-y" />
+            </template>
+          </SupaDropdown>
+        </div>
     </div>
 
 

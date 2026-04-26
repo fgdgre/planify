@@ -27,7 +27,12 @@
 
   const getEventById = (id: string) => eventsForSelectedDateRef.value.find((event) => event.id === id)
 
-  const handleEventSelect = (id: string | null) => {
+  const handleEventSelect = (id: unknown) => {
+    if (typeof id !== 'string') {
+      selectedEventId.value = ''
+      return
+    }
+
     if(!id) {
       selectedEventId.value = ''
       return

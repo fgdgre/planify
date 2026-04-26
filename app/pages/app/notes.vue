@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { useNotes, useNotesStore, NotesItem } from '@features/notes'
-import NotesFormModal from '@features/notes/components/NotesFormModal.vue'
+import { useNotes } from '@features/notes'
 import NotesList from "@features/notes/components/NotesList.vue";
 
 definePageMeta({
@@ -9,28 +8,29 @@ definePageMeta({
 })
 
 const { fetchNotes } = useNotes()
-const notesStore = useNotesStore()
-
-const isCreateModalOpen = ref(false)
+const route = useRoute()
+const router = useRouter()
 
 await fetchNotes()
 
-const handleModalClose = () => {
-  isCreateModalOpen.value = false
+const openCreateNote = async () => {
+  await router.replace({
+    query: {
+      ...route.query,
+      noteId: undefined,
+      noteAction: 'create',
+      action: undefined,
+    },
+  })
 }
 
 </script>
 
 <template>
   <div class="flex flex-col flex-1 p-4 gap-4">
-    <SupaButton color="primary" @click="isCreateModalOpen = true">
+    <SupaButton color="primary" @click="openCreateNote">
       Create Note
     </SupaButton>
-
-    <NotesFormModal
-      v-if="isCreateModalOpen"
-      @close="handleModalClose"
-    />
 
     <NotesList />
   </div>

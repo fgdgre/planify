@@ -1,16 +1,23 @@
 import { tv } from 'tailwind-variants'
 
 export const wrapper = tv({
-  base: 'flex flex-col bg-sidebar-background text-sidebar-foreground w-[80%] max-w-[370px] h-[100dvh] box-border fixed top-0 z-30 border-r border-border text-sidebar-foreground',
+  base: 'flex flex-col w-[80%] max-w-[370px] h-[100dvh] box-border fixed top-0 z-30 border-r border-border',
   variants: {
     open: {
       true: '',
       false: '',
     },
+    theme: {
+      white: 'bg-background text-foreground',
+      black: 'bg-sidebar-background text-sidebar-foreground',
+    },
     position: {
       left: 'border-border border-r',
       right: 'border-border border-l',
     },
+  },
+  defaultVariants: {
+    theme: 'white',
   },
   compoundVariants: [
     {
@@ -41,12 +48,19 @@ export const overlay = tv({
 })
 
 export const title = tv({
-  base: 'flex items-center justify-between text-sidebar-foreground h-8 p-4 pr-2 box-content transition-all pt-4',
+  base: 'flex items-center justify-between h-8 p-4 pr-2 box-content transition-all pt-4',
   variants: {
+    theme: {
+      white: 'text-foreground',
+      black: 'text-sidebar-foreground',
+    },
     open: {
       true: 'px-2 w-[32px]',
       false: '',
     },
+  },
+  defaultVariants: {
+    theme: 'white',
   },
 })
 

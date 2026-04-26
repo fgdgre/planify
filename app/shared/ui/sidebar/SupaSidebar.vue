@@ -9,6 +9,7 @@ withDefaults(
     withCloseButton?: boolean
     testId?: string
     position?: 'left' | 'right'
+    theme?: 'white' | 'black'
     preventClose?: boolean
     toggleFixedButton?: boolean
     noPadding?: boolean
@@ -23,6 +24,7 @@ withDefaults(
   {
     position: 'left',
     overlay: true,
+    theme: 'white',
   }
 )
 
@@ -49,12 +51,12 @@ watchEffect(() => {
 
   <aside
     ref="sidebar"
-    :class="[sidebarStyles.wrapper({ open: isOpen, position, class: ['transition-sidebar', ui?.wrapper] })]"
+    :class="[sidebarStyles.wrapper({ open: isOpen, position, theme, class: ['transition-sidebar', ui?.wrapper] })]"
     :data-testid="testId || 'supa-sidebar'"
   >
     <div
       v-if="$slots.title || withCloseButton"
-      :class="[sidebarStyles.title({ class: ui?.title })]"
+      :class="[sidebarStyles.title({ theme, class: ui?.title })]"
       :data-testid="testId ? testId + '-title-wrapper' : 'sidebar-title-wrapper'"
     >
       <div
@@ -69,7 +71,7 @@ watchEffect(() => {
         v-if="withCloseButton"
         :data-testid="testId ? testId + '-close-button' : 'sidebar-close-button'"
         icon="heroicons:x-mark"
-        :ui="{ icon: `text-sidebar-foreground size-5 ${ui?.closeButton}` }"
+        :ui="{ icon: `${theme === 'black' ? 'text-sidebar-foreground' : 'text-foreground'} size-5 ${ui?.closeButton}` }"
         variant="transparent"
         @click="isOpen = false"
       />
@@ -86,9 +88,9 @@ watchEffect(() => {
     <div
       v-if="$slots.footer"
       :data-testid="testId ? testId + '-footer-wrapper' : 'sidebar-footer-wrapper'"
-      :class="[sidebarStyles.footerWrapper({ self: !!$slots.content })]"
+      :class="[sidebarStyles.footerWrapper({ self: !!$slots.content, class: ui?.footer })]"
     >
-      <div :class="[sidebarStyles.footer({ class: ui?.footer })]">
+      <div :class="[sidebarStyles.footer()]">
         <slot name="footer" />
       </div>
     </div>

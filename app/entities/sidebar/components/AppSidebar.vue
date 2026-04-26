@@ -60,6 +60,7 @@ const sidebarFooterWrapper = computed(() =>
   <aside
     :class="[
       sidebarWrapper({
+        theme: 'black',
         class: [
           'sidebar w-[var(--sidebar-width)] overflow-hidden',
           showOnHover && 'hover:w-[var(--sidebar-full-width)]',

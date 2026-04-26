@@ -54,11 +54,11 @@ export const notesForm = () => {
     eventsLoading.value = false
   }
 
-  const initEventLinking = async () => {
+  const initEventLinking = async (date = selectedDate.value ?? new Date()) => {
+    selectedDate.value = date
     await fetchConnectedAccounts()
 
-    const now = new Date()
-    await loadMonthEvents(now.getFullYear(), now.getMonth() + 1)
+    await loadMonthEvents(date.getFullYear(), date.getMonth() + 1)
   }
 
   const getPayload = (): NoteFormPayload => ({
