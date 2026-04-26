@@ -42,6 +42,7 @@ const {
     show-footer
     :saving
     :submit-label="activeMode === 'create' ? 'Create' : 'Save'"
+    context-width="520px"
     @submit="handleSubmit"
     @cancel="closeSidebar"
   >
