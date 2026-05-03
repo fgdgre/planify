@@ -17,7 +17,7 @@ import { useCalendarStore, ACCOUNT_COLORS, INTERNAL_CALENDAR_COLOR } from '../st
 import { useCalendar } from './calendar'
 import { useInternalEvents } from './useInternalEvents'
 import { mapToScheduleXEvent } from '../helpers'
-import { useGoogleCalendarStore } from '@features/integrations/google-calendar'
+import { useGoogleCalendarStore, useGoogleCalendar } from '@features/integrations/google-calendar'
 import { useUserStore } from '@features/auth/stores/user'
 import { useSettingsStore } from '@features/settings'
 
@@ -45,7 +45,10 @@ export const useCalendarApp = () => {
 
   const { events } = storeToRefs(calendarStore)
   const { loadViewEvents } = useCalendar()
-  const { updateEvent } = useInternalEvents()
+  const { updateEvent, loadEvents: loadInternalEvents } = useInternalEvents()
+  const { fetchCalendarEvents, syncEvents } = useGoogleCalendar()
+
+  const isRefreshing = ref(false)
 
   let dragStartDateTime: Temporal.ZonedDateTime | null = null
 
@@ -214,5 +217,28 @@ export const useCalendarApp = () => {
     }
   }
 
-  return { calendarApp, goToDate, openEventView }
+  // Mirrors `google-calendar-events` middleware: pulls fresh events from Google
+  // into Supabase for every connected account, reloads internal events, and
+  // re-runs the current view's range query so the calendar updates in place.
+  const refreshEvents = async () => {
+    if (isRefreshing.value) return
+    isRefreshing.value = true
+    try {
+      const accounts = googleCalendarStore.accounts
+      await Promise.all([
+        loadInternalEvents(),
+        ...accounts.map(async (account) => {
+          await fetchCalendarEvents(account.id)
+          await syncEvents(account.id)
+        }),
+      ])
+
+      const range = (calendarApp as any).$app?.calendarState.range.value
+      if (range) await loadViewEvents(range)
+    } finally {
+      isRefreshing.value = false
+    }
+  }
+
+  return { calendarApp, goToDate, openEventView, refreshEvents, isRefreshing }
 }

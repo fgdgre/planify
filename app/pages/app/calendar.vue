@@ -10,7 +10,7 @@ definePageMeta({
   middleware: ['google-calendar-events'],
 })
 
-const { calendarApp, goToDate, openEventView } = useCalendarApp()
+const { calendarApp, goToDate, openEventView, refreshEvents, isRefreshing } = useCalendarApp()
 
 const handleSearchSelect = (event: CalendarEventDisplay) => {
   goToDate(event.start_at)
@@ -21,6 +21,14 @@ const handleSearchSelect = (event: CalendarEventDisplay) => {
 <template>
   <Teleport to="#page-header-actions" defer>
     <CalendarSearch @select="handleSearchSelect" />
+    <SupaButton
+      icon="heroicons:arrow-path"
+      variant="transparent"
+      :loading="isRefreshing"
+      :disabled="isRefreshing"
+      :ui="{ icon: isRefreshing ? 'animate-spin' : '' }"
+      @click="refreshEvents"
+    />
   </Teleport>
 
   <div class="flex-1 overflow-auto">
