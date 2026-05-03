@@ -46,7 +46,7 @@ await load()
             color="primary"
             icon="lucide:calendar"
             :ui="{
-              button: 'text-white rounded-[14px] text-base px-8 py-4',
+              button: 'text-white rounded-[14px] text-base px-8 py-4 h-auto',
               icon: 'order-last',
             }"
             @click="goCalendar"
@@ -56,7 +56,7 @@ await load()
           <SupaButton
             color="primary"
             outline
-            :ui="{ button: 'rounded-[14px] text-base px-8 py-4' }"
+            :ui="{ button: 'rounded-[14px] text-base px-8 py-4 h-auto' }"
             @click="openCreateNote"
           >
             Add Note
