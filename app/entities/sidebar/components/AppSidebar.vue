@@ -12,10 +12,18 @@ const { isSidebarCollapsed, sections } = storeToRefs(sidebarStore)
 const userStore = useUserStore()
 const { user } = storeToRefs(userStore)
 
-const userInfo = computed(() => ({
-  name: (user.value?.first_name || 'Unknown') + ' ' + (user.value?.last_name || 'User'),
-  email: user.value?.email,
-}))
+const userInfo = computed(() => {
+  const meta = user.value?.user_metadata
+  const firstName = meta?.first_name?.trim() ?? ''
+  const lastName = meta?.last_name?.trim() ?? ''
+  const fullName = [firstName, lastName].filter(Boolean).join(' ')
+  const email = user.value?.email ?? meta?.email ?? ''
+
+  return {
+    name: fullName || email || 'Unknown user',
+    email,
+  }
+})
 
 defineEmits<{
   toggleCollapsed: []
