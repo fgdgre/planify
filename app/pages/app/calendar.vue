@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import { ScheduleXCalendar } from '@schedule-x/vue'
 import { useCalendarApp } from '@entities/calendar'
+import CalendarSearch from '@entities/calendar/components/CalendarSearch.vue'
+import type { CalendarEventDisplay } from '@entities/calendar'
 
 definePageMeta({
   layout: 'app',
@@ -8,12 +10,22 @@ definePageMeta({
   middleware: ['google-calendar-events'],
 })
 
-const { calendarApp } = useCalendarApp()
+const { calendarApp, goToDate, openEventView } = useCalendarApp()
+
+const handleSearchSelect = (event: CalendarEventDisplay) => {
+  goToDate(event.start_at)
+  openEventView(event)
+}
 </script>
 
 <template>
-  <div class="flex-1 overflow-auto">
-    <ScheduleXCalendar :calendar-app="calendarApp" />
+  <div class="flex flex-col flex-1 overflow-hidden">
+    <div class="px-4 py-3 border-b border-border">
+      <CalendarSearch @select="handleSearchSelect" />
+    </div>
+    <div class="flex-1 overflow-auto">
+      <ScheduleXCalendar :calendar-app="calendarApp" />
+    </div>
   </div>
 </template>
 

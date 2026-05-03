@@ -27,6 +27,14 @@ const toMs = (v: unknown): number => {
   return new Date(String(v)).getTime()
 }
 
+const isoToYmd = (iso: string): string => {
+  const d = new Date(iso.replace(/\[.*\]$/, ''))
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 export const useCalendarApp = () => {
   const googleCalendarStore = useGoogleCalendarStore()
   const calendarStore = useCalendarStore()
@@ -198,5 +206,13 @@ export const useCalendarApp = () => {
     }
   })
 
-  return { calendarApp }
+  const goToDate = (iso: string) => {
+    const ymd = isoToYmd(iso)
+    const ctrl = (calendarApp as any).setDate ?? (calendarApp as any).calendarControls?.setDate
+    if (typeof ctrl === 'function') {
+      ctrl.call(calendarApp, ymd)
+    }
+  }
+
+  return { calendarApp, goToDate, openEventView }
 }
