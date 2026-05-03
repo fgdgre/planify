@@ -34,7 +34,6 @@ const {
   <SupaSplitSidebar
     v-model="isOpen"
     expanded
-    prevent-close
     :title="sidebarTitle"
     :subtitle="lastActivityText"
     :loading

@@ -27,11 +27,13 @@ const openCreateNote = async () => {
 </script>
 
 <template>
-  <div class="flex flex-col flex-1 p-4 gap-4">
-    <SupaButton color="primary" @click="openCreateNote">
-      Create Note
-    </SupaButton>
+  <div class="flex flex-col flex-1 overflow-auto">
+    <div class="flex flex-col flex-1 p-4 gap-4">
+      <SupaButton color="primary" @click="openCreateNote">
+        Create Note
+      </SupaButton>
 
-    <NotesList />
+      <NotesList />
+    </div>
   </div>
 </template>

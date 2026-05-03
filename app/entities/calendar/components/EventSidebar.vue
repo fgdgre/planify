@@ -33,7 +33,6 @@ const {
 <template>
   <SupaSplitSidebar
     v-model="isOpen"
-    prevent-close
     :expanded="isNotePanelOpen"
     :title="sidebarTitle"
     :loading
