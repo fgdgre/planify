@@ -212,6 +212,7 @@ export type Database = {
         Row: {
           calendar_event_id: string | null
           content: string
+          content_text: string | null
           created_at: string
           id: string
           title: string
@@ -221,6 +222,7 @@ export type Database = {
         Insert: {
           calendar_event_id?: string | null
           content?: string
+          content_text?: string | null
           created_at?: string
           id?: string
           title: string
@@ -230,6 +232,7 @@ export type Database = {
         Update: {
           calendar_event_id?: string | null
           content?: string
+          content_text?: string | null
           created_at?: string
           id?: string
           title?: string
@@ -311,7 +314,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       [_ in never]: never

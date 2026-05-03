@@ -4,6 +4,7 @@ export const noteSchema = z.object({
   id: z.string().uuid(),
   title: z.string(),
   content: z.string(),
+  content_text: z.string().nullable(),
   calendar_event_id: z.string().uuid().nullable(),
   user_id: z.string().uuid(),
   created_at: z.string(),
