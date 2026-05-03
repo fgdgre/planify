@@ -144,10 +144,6 @@ export const useGoogleCalendar = () => {
     }
   }
 
-  /**
-   * Load events from DB for a given account.
-   * Accepts an optional range; if omitted, loads without date filtering (used during sync).
-   */
   const loadEventsFromDb = async (
     googleAccountId: string,
     range?: { start: string; end: string },

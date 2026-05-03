@@ -18,6 +18,12 @@ export const useAppSidebar = defineStore('sidebar', () => {
       link: ROUTES.CALENDAR,
     },
     {
+      name: 'Notes',
+      pageName: 'notes',
+      icon: 'clarity:note-line',
+      link: ROUTES.NOTES,
+    },
+    {
       name: 'Settings',
       pageName: 'settings',
       icon: 'lucide:settings',

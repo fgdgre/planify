@@ -10,4 +10,5 @@ export enum ROUTES {
   HOME = '/app',
   SETTINGS = HOME + '/settings',
   CALENDAR = HOME + '/calendar',
+  NOTES = HOME + '/notes',
 }

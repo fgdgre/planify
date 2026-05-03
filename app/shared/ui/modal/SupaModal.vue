@@ -69,6 +69,7 @@ onUnmounted(() => {
             scrollable: scrollableContent,
             smallModal: !fullscreen,
             fullscreen: fullscreen,
+            class: ui?.mainContent,
           }),
         ]"
         data-testid="supa-modal-main-content"

@@ -243,7 +243,7 @@ watchEffect(() => {
 </template>
 
 <style scoped>
-:deep(div[data-radix-menu-content][data-state='open']) {
+:deep(div[data-reka-menu-content][data-state='open']) {
   animation: dropdownAppear 0.15s ease;
 }
 

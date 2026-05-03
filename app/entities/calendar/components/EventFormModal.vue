@@ -3,6 +3,10 @@ import { useInternalEvents } from '@entities/calendar/composables/useInternalEve
 import { useCalendar } from '@entities/calendar/composables/calendar'
 import { validateForm, type ValidationSchema } from '@features/validation'
 import type { CalendarEventDisplay, EventFormData, EventFormMode } from '@entities/calendar'
+import { useNotes } from '@features/notes'
+import { useUserStore } from '@features/auth'
+import NotesTabButton from "@features/notes/components/NotesTabButton.vue";
+import TabDetails from "@features/notes/components/TabDetails.vue";
 
 const props = defineProps<{
   mode: EventFormMode
@@ -16,8 +20,15 @@ const emit = defineEmits<{
 
 const { createEvent, updateEvent } = useInternalEvents()
 const { fetchEvents } = useCalendar()
+const { createNote } = useNotes()
+const userStore = useUserStore()
 
 const saving = ref(false)
+const showNoteForm = ref(false)
+const noteTitle = ref('')
+const noteContent = ref('')
+
+const isNoteFilled = computed(() => noteTitle.value.trim().length > 0)
 
 const isoToDate = (iso?: string): Date | undefined => {
   if (!iso) return undefined
@@ -42,6 +53,7 @@ const getInitialData = (): EventFormData => {
         end: isoToDate(props.event.end_at),
       },
       all_day: props.event.all_day,
+      note: null
     }
   }
 
@@ -119,6 +131,7 @@ const handleSubmit = async () => {
   }
 
   let success = false
+  let createdEventId: string | null = null
 
   if (props.mode === 'edit' && props.event) {
     const result = await updateEvent(props.event.id, payload)
@@ -126,6 +139,16 @@ const handleSubmit = async () => {
   } else {
     const result = await createEvent(payload)
     success = !!result
+    if (result) createdEventId = result.id
+  }
+
+  if (success && createdEventId && isNoteFilled.value) {
+    await createNote({
+      user_id: userStore.user!.id,
+      title: noteTitle.value,
+      content: noteContent.value || null,
+      calendar_event_id: createdEventId,
+    })
   }
 
   saving.value = false
@@ -179,7 +202,6 @@ const handleSubmit = async () => {
           :ui="{ modal: 'z-100' }"
         />
 
-        <!-- Time pickers — only when not all day -->
         <div v-if="!formData.all_day" class="grid grid-cols-2 gap-3">
           <div class="space-y-1.5">
             <label class="text-sm font-medium text-foreground">Start time</label>
@@ -197,6 +219,28 @@ const handleSubmit = async () => {
               class="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring"
             />
           </div>
+        </div>
+
+        <div v-if="mode === 'create'" class="space-y-3">
+          <NotesTabButton
+            :tab-filled="isNoteFilled"
+            active-tab
+            class="w-full"
+            @click="showNoteForm = !showNoteForm"
+          >
+            <div class="flex items-center justify-between gap-2">
+              <p>Create note for this event</p>
+
+              <SupaIcon :name="showNoteForm ? 'heroicons:chevron-up' : 'heroicons:chevron-down'" />
+            </div>
+          </NotesTabButton>
+
+          <TabDetails
+            v-if="showNoteForm"
+            class="px-0! pb-0!"
+            v-model:title="noteTitle"
+            v-model:content="noteContent"
+          />
         </div>
       </form>
     </template>

@@ -3,12 +3,18 @@ import { useInternalEvents } from "@entities/calendar/composables/useInternalEve
 import { useSettings } from "@features/settings";
 import { useUserStore } from "@features/auth/stores/user";
 
-export default defineNuxtRouteMiddleware(async () => {
+export default defineNuxtRouteMiddleware(async (to, from) => {
   const googleCalendarStore = useGoogleCalendarStore()
   const { fetchConnectedAccounts, fetchCalendarEvents, syncEvents } = useGoogleCalendar()
   const { loadEvents: loadInternalEvents } = useInternalEvents()
   const { getUserPreferences, syncAccountColors } = useSettings()
   const userStore = useUserStore()
+
+  const isCalendarQueryOnlyNavigation = to.path === from.path && to.path === '/app/calendar'
+
+  if (isCalendarQueryOnlyNavigation && googleCalendarStore.accounts.length) {
+    return
+  }
 
   await Promise.all([
     fetchConnectedAccounts(),

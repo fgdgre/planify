@@ -20,7 +20,7 @@ export const useGoogleCalendarStore = defineStore('google-calendar', () => {
     accounts.value = value
   }
   const setCalendarEvents = (googleAccountId: string, value: CalendarEvent[]) => {
-    calendarEvents.value[googleAccountId] = value
+    calendarEvents.value = { ...calendarEvents.value, [googleAccountId]: value }
   }
   const setLoading = (value: boolean) => {
     loading.value = value

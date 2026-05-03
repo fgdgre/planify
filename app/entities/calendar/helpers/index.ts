@@ -1,5 +1,8 @@
 import type { CalendarEventDisplay } from '../types'
 import type { CalendarEventExternal } from '@schedule-x/calendar'
+import type { Database } from '@shared/api/supabase/types/database'
+
+type CalendarEventRow = Database['public']['Tables']['calendar_events']['Row']
 
 export const parseTemporalStart = (dateString: string, allDay: boolean) => {
   if (allDay) {
@@ -27,3 +30,17 @@ export const mapToScheduleXEvent = (event: CalendarEventDisplay): CalendarEventE
     },
   }
 }
+
+export const mapCalendarEventRowToDisplay = (event: CalendarEventRow): CalendarEventDisplay => ({
+  id: event.id,
+  title: event.title ?? '(No title)',
+  start_at: event.start_at,
+  end_at: event.end_at,
+  all_day: event.all_day,
+  description: event.description ?? undefined,
+  location: event.location ?? undefined,
+  creator_email: event.creator_email ?? undefined,
+  html_link: event.html_link ?? undefined,
+  sourceAccountId: event.is_internal ? `internal_${event.user_id}` : event.google_account_id ?? undefined,
+  source: event.is_internal ? 'internal' : 'google',
+})
