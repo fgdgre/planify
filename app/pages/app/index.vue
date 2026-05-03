@@ -16,6 +16,7 @@ import type { Database } from '@shared/api/supabase/types/database'
 definePageMeta({
   title: 'Home',
   layout: 'app',
+  middleware: ['google-calendar-events'],
 })
 
 const googleCalendarStore = useGoogleCalendarStore()
@@ -82,26 +83,6 @@ const refreshDashboard = async () => {
   } finally {
     dataLoading.value = false
   }
-
-  console.log('[dashboard] loaded:', {
-    accounts: accounts.value.length,
-    events: allEvents.value.length,
-    weekEvents: weekEvents.value.length,
-    todaysEvents: todaysEvents.value.length,
-    notes: notes.value.length,
-    todaysEventNotes: todaysEventNotes.value.length,
-    weekRange: {
-      start: new Date(weekRange.value.start).toISOString(),
-      end: new Date(weekRange.value.end).toISOString(),
-    },
-    sampleEvent: allEvents.value[0]
-      ? {
-          id: allEvents.value[0].id,
-          start_at: allEvents.value[0].start_at,
-          is_internal: allEvents.value[0].is_internal,
-        }
-      : null,
-  })
 }
 
 const startOfWeekMonday = (now: Date) => {
@@ -211,6 +192,23 @@ const openEventView = (event: CalendarEvent, note?: Note) => {
   })
 }
 
+const openNoteInEventSidebar = (note: Note) => {
+  if (!note.calendar_event_id) return
+  router.replace({
+    query: {
+      ...route.query,
+      eventId: note.calendar_event_id,
+      eventNoteId: note.id,
+      action: undefined,
+      eventStart: undefined,
+      eventEnd: undefined,
+      eventAllDay: undefined,
+      noteId: undefined,
+      noteAction: undefined,
+    },
+  })
+}
+
 const stats = computed(() => [
   { icon: 'lucide:calendar', value: weekEvents.value.length, label: 'Events This Week' },
   { icon: 'lucide:mail', value: accounts.value.length, label: 'Connected Accounts' },
@@ -218,6 +216,7 @@ const stats = computed(() => [
 ])
 
 const goCalendar = () => router.push('/app/calendar')
+
 const openCreateNote = async () => {
   await router.push({
     path: '/app/notes',
@@ -225,18 +224,6 @@ const openCreateNote = async () => {
       ...route.query,
       noteAction: 'create',
       noteId: undefined,
-      action: undefined,
-    },
-  })
-}
-
-const openNote = async (note: Note) => {
-  await router.push({
-    path: '/app/notes',
-    query: {
-      ...route.query,
-      noteId: note.id,
-      noteAction: undefined,
       action: undefined,
     },
   })
@@ -265,21 +252,25 @@ await refreshDashboard()
   </Teleport>
 
   <div class="flex-1 overflow-auto">
-    <section class="dashboard-hero">
-      <div class="hero-content">
-        <h1 class="hero-title">
+    <section
+      class="flex flex-col gap-16 px-6 py-24 bg-[linear-gradient(135deg,#fff_0%,rgba(150,136,207,0.05)_50%,#fff_100%)]"
+    >
+      <div class="flex flex-col gap-6 max-w-[768px]">
+        <h1 class="text-[60px] leading-[60px] font-medium text-black">
           Add your plans for today<br />
           <span class="text-primary">and a couple of easy tips</span>
         </h1>
-        <p class="hero-description">
+        <p class="text-xl leading-7 text-black/60 max-w-[576px]">
           Choose an account, day, time, write notes and colour according to your mood
         </p>
-        <div class="hero-actions">
+        <div class="flex items-center gap-4">
           <SupaButton
             color="primary"
-            class="hero-button !text-white !rounded-[14px] !text-base"
-            :ui="{ icon: 'order-last' }"
             icon="lucide:calendar"
+            :ui="{
+              button: 'text-white rounded-[14px] text-base px-8 py-4 max-h-auto h-auto',
+              icon: 'order-last',
+            }"
             @click="goCalendar"
           >
             Open Calendar
@@ -287,7 +278,7 @@ await refreshDashboard()
           <SupaButton
             color="primary"
             outline
-            class="hero-button !rounded-[14px] !text-base"
+            :ui="{ button: 'rounded-[14px] text-base px-8 py-4 max-h-auto h-auto' }"
             @click="openCreateNote"
           >
             Add Note
@@ -295,76 +286,96 @@ await refreshDashboard()
         </div>
       </div>
 
-      <div class="chart-card">
+      <div class="border border-black/10 bg-white rounded-2xl p-8 flex flex-col gap-4">
         <EventsLineChart :buckets="buckets" />
 
-        <div class="chart-days">
-          <div v-for="bucket in buckets" :key="bucket.dayIndex" class="chart-day">
-            <span class="chart-day-label">{{ bucket.shortLabel }}</span>
-            <span class="chart-day-date">{{ bucket.date }}</span>
+        <div class="flex justify-between gap-2">
+          <div
+            v-for="bucket in buckets"
+            :key="bucket.dayIndex"
+            class="flex-1 flex flex-col items-center"
+          >
+            <span class="text-xs leading-4 font-medium text-black/40 text-center">{{ bucket.shortLabel }}</span>
+            <span class="text-sm leading-5 text-black/60 text-center">{{ bucket.date }}</span>
           </div>
         </div>
 
-        <div class="chart-footer">Event distribution for this week</div>
+        <div class="border-t border-black/10 pt-6 text-sm leading-5 text-black/50 text-center">
+          Event distribution for this week
+        </div>
       </div>
     </section>
 
-    <section class="dashboard-stats">
+    <section class="flex flex-wrap gap-6 px-6 py-16">
       <div
         v-for="(stat, i) in stats"
         :key="stat.label"
-        class="stat-card"
+        class="flex-1 min-w-[280px] border border-black/10 rounded-[14px] p-8 flex flex-col gap-4 bg-white"
       >
         <div
-          class="stat-icon"
+          class="size-12 rounded-[10px] flex items-center justify-center"
           :class="i % 2 === 0 ? 'bg-[rgba(150,136,207,0.08)]' : ''"
         >
           <SupaIcon :name="stat.icon" :ui="{ icon: 'size-6 text-foreground' }" />
         </div>
-        <p class="stat-value">{{ stat.value }}</p>
-        <p class="stat-label">{{ stat.label }}</p>
+        <p class="text-4xl leading-10 font-medium text-black">{{ stat.value }}</p>
+        <p class="text-sm leading-5 text-black/50">{{ stat.label }}</p>
       </div>
     </section>
 
-    <section class="dashboard-schedule">
-      <div class="section-header">
-        <h2 class="schedule-title">Today's Schedule</h2>
-        <NuxtLink class="section-link" to="/app/calendar">View all</NuxtLink>
+    <section
+      class="px-6 pt-16 flex flex-col gap-8 min-h-[400px] bg-[linear-gradient(180deg,#fff_0%,rgba(150,136,207,0.05)_100%)]"
+    >
+      <div class="flex items-center justify-between gap-4">
+        <h2 class="text-3xl leading-9 font-medium text-black">Today's Schedule</h2>
+        <NuxtLink class="text-sm text-primary underline underline-offset-2" to="/app/calendar">
+          View all
+        </NuxtLink>
       </div>
 
-      <div class="schedule-list">
-        <div v-if="todaysEvents.length === 0" class="schedule-empty">
+      <div class="flex flex-col w-full gap-3">
+        <div
+          v-if="todaysEvents.length === 0"
+          class="p-8 border border-dashed border-black/10 rounded-[14px] text-center text-sm text-black/45"
+        >
           Nothing scheduled for today.
         </div>
 
         <div
           v-for="event in todaysEvents"
           :key="event.id"
-          class="schedule-row"
+          class="flex items-center gap-6 p-[24.8px] bg-white border border-black/10 rounded-[14px] w-full text-left cursor-pointer transition-colors hover:border-primary/50"
           role="button"
           tabindex="0"
           @click="openEventView(event)"
           @keydown.enter.prevent="openEventView(event)"
           @keydown.space.prevent="openEventView(event)"
         >
-          <span class="schedule-time">{{ formatTime(event.start_at) }}</span>
-          <span class="schedule-bar" :style="{ background: eventBarColor(event) }" />
-          <div class="schedule-meta">
-            <p class="schedule-event-title">{{ event.title || '(No title)' }}</p>
-            <p v-if="event.creator_email" class="schedule-event-email">
+          <span class="w-16 text-sm leading-5 font-medium text-black/40 shrink-0">
+            {{ formatTime(event.start_at) }}
+          </span>
+          <span
+            class="w-1 h-12 rounded-full shrink-0"
+            :style="{ background: eventBarColor(event) }"
+          />
+          <div class="flex flex-col gap-1 min-w-0">
+            <p class="text-base leading-6 font-medium text-black truncate">
+              {{ event.title || '(No title)' }}
+            </p>
+            <p v-if="event.creator_email" class="text-sm leading-5 text-black/50">
               {{ event.creator_email }}
             </p>
 
             <div
               v-if="notesByEventId.get(event.id)?.length"
-              class="schedule-notes"
+              class="flex flex-wrap gap-1.5 mt-1.5"
               @click.stop
             >
               <button
                 v-for="note in notesByEventId.get(event.id)"
                 :key="note.id"
                 type="button"
-                class="schedule-note-chip"
+                class="inline-flex items-center gap-1.5 max-w-[220px] px-2.5 py-1 bg-primary/10 text-foreground rounded-full text-xs leading-4 cursor-pointer transition-colors hover:bg-primary/20"
                 @click="openEventView(event, note)"
               >
                 <SupaIcon name="lucide:notebook-pen" :ui="{ icon: 'size-3.5 shrink-0' }" />
@@ -375,23 +386,31 @@ await refreshDashboard()
         </div>
       </div>
 
-      <div class="notes-column">
-        <div class="section-header">
-          <h2 class="schedule-title">Notes for today's events</h2>
-          <NuxtLink class="section-link" to="/app/notes">View all</NuxtLink>
+      <div class="flex flex-col gap-4 pb-16">
+        <div class="flex items-center justify-between gap-4">
+          <h2 class="text-3xl leading-9 font-medium text-black">Notes for today's events</h2>
+          <NuxtLink class="text-sm text-primary underline underline-offset-2" to="/app/notes">
+            View all
+          </NuxtLink>
         </div>
 
-        <div v-if="todaysEventNotes.length === 0" class="schedule-empty">
+        <div
+          v-if="todaysEventNotes.length === 0"
+          class="p-8 border border-dashed border-black/10 rounded-[14px] text-center text-sm text-black/45"
+        >
           No notes linked to today's events.
         </div>
 
-        <div v-else class="notes-grid">
+        <div
+          v-else
+          class="grid grid-cols-[repeat(auto-fill,minmax(300px,360px))] gap-4 justify-start"
+        >
           <NotesItem
             v-for="note in todaysEventNotes"
             :key="note.id"
             :item="note"
             class="bg-white"
-            @view="() => openNote(note)"
+            @view="() => openNoteInEventSidebar(note)"
             @delete="() => handleDeleteNote(note)"
           />
         </div>
@@ -399,283 +418,3 @@ await refreshDashboard()
     </section>
   </div>
 </template>
-
-<style scoped>
-.dashboard-hero {
-  display: flex;
-  flex-direction: column;
-  gap: 64px;
-  padding: 96px 24px;
-  background: linear-gradient(135deg, #fff 0%, rgba(150, 136, 207, 0.05) 50%, #fff 100%);
-}
-
-.hero-content {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  max-width: 768px;
-}
-
-.hero-title {
-  font-size: 60px;
-  line-height: 60px;
-  font-weight: 500;
-  color: #000;
-}
-
-.hero-description {
-  font-size: 20px;
-  line-height: 28px;
-  color: rgba(0, 0, 0, 0.6);
-  max-width: 576px;
-}
-
-.hero-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.hero-button {
-  padding: 16px 32px 16px 32px !important;
-}
-
-.chart-card {
-  border: 0.8px solid rgba(0, 0, 0, 0.1);
-  background: #fff;
-  border-radius: 16px;
-  padding: 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.chart-days {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.chart-day {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-}
-
-.chart-day-label {
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.4);
-  text-align: center;
-}
-
-.chart-day-date {
-  font-size: 14px;
-  line-height: 20px;
-  color: rgba(0, 0, 0, 0.6);
-  text-align: center;
-}
-
-.chart-footer {
-  border-top: 0.8px solid rgba(0, 0, 0, 0.1);
-  padding-top: 24px;
-  font-size: 14px;
-  line-height: 20px;
-  color: rgba(0, 0, 0, 0.5);
-  text-align: center;
-}
-
-.dashboard-stats {
-  display: flex;
-  gap: 24px;
-  padding: 64px 24px;
-  flex-wrap: wrap;
-}
-
-.stat-card {
-  flex: 1;
-  min-width: 280px;
-  border: 0.8px solid rgba(0, 0, 0, 0.1);
-  border-radius: 14px;
-  padding: 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  background: #fff;
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stat-value {
-  font-size: 36px;
-  line-height: 40px;
-  font-weight: 500;
-  color: #000;
-}
-
-.stat-label {
-  font-size: 14px;
-  line-height: 20px;
-  color: rgba(0, 0, 0, 0.5);
-}
-
-.dashboard-schedule {
-  padding: 64px 24px 0;
-  background: linear-gradient(180deg, #fff 0%, rgba(150, 136, 207, 0.05) 100%);
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-  min-height: 400px;
-}
-
-.schedule-title {
-  font-size: 30px;
-  line-height: 36px;
-  font-weight: 500;
-  color: #000;
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.section-link {
-  font-size: 14px;
-  color: #9688cf;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.schedule-list {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  gap: 12px;
-}
-
-.schedule-row {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  padding: 24.8px;
-  background: #fff;
-  border: 0.8px solid rgba(0, 0, 0, 0.1);
-  border-radius: 14px;
-  width: 100%;
-  text-align: left;
-  cursor: pointer;
-  font: inherit;
-  color: inherit;
-  transition: border-color 0.15s ease, transform 0.15s ease;
-}
-
-.schedule-row:hover {
-  border-color: rgba(150, 136, 207, 0.5);
-}
-
-.schedule-row:active {
-  transform: scale(0.998);
-}
-
-.schedule-time {
-  width: 64px;
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.4);
-  flex-shrink: 0;
-}
-
-.schedule-bar {
-  width: 4px;
-  height: 48px;
-  border-radius: 26843500px;
-  background: #9688cf;
-  flex-shrink: 0;
-}
-
-.schedule-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.schedule-event-title {
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 500;
-  color: #000;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.schedule-event-email {
-  font-size: 14px;
-  line-height: 20px;
-  color: rgba(0, 0, 0, 0.5);
-}
-
-.schedule-notes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.schedule-note-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  max-width: 220px;
-  padding: 4px 10px;
-  background: rgba(150, 136, 207, 0.08);
-  color: #4d4d4d;
-  border-radius: 999px;
-  font-size: 12px;
-  line-height: 16px;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.schedule-note-chip:hover {
-  background: rgba(150, 136, 207, 0.18);
-}
-
-.schedule-empty {
-  padding: 32px;
-  border: 1px dashed rgba(0, 0, 0, 0.1);
-  border-radius: 14px;
-  text-align: center;
-  font-size: 14px;
-  color: rgba(0, 0, 0, 0.45);
-}
-
-.notes-column {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding-bottom: 64px;
-}
-
-.notes-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 360px));
-  gap: 16px;
-  justify-content: start;
-}
-</style>

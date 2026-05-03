@@ -36,7 +36,7 @@ const showEmptyState = computed(() => !loading.value && notes.value.length === 0
 
     <div
       v-if="!showEmptyState"
-      class="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4"
+      class="grid grid-cols-[repeat(auto-fill,minmax(300px,360px))] gap-4 justify-start"
     >
       <NotesItem
         v-for="note in notes"
