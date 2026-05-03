@@ -9,6 +9,9 @@ import { EventsLineChart, useWeeklyEventsChart } from '@entities/charts'
 import { useNotes, useNotesStore, NotesItem } from '@features/notes'
 import type { Note } from '@features/notes'
 import { useUserStore } from '@features/auth'
+import { useSettings, useSettingsStore } from '@features/settings'
+import { ACCOUNT_COLORS, INTERNAL_CALENDAR_COLOR } from '@entities/calendar/stores/calendar'
+import type { Database } from '@shared/api/supabase/types/database'
 
 definePageMeta({
   title: 'Home',
@@ -27,24 +30,55 @@ const { deleteNote, refreshNotes } = useNotes()
 const userStore = useUserStore()
 const { user } = storeToRefs(userStore)
 
+const settingsStore = useSettingsStore()
+const { preferences } = storeToRefs(settingsStore)
+const { getUserPreferences } = useSettings()
+
+const supabase = useSupabaseClient<Database>()
+
 const route = useRoute()
 const router = useRouter()
 
 const dataLoading = ref(false)
+const todaysEventNotes = ref<Note[]>([])
+
+const fetchTodaysEventNotes = async (eventIds: string[]) => {
+  if (!user.value?.id || eventIds.length === 0) {
+    todaysEventNotes.value = []
+    return
+  }
+
+  const { data, error } = await supabase
+    .from('notes')
+    .select('*')
+    .eq('user_id', user.value.id)
+    .in('calendar_event_id', eventIds)
+    .order('updated_at', { ascending: false })
+
+  if (error) {
+    console.error('[dashboard] todaysEventNotes error:', error)
+    return
+  }
+
+  todaysEventNotes.value = (data ?? []) as Note[]
+}
 
 const refreshDashboard = async () => {
   if (!user.value?.id) return
   dataLoading.value = true
   try {
-    if (accounts.value.length === 0) {
-      await fetchConnectedAccounts()
-    }
+    await Promise.all([
+      accounts.value.length === 0 ? fetchConnectedAccounts() : Promise.resolve(),
+      preferences.value ? Promise.resolve() : getUserPreferences(user.value.id),
+    ])
 
     await Promise.all([
       loadInternalEvents(),
       ...accounts.value.map((account) => loadEventsFromDb(account.id)),
       notes.value.length === 0 ? refreshNotes() : Promise.resolve(),
     ])
+
+    await fetchTodaysEventNotes(todaysEvents.value.map((e) => e.id))
   } finally {
     dataLoading.value = false
   }
@@ -52,11 +86,23 @@ const refreshDashboard = async () => {
   console.log('[dashboard] loaded:', {
     accounts: accounts.value.length,
     events: allEvents.value.length,
+    weekEvents: weekEvents.value.length,
+    todaysEvents: todaysEvents.value.length,
     notes: notes.value.length,
+    todaysEventNotes: todaysEventNotes.value.length,
+    weekRange: {
+      start: new Date(weekRange.value.start).toISOString(),
+      end: new Date(weekRange.value.end).toISOString(),
+    },
+    sampleEvent: allEvents.value[0]
+      ? {
+          id: allEvents.value[0].id,
+          start_at: allEvents.value[0].start_at,
+          is_internal: allEvents.value[0].is_internal,
+        }
+      : null,
   })
 }
-
-await refreshDashboard()
 
 const startOfWeekMonday = (now: Date) => {
   const d = new Date(now)
@@ -109,6 +155,17 @@ const todaysEvents = computed(() => {
     .sort((a, b) => new Date(stripZone(a.start_at)).getTime() - new Date(stripZone(b.start_at)).getTime())
 })
 
+const notesByEventId = computed(() => {
+  const map = new Map<string, Note[]>()
+  for (const note of todaysEventNotes.value) {
+    if (!note.calendar_event_id) continue
+    const list = map.get(note.calendar_event_id) ?? []
+    list.push(note)
+    map.set(note.calendar_event_id, list)
+  }
+  return map
+})
+
 const upcomingTodayCount = computed(() => {
   const now = Date.now()
   return todaysEvents.value.filter((e) => new Date(stripZone(e.start_at)).getTime() >= now).length
@@ -119,7 +176,40 @@ const formatTime = (iso: string) => {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
 }
 
-const eventBarColor = (event: CalendarEvent) => (event.is_internal ? '#9688CF' : '#0a0a0a')
+const eventBarColor = (event: CalendarEvent) => {
+  const colors = preferences.value?.eventsColors
+
+  if (event.is_internal) {
+    return colors?.['internal']?.lightColors.main ?? INTERNAL_CALENDAR_COLOR.lightColors.main
+  }
+
+  if (event.google_account_id) {
+    const stored = colors?.[event.google_account_id]?.lightColors.main
+    if (stored) return stored
+
+    const idx = accounts.value.findIndex((a) => a.id === event.google_account_id)
+    const fallback = ACCOUNT_COLORS[idx >= 0 ? idx % ACCOUNT_COLORS.length : 0]
+    return fallback?.lightColors.main ?? INTERNAL_CALENDAR_COLOR.lightColors.main
+  }
+
+  return INTERNAL_CALENDAR_COLOR.lightColors.main
+}
+
+const openEventView = (event: CalendarEvent, note?: Note) => {
+  router.replace({
+    query: {
+      ...route.query,
+      eventId: event.id,
+      eventNoteId: note?.id,
+      action: undefined,
+      eventStart: undefined,
+      eventEnd: undefined,
+      eventAllDay: undefined,
+      noteId: undefined,
+      noteAction: undefined,
+    },
+  })
+}
 
 const stats = computed(() => [
   { icon: 'lucide:calendar', value: weekEvents.value.length, label: 'Events This Week' },
@@ -153,8 +243,13 @@ const openNote = async (note: Note) => {
 }
 
 const handleDeleteNote = async (note: Note) => {
-  await deleteNote(note.id)
+  const ok = await deleteNote(note.id)
+  if (ok) {
+    todaysEventNotes.value = todaysEventNotes.value.filter((n) => n.id !== note.id)
+  }
 }
+
+await refreshDashboard()
 </script>
 
 <template>
@@ -182,7 +277,7 @@ const handleDeleteNote = async (note: Note) => {
         <div class="hero-actions">
           <SupaButton
             color="primary"
-            class="!text-white !rounded-[14px] !px-8 !py-4 !text-base"
+            class="hero-button !text-white !rounded-[14px] !text-base"
             :ui="{ icon: 'order-last' }"
             icon="lucide:calendar"
             @click="goCalendar"
@@ -192,7 +287,7 @@ const handleDeleteNote = async (note: Note) => {
           <SupaButton
             color="primary"
             outline
-            class="!rounded-[14px] !px-8 !py-4 !text-base"
+            class="hero-button !rounded-[14px] !text-base"
             @click="openCreateNote"
           >
             Add Note
@@ -232,44 +327,70 @@ const handleDeleteNote = async (note: Note) => {
     </section>
 
     <section class="dashboard-schedule">
-      <h2 class="schedule-title">Today's Schedule</h2>
+      <div class="section-header">
+        <h2 class="schedule-title">Today's Schedule</h2>
+        <NuxtLink class="section-link" to="/app/calendar">View all</NuxtLink>
+      </div>
 
-      <div class="schedule-grid">
-        <div class="schedule-list">
-          <div v-if="todaysEvents.length === 0" class="schedule-empty">
-            Nothing scheduled for today.
-          </div>
+      <div class="schedule-list">
+        <div v-if="todaysEvents.length === 0" class="schedule-empty">
+          Nothing scheduled for today.
+        </div>
 
-          <div
-            v-for="event in todaysEvents"
-            :key="event.id"
-            class="schedule-row"
-          >
-            <span class="schedule-time">{{ formatTime(event.start_at) }}</span>
-            <span class="schedule-bar" :style="{ background: eventBarColor(event) }" />
-            <div class="schedule-meta">
-              <p class="schedule-event-title">{{ event.title || '(No title)' }}</p>
-              <p v-if="event.creator_email" class="schedule-event-email">
-                {{ event.creator_email }}
-              </p>
+        <div
+          v-for="event in todaysEvents"
+          :key="event.id"
+          class="schedule-row"
+          role="button"
+          tabindex="0"
+          @click="openEventView(event)"
+          @keydown.enter.prevent="openEventView(event)"
+          @keydown.space.prevent="openEventView(event)"
+        >
+          <span class="schedule-time">{{ formatTime(event.start_at) }}</span>
+          <span class="schedule-bar" :style="{ background: eventBarColor(event) }" />
+          <div class="schedule-meta">
+            <p class="schedule-event-title">{{ event.title || '(No title)' }}</p>
+            <p v-if="event.creator_email" class="schedule-event-email">
+              {{ event.creator_email }}
+            </p>
+
+            <div
+              v-if="notesByEventId.get(event.id)?.length"
+              class="schedule-notes"
+              @click.stop
+            >
+              <button
+                v-for="note in notesByEventId.get(event.id)"
+                :key="note.id"
+                type="button"
+                class="schedule-note-chip"
+                @click="openEventView(event, note)"
+              >
+                <SupaIcon name="lucide:notebook-pen" :ui="{ icon: 'size-3.5 shrink-0' }" />
+                <span class="truncate">{{ note.title }}</span>
+              </button>
             </div>
           </div>
         </div>
+      </div>
 
-        <div class="notes-column">
-          <div class="notes-column-header">
-            <p class="notes-column-title">Recent notes</p>
-            <NuxtLink class="notes-column-link" to="/app/notes">View all</NuxtLink>
-          </div>
+      <div class="notes-column">
+        <div class="section-header">
+          <h2 class="schedule-title">Notes for today's events</h2>
+          <NuxtLink class="section-link" to="/app/notes">View all</NuxtLink>
+        </div>
 
-          <div v-if="notes.length === 0" class="schedule-empty">
-            No notes yet.
-          </div>
+        <div v-if="todaysEventNotes.length === 0" class="schedule-empty">
+          No notes linked to today's events.
+        </div>
 
+        <div v-else class="notes-grid">
           <NotesItem
-            v-for="note in notes.slice(0, 4)"
+            v-for="note in todaysEventNotes"
             :key="note.id"
             :item="note"
+            class="bg-white"
             @view="() => openNote(note)"
             @delete="() => handleDeleteNote(note)"
           />
@@ -313,6 +434,10 @@ const handleDeleteNote = async (note: Note) => {
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+.hero-button {
+  padding: 16px 32px 16px 32px !important;
 }
 
 .chart-card {
@@ -420,22 +545,24 @@ const handleDeleteNote = async (note: Note) => {
   color: #000;
 }
 
-.schedule-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 32px;
-  padding-bottom: 64px;
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
-@media (min-width: 1100px) {
-  .schedule-grid {
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-  }
+.section-link {
+  font-size: 14px;
+  color: #9688cf;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .schedule-list {
   display: flex;
   flex-direction: column;
+  width: 100%;
   gap: 12px;
 }
 
@@ -447,6 +574,20 @@ const handleDeleteNote = async (note: Note) => {
   background: #fff;
   border: 0.8px solid rgba(0, 0, 0, 0.1);
   border-radius: 14px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.schedule-row:hover {
+  border-color: rgba(150, 136, 207, 0.5);
+}
+
+.schedule-row:active {
+  transform: scale(0.998);
 }
 
 .schedule-time {
@@ -489,6 +630,32 @@ const handleDeleteNote = async (note: Note) => {
   color: rgba(0, 0, 0, 0.5);
 }
 
+.schedule-notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.schedule-note-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 220px;
+  padding: 4px 10px;
+  background: rgba(150, 136, 207, 0.08);
+  color: #4d4d4d;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 16px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.schedule-note-chip:hover {
+  background: rgba(150, 136, 207, 0.18);
+}
+
 .schedule-empty {
   padding: 32px;
   border: 1px dashed rgba(0, 0, 0, 0.1);
@@ -501,25 +668,14 @@ const handleDeleteNote = async (note: Note) => {
 .notes-column {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+  padding-bottom: 64px;
 }
 
-.notes-column-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.notes-column-title {
-  font-size: 16px;
-  font-weight: 500;
-  color: #000;
-}
-
-.notes-column-link {
-  font-size: 14px;
-  color: #9688cf;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+.notes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 360px));
+  gap: 16px;
+  justify-content: start;
 }
 </style>
