@@ -88,23 +88,23 @@ const openCreateNote = async () => {
 </script>
 
 <template>
+  <Teleport to="#page-header-actions" defer>
+    <SupaButton color="primary" @click="openCreateNote">
+      Create Note
+    </SupaButton>
+  </Teleport>
+
   <div ref="scrollContainer" class="flex flex-col flex-1 overflow-auto">
     <div class="flex flex-col flex-1 p-4 gap-4">
-      <div class="flex flex-wrap items-center gap-3">
+      <div class="flex items-center gap-3">
         <SupaInput
           v-model="searchInput"
           placeholder="Search notes..."
           leading-icon="lucide:search"
-          class="flex-1 min-w-[240px]"
-          :ui="{ wrapper: 'w-full' }"
+          :ui="{ wrapper: 'w-fit' }"
         />
-        <SupaButton color="primary" @click="openCreateNote">
-          Create Note
-        </SupaButton>
-      </div>
 
-      <div class="flex flex-wrap items-center gap-2">
-        <div class="flex items-center gap-1 rounded-md border border-border p-1">
+        <div class="flex shrink-0 items-center gap-1 rounded-md border border-border p-1">
           <button
             v-for="option in linkedOptions"
             :key="option.value"

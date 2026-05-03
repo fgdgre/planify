@@ -19,13 +19,12 @@ const handleSearchSelect = (event: CalendarEventDisplay) => {
 </script>
 
 <template>
-  <div class="flex flex-col flex-1 overflow-hidden">
-    <div class="px-4 py-3 border-b border-border">
-      <CalendarSearch @select="handleSearchSelect" />
-    </div>
-    <div class="flex-1 overflow-auto">
-      <ScheduleXCalendar :calendar-app="calendarApp" />
-    </div>
+  <Teleport to="#page-header-actions" defer>
+    <CalendarSearch @select="handleSearchSelect" />
+  </Teleport>
+
+  <div class="flex-1 overflow-auto">
+    <ScheduleXCalendar :calendar-app="calendarApp" />
   </div>
 </template>
 

@@ -21,7 +21,10 @@ const { isSidebarCollapsed } = storeToRefs(sidebarStore)
     <NoteSidebar />
 
     <main class="main pl-[var(--sidebar-width)]">
-      <h1 class="text-2xl font-medium p-4 pb-4 border-b border-border">{{ layoutTitle }}</h1>
+      <div class="flex items-center justify-between gap-4 p-4 border-b border-border">
+        <h1 class="text-2xl font-medium">{{ layoutTitle }}</h1>
+        <div id="page-header-actions" class="flex items-center gap-2" />
+      </div>
       <div class="overflow-hidden flex flex-col flex-1">
         <slot />
       </div>
