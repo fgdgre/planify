@@ -58,13 +58,12 @@ const {
 
       <div class="border-t border-border" />
 
-      <SupaTextarea
+      <SupaRichTextarea
         v-model="formData.content"
         label="Description"
         placeholder="Write your note..."
         :readonly="!isEditable"
-        resizable
-        :ui="{ wrapper: 'flex-1 min-h-0', textarea: 'h-full min-h-[360px]' }"
+        :ui="{ wrapper: 'flex-1 min-h-0', editor: 'min-h-[360px]' }"
       />
     </template>
 

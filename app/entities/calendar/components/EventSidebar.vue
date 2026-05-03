@@ -136,9 +136,7 @@ const {
             @click="openNote(note)"
           >
             <p class="text-sm font-medium text-foreground">{{ note.title }}</p>
-            <p v-if="note.content" class="line-clamp-2 text-xs text-placeholder">
-              {{ note.content }}
-            </p>
+            <SupaRichText :content="note.content" :line-clamp="2" size="xs" class="text-placeholder" />
           </button>
         </div>
 

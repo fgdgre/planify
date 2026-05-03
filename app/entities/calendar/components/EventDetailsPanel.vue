@@ -125,7 +125,7 @@ const formattedTime = computed(() => {
           @click="clickableNotes && emit('noteClick', note)"
         >
           <p class="text-sm font-medium text-foreground">{{ note.title }}</p>
-          <p v-if="note.content" class="text-xs text-placeholder line-clamp-3">{{ note.content }}</p>
+          <SupaRichText :content="note.content" :line-clamp="3" size="xs" class="text-placeholder" />
         </button>
       </div>
 

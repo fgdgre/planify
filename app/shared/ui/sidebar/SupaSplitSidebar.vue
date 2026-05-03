@@ -75,7 +75,7 @@ defineEmits<{
 
       <div
         v-else
-        class="h-full overflow-hidden"
+        class="h-full overflow-hidden border-b border-border"
         :class="expanded ? 'grid' : 'flex flex-col'"
         :style="expanded ? { gridTemplateColumns: `minmax(0, 1fr) ${contextWidth}` } : {}"
       >

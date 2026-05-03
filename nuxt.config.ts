@@ -52,7 +52,7 @@ export default defineNuxtConfig({
     redirect: false,
     clientOptions: {
       auth: {
-        flowType: 'implicit',
+        flowType: 'pkce',
       },
     },
   },

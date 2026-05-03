@@ -64,7 +64,7 @@ const handleItemAction = (action: unknown) => {
       <div class="flex flex-col gap-2">
         <p class="text-foreground font-medium text-[18px]">{{ item.title }}</p>
 
-        <p class="text-placeholder text-sm line-clamp-2">{{ item.content }}</p>
+        <SupaRichText :content="item.content" :line-clamp="2" size="sm" class="text-placeholder" />
 
         <div v-if="linkedEvent" class="flex items-center gap-2 bg-[rgba(0,0,0,0.05)] rounded-md p-2">
             <SupaIcon>

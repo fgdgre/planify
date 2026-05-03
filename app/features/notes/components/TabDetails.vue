@@ -24,12 +24,11 @@ withDefaults(
       :highlight-error="!!titleError"
     />
 
-    <SupaTextarea
+    <SupaRichTextarea
       v-model="content"
       label="Content"
       placeholder="Write your note..."
-      resizable
-      :ui="{ wrapper: 'flex-1 min-h-0', textarea: 'h-full min-h-[320px]' }"
+      :ui="{ wrapper: 'flex-1 min-h-0', editor: 'min-h-[320px]' }"
     />
   </div>
 </template>
