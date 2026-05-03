@@ -129,7 +129,7 @@ const {
         <p>Connect up to 3 email calendars. Create events and notes. Stay organized.</p>
       </div>
 
-      <div class="flex flex-col gap-4 text-white w-full pt-8">
+      <div class="flex flex-col gap-4 text-white w-full">
         <div class="flex gap-3">
           <div class="rounded-full bg-[rgba(255,255,255,0.20)] w-8 h-8 flex items-center justify-center">
             <SupaIcon name="ic:outline-email" />
