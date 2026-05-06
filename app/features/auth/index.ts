@@ -2,6 +2,7 @@ export { useInitApp } from './composables/init';
 export { useLogout } from './composables/logout';
 export { useLogin } from './composables/login';
 export { useForgotPassword } from './composables/forgot-password';
+export { useGoogleAuth } from './composables/google-auth';
 export { useResetPassword } from './composables/reset-password';
 export { useSignup } from './composables/signup';
 export { getUser } from './composables/user';

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useSignup } from "@features/auth";
+import { useGoogleAuth, useSignup } from "@features/auth";
 import { ROUTES } from "~/shared/constants/routes";
 
 definePageMeta({
@@ -16,6 +16,8 @@ const {
   handleFieldChange,
   handleFieldBlur,
 } = useSignup()
+
+const { loading: googleLoading, signInWithGoogle } = useGoogleAuth()
 </script>
 
 <template>
@@ -85,6 +87,27 @@ const {
             icon="heroicons:exclamation-triangle"
             :message="formErrorMessage"
           />
+
+          <div class="flex flex-col gap-4 w-full mb-6">
+            <SupaButton
+              type="button"
+              stretch="width"
+              outline
+              rounded="full"
+              :loading="googleLoading"
+              :disabled="loading"
+              icon="logos:google-icon"
+              @click="signInWithGoogle"
+            >
+              Sign up with Google
+            </SupaButton>
+
+            <div class="flex items-center gap-3 text-xs text-placeholder">
+              <div class="flex-1 h-px bg-border" />
+              <span>or</span>
+              <div class="flex-1 h-px bg-border" />
+            </div>
+          </div>
 
           <form
             class="flex flex-col gap-10 items-center justify-center w-full"
