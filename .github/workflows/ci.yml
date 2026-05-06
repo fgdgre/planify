@@ -96,6 +96,9 @@ jobs:
           NUXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_ANON_KEY }}
         run: pnpm build
 
+      - name: Add SPA fallback for Netlify
+        run: echo '/*  /index.html  200' > .output/public/_redirects
+
       - name: Deploy to Netlify
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
