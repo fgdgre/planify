@@ -1,0 +1,5 @@
+[build]
+  publish = ".output/public"
+  # Skip every auto-triggered Netlify build. Deploys are pushed from GitHub Actions
+  # only after the CI pipeline (typecheck + unit + e2e) succeeds on main.
+  ignore = "exit 0"
