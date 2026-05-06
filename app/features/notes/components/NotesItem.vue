@@ -30,7 +30,7 @@ const handleItemAction = (action: unknown) => {
 
 <template>
   <div
-    class="flex flex-col gap-4 rounded-[14px] p-6 border border-border min-w-[300px] max-w-[400px] cursor-pointer transition-colors hover:border-primary/40"
+    class="flex flex-col gap-4 rounded-[14px] p-6 border border-border w-full min-w-0 cursor-pointer transition-colors hover:border-primary/40"
     role="button"
     tabindex="0"
     @click="emit('view')"
