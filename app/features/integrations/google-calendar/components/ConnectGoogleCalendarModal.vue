@@ -17,8 +17,8 @@ const {
 const googleCalendarStore = useGoogleCalendarStore()
 
 const {
-  getAccounts,
-  getCalendarEvents,
+  accounts,
+  calendarEvents,
   isLoading,
 } = storeToRefs(googleCalendarStore)
 
@@ -49,9 +49,9 @@ onMounted(fetchConnectedAccounts)
         {{ errorMessage }}
       </p>
 
-      <div v-if="getAccounts.length" class="space-y-6">
+      <div v-if="accounts.length" class="space-y-6">
         <div
-          v-for="account in getAccounts"
+          v-for="account in accounts"
           :key="account.id"
           class="rounded border p-4 space-y-3"
         >
@@ -67,14 +67,14 @@ onMounted(fetchConnectedAccounts)
             Load calendars
           </SupaButton>
 
-          <div v-if="getCalendarEvents?.[account.id]?.length" class="space-y-2">
+          <div v-if="calendarEvents?.[account.id]?.length" class="space-y-2">
             <p class="font-medium">Calendars:</p>
             <ul class="list-disc pl-5">
               <li
-                v-for="calendar in getCalendarEvents[account.id]"
+                v-for="calendar in calendarEvents[account.id]"
                 :key="calendar.id"
               >
-                {{ calendar.summary || calendar.id }}
+                {{ calendar.title || calendar.id }}
               </li>
             </ul>
           </div>

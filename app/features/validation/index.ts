@@ -1,5 +1,15 @@
 import { z } from "zod";
-import _ from "lodash";
+
+const isDeepEqual = (a: unknown, b: unknown): boolean => {
+  if (a === b) return true;
+  if (typeof a !== typeof b || a === null || b === null) return false;
+  if (typeof a !== "object") return false;
+  try {
+    return JSON.stringify(a) === JSON.stringify(b);
+  } catch {
+    return false;
+  }
+};
 
 type FilesMimeType =
   | "image/jpeg"
@@ -118,7 +128,7 @@ export const validateFileSize = ({ value, maxSize }: { value: File; maxSize: num
 };
 
 export const validateMatchWith = ({ value, matchWith }: { value: any; matchWith: any }) => {
-  return _.isEqual(value, matchWith);
+  return isDeepEqual(value, matchWith);
 };
 
 export const validateDateBefore = ({ startDate, endDate }: { startDate: Date; endDate: Date }) => {

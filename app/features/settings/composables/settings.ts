@@ -5,10 +5,11 @@ import { userPreferencesSchema } from "@features/settings/schemas/preferences";
 import { defaultPreferences } from "@features/settings/constants/preferences";
 import { useNotification } from "@features/notification";
 import type { GoogleAccount } from "@shared/types/google";
+import type { Database } from "@shared/api/supabase/types/database";
 
 export const useSettings = () => {
   const settingsStore = useSettingsStore()
-  const supabase = useSupabaseClient()
+  const supabase = useSupabaseClient<Database>()
 
   const getUserPreferences = async (userId: string) => {
     settingsStore.setLoading(true)
@@ -84,8 +85,8 @@ export const useSettings = () => {
    * Assigns PRESET_COLORS by account creation order for new accounts.
    */
   const syncAccountColors = async (userId: string, accounts: GoogleAccount[]) => {
-    const current = settingsStore.preferences ?? { ...defaultPreferences }
-    const updatedColors = { ...current.eventsColors }
+    const current: UserPreferences = settingsStore.preferences ?? { ...defaultPreferences }
+    const updatedColors: Record<string, EventColorConfig> = { ...current.eventsColors }
 
     // Ensure internal is always set
     if (!updatedColors['internal']) {
@@ -100,7 +101,8 @@ export const useSettings = () => {
     let changed = false
     sorted.forEach((account, index) => {
       if (!updatedColors[account.id]) {
-        updatedColors[account.id] = PRESET_COLORS[index % PRESET_COLORS.length]
+        const preset = PRESET_COLORS[index % PRESET_COLORS.length] ?? INTERNAL_CALENDAR_COLOR
+        updatedColors[account.id] = preset
         changed = true
       }
     })

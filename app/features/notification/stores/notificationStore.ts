@@ -24,7 +24,7 @@ export const useNotificationsStore = defineStore('notification', () => {
     icon,
   }: {
     title: string
-    description: string
+    description?: string
     showProgress?: boolean
     icon?: string
   }) => {
@@ -38,7 +38,7 @@ export const useNotificationsStore = defineStore('notification', () => {
     icon,
   }: {
     title: string
-    description: string
+    description?: string
     showProgress?: boolean
     icon?: string
   }) => {

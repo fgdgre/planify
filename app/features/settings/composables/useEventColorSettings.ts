@@ -13,12 +13,12 @@ export const useEventColorSettings = () => {
 
   const WEEK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] as const
 
-  const sources = computed(() => [
+  const sources = computed<{ key: string; label: string | null; email?: string }[]>(() => [
     { key: 'internal', label: 'Personal Events' },
     ...googleCalendarStore.accounts.map((account) => ({
       key: account.id,
       label: account.display_name,
-      email: account.email
+      email: account.email,
     })),
   ])
 
@@ -26,8 +26,10 @@ export const useEventColorSettings = () => {
   const originalSnapshot = ref('')
 
   const defaultForKey = (key: string, index: number): EventColorConfig => {
-    const source = key === 'internal' ? INTERNAL_CALENDAR_COLOR : PRESET_COLORS[index % PRESET_COLORS.length]
-    return { ...source, lightColors: { ...source.lightColors } }
+    const source = key === 'internal'
+      ? INTERNAL_CALENDAR_COLOR
+      : (PRESET_COLORS[index % PRESET_COLORS.length] ?? INTERNAL_CALENDAR_COLOR)
+    return { colorName: source.colorName, lightColors: { ...source.lightColors } }
   }
 
   const initDraft = () => {

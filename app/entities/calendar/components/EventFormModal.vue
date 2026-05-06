@@ -66,6 +66,7 @@ const getInitialData = (): EventFormData => {
       end: props.prefill?.date?.end,
     },
     all_day: props.prefill?.all_day ?? false,
+    note: null,
   }
 }
 
@@ -92,7 +93,7 @@ const schema: ValidationSchema = {
 const errorMessages = ref<Record<string, string>>({})
 
 const applyTime = (date: Date, timeStr: string): Date => {
-  const [hours, minutes] = timeStr.split(':').map(Number)
+  const [hours = 0, minutes = 0] = timeStr.split(':').map(Number)
   const d = new Date(date.getTime())
   d.setHours(hours, minutes, 0, 0)
   return d
@@ -146,7 +147,7 @@ const handleSubmit = async () => {
     await createNote({
       user_id: userStore.user!.id,
       title: noteTitle.value,
-      content: noteContent.value || null,
+      content: noteContent.value || undefined,
       calendar_event_id: createdEventId,
     })
   }

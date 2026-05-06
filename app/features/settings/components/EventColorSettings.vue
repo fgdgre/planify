@@ -61,7 +61,7 @@ defineExpose({ isDirty, isSaving, save, discard })
 
           <input
             v-if="draft[source.key]"
-            v-model="draft[source.key].colorName"
+            v-model="draft[source.key]!.colorName"
             type="text"
             placeholder="Event label..."
             class="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
@@ -90,7 +90,7 @@ defineExpose({ isDirty, isSaving, save, discard })
             <div class="flex items-center gap-2">
               <input
                 type="color"
-                :value="rgbStringToHex(draft[source.key].lightColors.main)"
+                :value="rgbStringToHex(draft[source.key]!.lightColors.main)"
                 class="size-7 cursor-pointer rounded border border-border bg-transparent p-0.5 shrink-0"
                 @input="onMainChange(source.key, ($event.target as HTMLInputElement).value)"
               />
@@ -100,7 +100,7 @@ defineExpose({ isDirty, isSaving, save, discard })
             <div class="flex items-center gap-2">
               <input
                 type="color"
-                :value="rgbStringToHex(draft[source.key].lightColors.container)"
+                :value="rgbStringToHex(draft[source.key]!.lightColors.container)"
                 class="size-7 cursor-pointer rounded border border-border bg-transparent p-0.5 shrink-0"
                 @input="onContainerChange(source.key, ($event.target as HTMLInputElement).value)"
               />
@@ -110,7 +110,7 @@ defineExpose({ isDirty, isSaving, save, discard })
             <div class="flex items-center gap-2">
               <input
                 type="color"
-                :value="rgbStringToHex(draft[source.key].lightColors.onContainer)"
+                :value="rgbStringToHex(draft[source.key]!.lightColors.onContainer)"
                 class="size-7 cursor-pointer rounded border border-border bg-transparent p-0.5 shrink-0"
                 @input="onOnContainerChange(source.key, ($event.target as HTMLInputElement).value)"
               />

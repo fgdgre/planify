@@ -1,6 +1,6 @@
 <script setup lang="ts">
 defineProps<{
-  label: string
+  label?: string
   tabFilled: boolean
   activeTab: boolean
 }>()
