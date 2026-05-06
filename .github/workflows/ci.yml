@@ -90,11 +90,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build
+      - name: Generate static site
         env:
           NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_SUPABASE_URL }}
           NUXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_ANON_KEY }}
-        run: pnpm build
+        run: pnpm exec nuxt generate
+
+      - name: Verify build output
+        run: |
+          echo "Contents of .output/public:"
+          ls -la .output/public
+          test -f .output/public/index.html || (echo "::error::index.html missing from build output" && exit 1)
 
       - name: Add SPA fallback for Netlify
         run: echo '/*  /index.html  200' > .output/public/_redirects
