@@ -1,0 +1,16 @@
+protected_branch="refs/heads/main"
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  if [ "$remote_ref" = "$protected_branch" ]; then
+    echo "→ Pushing to main: running e2e tests before push..."
+    if ! pnpm test:e2e; then
+      echo ""
+      echo "✗ E2E tests failed. Push aborted."
+      echo "  Fix the failures, or bypass with: git push --no-verify"
+      exit 1
+    fi
+    echo "✓ E2E tests passed."
+  fi
+done
+
+exit 0
