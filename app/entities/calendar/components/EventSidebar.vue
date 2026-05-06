@@ -6,6 +6,7 @@ import { useEventSidebar } from '../composables/event-sidebar'
 
 const {
   closeSidebar,
+  deleteLinkedNote,
   deleting,
   discardNoteDraft,
   errorMessages,
@@ -27,7 +28,30 @@ const {
   showFooter,
   sidebarTitle,
   submitLabel,
+  unlinkNoteFromEvent,
 } = useEventSidebar()
+
+const noteActionItems = computed(() => {
+  const items = [
+    { value: 'discard', label: 'Discard', icon: 'heroicons:arrow-uturn-left' },
+  ]
+  if (formData.value.noteId) {
+    items.push(
+      { value: 'unlink', label: 'Unlink from event', icon: 'heroicons:link-slash' },
+      { value: 'delete', label: 'Delete note', icon: 'heroicons:trash' },
+    )
+  }
+  return items
+})
+
+const handleNoteAction = (action: unknown) => {
+  if (typeof action !== 'string') return
+  switch (action) {
+    case 'discard': return discardNoteDraft()
+    case 'unlink': return unlinkNoteFromEvent()
+    case 'delete': return deleteLinkedNote()
+  }
+}
 </script>
 
 <template>
@@ -53,13 +77,15 @@ const {
           </p>
         </div>
 
-        <SupaButton
-          size="sm"
-          variant="transparent"
-          @click="discardNoteDraft"
+        <SupaDropdown
+          :items="noteActionItems"
+          :ui="{ trigger: 'w-9 h-9 min-w-9 p-0 justify-center border-none shadow-none!', menuContent: 'z-1000' }"
+          @update:model-value="handleNoteAction"
         >
-          Discard
-        </SupaButton>
+          <template #menuTrigger>
+            <SupaIcon size="sm" name="pepicons-pencil:dots-y" />
+          </template>
+        </SupaDropdown>
       </div>
 
       <TabDetails

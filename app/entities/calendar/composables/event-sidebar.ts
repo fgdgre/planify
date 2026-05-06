@@ -123,7 +123,7 @@ export const useEventSidebar = () => {
   const userStore = useUserStore()
   const { createEvent, updateEvent, deleteEvent } = useInternalEvents()
   const { fetchEvents } = useCalendar()
-  const { createNote, updateNote } = useNotes()
+  const { createNote, updateNote, deleteNote } = useNotes()
 
   const drafts = useStorage<Record<string, EventSidebarDraft>>('planify:event-sidebar-drafts', {})
   const noteDrafts = useStorage<Record<string, EventSidebarNoteDraft>>('planify:event-sidebar-note-drafts', {})
@@ -378,8 +378,7 @@ export const useEventSidebar = () => {
     await replaceQuery({ eventNoteId: null })
   }
 
-  const discardNoteDraft = async () => {
-    clearCurrentNoteDraft()
+  const closeNotePanel = async () => {
     activeNoteId.value = null
     formData.value.showNoteForm = false
     formData.value.noteId = ''
@@ -387,6 +386,42 @@ export const useEventSidebar = () => {
     formData.value.noteContent = ''
     noteTitleError.value = ''
     await replaceQuery({ eventNoteId: null })
+  }
+
+  const discardNoteDraft = async () => {
+    clearCurrentNoteDraft()
+    await closeNotePanel()
+  }
+
+  const unlinkNoteFromEvent = async () => {
+    if (!activeNoteId.value || !selectedEvent.value) return
+
+    saving.value = true
+    const updated = await updateNote(activeNoteId.value, {
+      calendar_event_id: null,
+      updated_at: new Date().toISOString(),
+    }) as Note | null
+    saving.value = false
+
+    if (!updated) return
+
+    clearCurrentNoteDraft()
+    await fetchEventNotes(selectedEvent.value.id)
+    await closeNotePanel()
+  }
+
+  const deleteLinkedNote = async () => {
+    if (!activeNoteId.value || !selectedEvent.value) return
+
+    deleting.value = true
+    const success = await deleteNote(activeNoteId.value)
+    deleting.value = false
+
+    if (!success) return
+
+    clearCurrentNoteDraft()
+    await fetchEventNotes(selectedEvent.value.id)
+    await closeNotePanel()
   }
 
   const handleDelete = async () => {
@@ -708,6 +743,7 @@ export const useEventSidebar = () => {
   return {
     activeMode,
     closeSidebar,
+    deleteLinkedNote,
     deleting,
     discardNoteDraft,
     errorMessages,
@@ -731,5 +767,6 @@ export const useEventSidebar = () => {
     showFooter,
     sidebarTitle,
     submitLabel,
+    unlinkNoteFromEvent,
   }
 }
