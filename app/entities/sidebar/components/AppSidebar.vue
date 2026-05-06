@@ -109,7 +109,7 @@ const sidebarFooterWrapper = computed(() =>
       </div>
 
       <div class="flex items-center justify-between w-full">
-        <p class="font-medium">Planify</p>
+        <p class="font-medium text-white">Planify</p>
       </div>
     </div>
     <div :class="[sidebarMainContent({ noPadding: true, class: 'flex flex-col justify-between' })]">

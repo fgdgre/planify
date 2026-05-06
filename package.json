@@ -7,6 +7,9 @@
     "dev": "nuxt dev",
     "prepare": "nuxt prepare",
     "typecheck": "nuxt typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "db:types": "supabase gen types typescript --project-id piqouitlhtmlnvyzvftd --schema public > app/shared/api/supabase/types/database.ts"
   },
   "dependencies": {
@@ -45,5 +48,12 @@
     "vue-chartjs": "^5.3.3",
     "vue-router": "^4.6.4",
     "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@vitejs/plugin-vue": "^6.0.6",
+    "@vue/test-utils": "^2.4.10",
+    "jsdom": "^29.1.1",
+    "vitest": "^4.1.5"
   }
 }

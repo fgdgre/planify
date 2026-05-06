@@ -91,7 +91,7 @@ const {
                   />
                 </template>
                 <template #label>
-                  <NuxtLink :to="ROUTES.FORGOT_PASSWORD" class="text-primary opacity-80 hover:opacity-100 text-xs ml-2">
+                  <NuxtLink :to="ROUTES.FORGOT_PASSWORD" class="text-primary opacity-80 hover:opacity-100 text-xs ml-2" tabindex="-1">
                     Forgot password?
                   </NuxtLink>
                 </template>
