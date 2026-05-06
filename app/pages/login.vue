@@ -146,35 +146,37 @@ const { loading: googleLoading, signInWithGoogle } = useGoogleAuth()
         </div>
     </div>
 
-    <div class="bg-primary w-full flex flex-col items-center justify-center p-12">
-      <div class="flex flex-col gap-6 text-white">
-        <h2 class="text-5xl font medium">Your schedule, unified</h2>
-        <p>Connect up to 3 email calendars. Create events and notes. Stay organized.</p>
-      </div>
-
-      <div class="flex flex-col gap-4 text-white w-full">
-        <div class="flex gap-3">
-          <div class="rounded-full bg-[rgba(255,255,255,0.20)] w-8 h-8 flex items-center justify-center">
-            <SupaIcon name="ic:outline-email" />
-          </div>
-
-          <p>3 email accounts</p>
+    <div class="bg-primary w-full flex items-center justify-center p-12">
+      <div class="flex flex-col gap-12 text-white max-w-[420px] w-full">
+        <div class="flex flex-col gap-6">
+          <h2 class="text-5xl font-medium">Your schedule, unified</h2>
+          <p>Connect up to 3 email calendars. Create events and notes. Stay organized.</p>
         </div>
 
-        <div class="flex gap-3">
-          <div class="rounded-full bg-[rgba(255,255,255,0.20)] w-8 h-8 flex items-center justify-center">
-            <SupaIcon name="lucide:edit" />
+        <div class="flex flex-col gap-4">
+          <div class="flex gap-3 items-center">
+            <div class="rounded-full bg-[rgba(255,255,255,0.20)] w-8 h-8 flex items-center justify-center shrink-0">
+              <SupaIcon name="ic:outline-email" />
+            </div>
+
+            <p>3 email accounts</p>
           </div>
 
-          <p>Smart notes</p>
-        </div>
+          <div class="flex gap-3 items-center">
+            <div class="rounded-full bg-[rgba(255,255,255,0.20)] w-8 h-8 flex items-center justify-center shrink-0">
+              <SupaIcon name="lucide:edit" />
+            </div>
 
-        <div class="flex gap-3">
-          <div class="rounded-full bg-[rgba(255,255,255,0.20)] w-8 h-8 flex items-center justify-center">
-            <SupaIcon name="solar:pallete-2-broken" />
+            <p>Smart notes</p>
           </div>
 
-          <p>Beautiful design</p>
+          <div class="flex gap-3 items-center">
+            <div class="rounded-full bg-[rgba(255,255,255,0.20)] w-8 h-8 flex items-center justify-center shrink-0">
+              <SupaIcon name="solar:pallete-2-broken" />
+            </div>
+
+            <p>Beautiful design</p>
+          </div>
         </div>
       </div>
     </div>

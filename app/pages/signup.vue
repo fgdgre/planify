@@ -22,35 +22,37 @@ const { loading: googleLoading, signInWithGoogle } = useGoogleAuth()
 
 <template>
   <div class="grid grid-cols-2 h-full w-full">
-    <div class="bg-primary w-full flex flex-col items-center justify-center p-12 gap-12">
-      <div class="flex flex-col gap-6 text-white">
-        <h2 class="text-5xl font-medium">Plan everything,<br />effortlessly</h2>
-        <p>Join thousands of users who organize their lives with Planify.</p>
-      </div>
-
-      <div class="flex flex-col gap-4 text-white w-full">
-        <div class="flex gap-3">
-          <div class="rounded-full bg-[rgba(255,255,255,0.20)] w-8 h-8 flex items-center justify-center">
-            <SupaIcon name="lucide:check" />
-          </div>
-
-          <p>Free trial</p>
+    <div class="bg-primary w-full flex items-center justify-center p-12">
+      <div class="flex flex-col gap-12 text-white max-w-[420px] w-full">
+        <div class="flex flex-col gap-6">
+          <h2 class="text-5xl font-medium">Plan everything,<br />effortlessly</h2>
+          <p>Join thousands of users who organize their lives with Planify.</p>
         </div>
 
-        <div class="flex gap-3">
-          <div class="rounded-full bg-[rgba(255,255,255,0.20)] w-8 h-8 flex items-center justify-center">
-            <SupaIcon name="lucide:check" />
+        <div class="flex flex-col gap-4">
+          <div class="flex gap-3 items-center">
+            <div class="rounded-full bg-[rgba(255,255,255,0.20)] w-8 h-8 flex items-center justify-center shrink-0">
+              <SupaIcon name="lucide:check" />
+            </div>
+
+            <p>Free trial</p>
           </div>
 
-          <p>No credit card required</p>
-        </div>
+          <div class="flex gap-3 items-center">
+            <div class="rounded-full bg-[rgba(255,255,255,0.20)] w-8 h-8 flex items-center justify-center shrink-0">
+              <SupaIcon name="lucide:check" />
+            </div>
 
-        <div class="flex gap-3">
-          <div class="rounded-full bg-[rgba(255,255,255,0.20)] w-8 h-8 flex items-center justify-center">
-            <SupaIcon name="lucide:check" />
+            <p>No credit card required</p>
           </div>
 
-          <p>Start organizing instantly</p>
+          <div class="flex gap-3 items-center">
+            <div class="rounded-full bg-[rgba(255,255,255,0.20)] w-8 h-8 flex items-center justify-center shrink-0">
+              <SupaIcon name="lucide:check" />
+            </div>
+
+            <p>Start organizing instantly</p>
+          </div>
         </div>
       </div>
     </div>
