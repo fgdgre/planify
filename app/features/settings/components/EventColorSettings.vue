@@ -1,6 +1,16 @@
 <script setup lang="ts">
 import { useEventColorSettings } from '@features/settings/composables/useEventColorSettings'
 
+const props = defineProps<{
+  saveSignal?: number
+  discardSignal?: number
+}>()
+
+const emit = defineEmits<{
+  'update:dirty': [boolean]
+  'update:saving': [boolean]
+}>()
+
 const {
   WEEK_DAYS,
   PRESET_COLORS,
@@ -20,8 +30,18 @@ const {
   previewEventsForDay,
 } = useEventColorSettings()
 
-// FIXME: change to emits
-defineExpose({ isDirty, isSaving, save, discard })
+watch(isDirty, (value) => emit('update:dirty', value), { immediate: true })
+watch(isSaving, (value) => emit('update:saving', value), { immediate: true })
+
+watch(() => props.saveSignal, (value, prev) => {
+  if (value === undefined || value === prev) return
+  save()
+})
+
+watch(() => props.discardSignal, (value, prev) => {
+  if (value === undefined || value === prev) return
+  discard()
+})
 </script>
 
 <template>

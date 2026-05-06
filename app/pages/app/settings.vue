@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { useGoogleCalendar, useGoogleCalendarStore } from '@features/integrations/google-calendar'
-import { useSettings } from '@features/settings'
-import { useUserStore } from '@features/auth/stores/user'
+import { useSettingsPage } from '@features/settings'
 import EventColorSettings from '@features/settings/components/EventColorSettings.vue'
 
 definePageMeta({
@@ -9,31 +7,18 @@ definePageMeta({
   layout: 'app',
 })
 
-const { connectGoogle, fetchConnectedAccounts, deleteAccount } = useGoogleCalendar()
-const { getUserPreferences, syncAccountColors } = useSettings()
-const googleCalendarStore = useGoogleCalendarStore()
-const userStore = useUserStore()
-
-const { accounts, isLoading } = storeToRefs(googleCalendarStore)
-
-const colorSettingsRef = ref<InstanceType<typeof EventColorSettings>>()
-const route = useRoute()
-
-// Unwrap the exposed refs from the child — Vue does not auto-unwrap nested ref accesses in templates
-const isColorsDirty = computed(() => colorSettingsRef.value?.isDirty ?? false)
-const isColorsSaving = computed(() => colorSettingsRef.value?.isSaving ?? false)
-
-onMounted(async () => {
-  if (!userStore.user) return
-  await getUserPreferences(userStore.user.id)
-  await fetchConnectedAccounts()
-  await syncAccountColors(userStore.user.id, googleCalendarStore.accounts)
-
-  // After Google OAuth callback redirects back here, clean up the URL
-  if (route.query.google_connected) {
-    useRouter().replace({ query: {} })
-  }
-})
+const {
+  accounts,
+  isLoading,
+  connectGoogle,
+  deleteAccount,
+  isColorsDirty,
+  isColorsSaving,
+  colorsSaveSignal,
+  colorsDiscardSignal,
+  requestColorsSave,
+  requestColorsDiscard,
+} = useSettingsPage()
 </script>
 
 <template>
@@ -97,21 +82,26 @@ onMounted(async () => {
             <SupaButton
               variant="transparent"
               :disabled="isColorsSaving"
-              @click="colorSettingsRef?.discard()"
+              @click="requestColorsDiscard"
             >
               Discard
             </SupaButton>
             <SupaButton
               color="primary"
               :loading="isColorsSaving"
-              @click="colorSettingsRef?.save()"
+              @click="requestColorsSave"
             >
               Save changes
             </SupaButton>
           </div>
         </div>
 
-        <EventColorSettings ref="colorSettingsRef" />
+        <EventColorSettings
+          :save-signal="colorsSaveSignal"
+          :discard-signal="colorsDiscardSignal"
+          @update:dirty="(value) => (isColorsDirty = value)"
+          @update:saving="(value) => (isColorsSaving = value)"
+        />
       </div>
     </div>
   </div>
