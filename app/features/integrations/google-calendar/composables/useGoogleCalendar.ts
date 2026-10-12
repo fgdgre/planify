@@ -1,5 +1,9 @@
 import { useNotification } from "@features/notification";
 import { useGoogleCalendarStore } from "@features/integrations/google-calendar/stores/google-calendar";
+import { pickStaleAccountIds } from "@features/integrations/google-calendar/helpers/sync";
+
+/** Shared across composable instances so overlapping callers join one sync run instead of starting another. */
+let inflightSync: Promise<boolean> | null = null
 
 export const useGoogleCalendar = () => {
   const supabase = useSupabaseClient()
@@ -8,11 +12,14 @@ export const useGoogleCalendar = () => {
   const { showErrorToast } = useNotification()
   const googleCalendarStore = useGoogleCalendarStore()
 
+  // Reads the cached session. supabase-js refreshes it on its own only when the
+  // access token is about to expire, so on a healthy session this costs no
+  // network call. (`refreshSession()` forced a token rotation on every call.)
   const getAccessToken = async () => {
-    const { data, error } = await supabase.auth.refreshSession()
+    const { data, error } = await supabase.auth.getSession()
 
     if (error) {
-      console.error('Failed to refresh session:', error)
+      console.error('Failed to read session:', error)
     }
 
     const token = data.session?.access_token
@@ -24,21 +31,25 @@ export const useGoogleCalendar = () => {
     return token
   }
 
-  const connectGoogle = async () => {
-    const config = useRuntimeConfig()
-    const supabase = useSupabaseClient()
+  const callEdgeFunction = async (name: string, body: Record<string, unknown>) => {
+    const accessToken = await getAccessToken()
 
+    return fetch(`${config.public.supabaseUrl}/functions/v1/${name}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(body),
+    })
+  }
+
+  const connectGoogle = async () => {
     if (!config.public.supabaseUrl) {
       throw new Error('Missing public.supabaseUrl')
     }
 
-    const { data } = await supabase.auth.refreshSession()
-    const accessToken = data.session?.access_token
-
-    if (!accessToken) {
-      throw new Error('No active session')
-    }
-
+    const accessToken = await getAccessToken()
     const appOrigin = window.location.origin
     const functionUrl = `${config.public.supabaseUrl}/functions/v1/google-oauth-start?app_origin=${encodeURIComponent(appOrigin)}`
 
@@ -64,7 +75,10 @@ export const useGoogleCalendar = () => {
     window.location.href = json.url
   }
 
-  const fetchConnectedAccounts = async () => {
+  /** Loads the user's Google accounts once per session; pass `force` where a fresh list matters (settings). */
+  const fetchConnectedAccounts = async (options: { force?: boolean } = {}) => {
+    if (googleCalendarStore.accountsLoaded && !options.force) return
+
     try {
       googleCalendarStore.setLoading(true)
 
@@ -73,11 +87,11 @@ export const useGoogleCalendar = () => {
         .select('*')
         .order('created_at', { ascending: false })
 
-      if(error) {
+      if (error) {
         showErrorToast({ title: 'Error', description: error.message })
         return
       }
-      console.log('Connected accounts:', data)
+
       googleCalendarStore.setAccounts(data)
     } catch (error: any) {
       showErrorToast({ title: 'Error', description: error.message })
@@ -87,87 +101,89 @@ export const useGoogleCalendar = () => {
     }
   }
 
-  const fetchCalendarEvents = async (googleAccountId: string) => {
+  /** Refreshes the `google_calendars` rows for one account from Google's calendarList. */
+  const listCalendars = async (googleAccountId: string) => {
     try {
-      const accessToken = await getAccessToken()
-      const response = await fetch(
-        `${config.public.supabaseUrl}/functions/v1/google-list-calendars`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({ googleAccountId }),
-        }
-      )
+      const response = await callEdgeFunction('google-list-calendars', { googleAccountId })
 
       if (!response.ok) {
         console.error('Failed to load calendars:', response.status)
         showErrorToast({ title: 'Error', description: 'Failed to load calendars' })
+        return false
       }
+
+      googleCalendarStore.markCalendarsListed(googleAccountId)
+      return true
     } catch (error: any) {
       showErrorToast({ title: 'Error', description: error.message })
       console.error('Error loading calendars:', error)
+      return false
     }
   }
 
+  /** Asks the edge function to pull one account's events from Google into `calendar_events`. */
   const syncEvents = async (googleAccountId: string) => {
     try {
-      googleCalendarStore.setLoading(true)
-
-      await loadEventsFromDb(googleAccountId)
-
-      const accessToken = await getAccessToken()
-      const response = await fetch(
-        `${config.public.supabaseUrl}/functions/v1/google-sync-events`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({ googleAccountId }),
-        }
-      )
+      const response = await callEdgeFunction('google-sync-events', { googleAccountId })
 
       if (!response.ok) {
         console.error('Sync failed:', response.status, await response.text())
-        return
+        return false
       }
 
-      await loadEventsFromDb(googleAccountId)
+      googleCalendarStore.markSynced(googleAccountId, Date.now())
+      return true
     } catch (error: any) {
       console.error('Error syncing events:', error)
-    } finally {
-      googleCalendarStore.setLoading(false)
+      return false
     }
   }
 
-  const loadEventsFromDb = async (
-    googleAccountId: string,
-    range?: { start: string; end: string },
-  ) => {
-    let query = supabase
-      .from('calendar_events')
-      .select('*')
-      .eq('google_account_id', googleAccountId)
-      .order('start_at', { ascending: true })
+  /**
+   * Syncs every connected account whose cache is older than SYNC_TTL_MS (every
+   * account when `force`). Calendars are listed once per session per account,
+   * or again on a forced refresh, since the list rarely changes. Resolves to
+   * true when at least one account synced; open views reload via `syncVersion`.
+   */
+  const syncAllAccounts = async (options: { force?: boolean } = {}): Promise<boolean> => {
+    if (inflightSync) return inflightSync
 
-    if (range) {
-      query = query.gte('start_at', range.start).lte('end_at', range.end)
-    }
+    inflightSync = (async () => {
+      const accountIds = googleCalendarStore.accounts.map((account) => account.id)
+      const staleIds = pickStaleAccountIds(accountIds, googleCalendarStore.syncedAt, Date.now(), {
+        force: options.force,
+      })
 
-    const { data, error } = await query
+      if (!staleIds.length) return false
 
-    console.log('loadEventsFromDb:', { googleAccountId, error, count: data?.length })
+      googleCalendarStore.setLoading(true)
 
-    if (error) {
-      showErrorToast({ title: 'Error', description: error.message })
-      return
-    }
+      try {
+        const results = await Promise.all(
+          staleIds.map(async (googleAccountId) => {
+            if (options.force || !googleCalendarStore.calendarsListed[googleAccountId]) {
+              const listed = await listCalendars(googleAccountId)
+              if (!listed) return false
+            }
 
-    googleCalendarStore.setCalendarEvents(googleAccountId, data ?? [])
+            return syncEvents(googleAccountId)
+          }),
+        )
+
+        const synced = results.some(Boolean)
+
+        if (synced) {
+          googleCalendarStore.bumpSyncVersion()
+        }
+
+        return synced
+      } finally {
+        googleCalendarStore.setLoading(false)
+        inflightSync = null
+      }
+    })()
+
+    return inflightSync
   }
 
   const deleteAccount = async (accountId: string) => {
@@ -197,9 +213,9 @@ export const useGoogleCalendar = () => {
   return {
     connectGoogle,
     fetchConnectedAccounts,
-    fetchCalendarEvents,
+    listCalendars,
     syncEvents,
-    loadEventsFromDb,
+    syncAllAccounts,
     deleteAccount,
   }
 }

@@ -5,7 +5,7 @@ import { useSettings } from '@features/settings/composables/settings'
 export const useSettingsPage = () => {
   const route = useRoute()
   const router = useRouter()
-  const { connectGoogle, fetchConnectedAccounts, deleteAccount } = useGoogleCalendar()
+  const { connectGoogle, fetchConnectedAccounts, deleteAccount, syncAllAccounts } = useGoogleCalendar()
   const { getUserPreferences, syncAccountColors } = useSettings()
   const googleCalendarStore = useGoogleCalendarStore()
   const userStore = useUserStore()
@@ -28,11 +28,14 @@ export const useSettingsPage = () => {
     if (!userStore.user) return
 
     await getUserPreferences(userStore.user.id)
-    await fetchConnectedAccounts()
+    // Settings is where accounts get connected and removed, so always show the fresh list here.
+    await fetchConnectedAccounts({ force: true })
     await syncAccountColors(userStore.user.id, googleCalendarStore.accounts)
 
     if (route.query.google_connected) {
       router.replace({ query: {} })
+      // List the new account's calendars and pull its events now, not on the next calendar visit.
+      void syncAllAccounts()
     }
   })
 

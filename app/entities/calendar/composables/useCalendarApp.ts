@@ -45,8 +45,8 @@ export const useCalendarApp = () => {
 
   const { events } = storeToRefs(calendarStore)
   const { loadViewEvents } = useCalendar()
-  const { updateEvent, loadEvents: loadInternalEvents } = useInternalEvents()
-  const { fetchCalendarEvents, syncEvents } = useGoogleCalendar()
+  const { updateEvent } = useInternalEvents()
+  const { syncAllAccounts } = useGoogleCalendar()
 
   const isRefreshing = ref(false)
 
@@ -202,12 +202,25 @@ export const useCalendarApp = () => {
     },
   )
 
+  const currentRange = () => (calendarApp as any).$app?.calendarState.range.value
+
   onMounted(() => {
-    const range = (calendarApp as any).$app?.calendarState.range.value
+    const range = currentRange()
     if (range) {
       loadViewEvents(range)
     }
   })
+
+  // A background sync (middleware, settings) bumps syncVersion when Google had
+  // new data; reload the visible range so the grid updates in place.
+  watch(
+    () => googleCalendarStore.syncVersion,
+    () => {
+      if (isRefreshing.value) return
+      const range = currentRange()
+      if (range) loadViewEvents(range)
+    },
+  )
 
   const goToDate = (iso: string) => {
     const ymd = isoToYmd(iso)
@@ -217,23 +230,15 @@ export const useCalendarApp = () => {
     }
   }
 
-  // Mirrors `google-calendar-events` middleware: pulls fresh events from Google
-  // into Supabase for every connected account, reloads internal events, and
-  // re-runs the current view's range query so the calendar updates in place.
+  // Manual refresh: force a Google sync for every connected account, then
+  // re-run the current view's range query so the calendar updates in place.
   const refreshEvents = async () => {
     if (isRefreshing.value) return
     isRefreshing.value = true
     try {
-      const accounts = googleCalendarStore.accounts
-      await Promise.all([
-        loadInternalEvents(),
-        ...accounts.map(async (account) => {
-          await fetchCalendarEvents(account.id)
-          await syncEvents(account.id)
-        }),
-      ])
+      await syncAllAccounts({ force: true })
 
-      const range = (calendarApp as any).$app?.calendarState.range.value
+      const range = currentRange()
       if (range) await loadViewEvents(range)
     } finally {
       isRefreshing.value = false
