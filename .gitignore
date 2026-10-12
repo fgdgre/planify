@@ -41,6 +41,7 @@ playwright/.cache
 # directory is excluded, so the negations below would silently do nothing.
 docs/*.md
 !docs/amplitude-integration.md
+!docs/api-usage-audit-2026-10-13.md
 !docs/diploma-collaboration-strategy.md
 !docs/feature-plan-calendar-ux-and-landing.md
 !docs/feature-plan-telegram-notifications-mobile.md
