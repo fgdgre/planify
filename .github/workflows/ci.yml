@@ -70,9 +70,22 @@ jobs:
       - name: Run unit tests
         run: pnpm test
 
+  edge-functions:
+    name: Edge Function tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Run Deno tests (shared OAuth state, origin allow-list, CORS, HTTP helpers)
+        run: deno test --no-lock supabase/functions/_shared/
+
   deploy:
     name: Deploy to Netlify
-    needs: [typecheck, unit-tests]
+    needs: [typecheck, unit-tests, edge-functions]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
@@ -101,6 +114,11 @@ jobs:
           echo "Contents of .output/public:"
           ls -la .output/public
           test -f .output/public/index.html || (echo "::error::index.html missing from build output" && exit 1)
+          test -f .output/public/_headers || (echo "::error::_headers (security headers) missing from build output" && exit 1)
+          grep -q "sha256-" .output/public/_headers || (echo "::error::CSP inline script hash was not injected into _headers" && exit 1)
+          grep -q "__NUXT_INLINE_SCRIPT_HASHES__" .output/public/_headers && (echo "::error::CSP placeholder left in _headers" && exit 1)
+          echo "Security headers:"
+          grep -E "^  (Content-Security-Policy|Strict-Transport-Security|X-Frame-Options)" .output/public/_headers
 
       - name: Add SPA fallback for Netlify
         run: echo '/*  /index.html  200' > .output/public/_redirects
