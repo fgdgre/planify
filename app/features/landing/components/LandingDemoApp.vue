@@ -193,6 +193,7 @@ const drag = ref<{ event: DemoEvent; el: HTMLElement; x: number; y: number; offs
 const dropDay = ref<number | null>(null)
 
 function onEventDown(pointer: PointerEvent, event: DemoEvent) {
+  if (!pointer.isPrimary || pointer.button !== 0) return
   const el = pointer.currentTarget as HTMLElement
   drag.value = { event, el, x: pointer.clientX, y: pointer.clientY, offsetY: pointer.clientY - el.getBoundingClientRect().top, moved: false, locked: false }
   el.setPointerCapture?.(pointer.pointerId)
@@ -319,30 +320,30 @@ onBeforeUnmount(() => {
   <div
     ref="root"
     :data-mode="mode"
-    class="relative grid h-full grid-cols-[104px_1fr] grid-rows-[1fr_auto] overflow-hidden rounded-[18px] border border-border bg-white text-xs transition-shadow duration-400 tablet:grid-cols-[160px_1fr]"
+    class="relative grid h-full grid-cols-[52px_1fr] grid-rows-[1fr_auto] overflow-hidden rounded-[18px] border border-border bg-white text-xs transition-shadow duration-400 tablet:grid-cols-[160px_1fr]"
     :class="mode === 'live' ? 'shadow-[0_0_0_2px_var(--primary),0_40px_100px_-40px_rgba(111,95,184,0.6)]' : 'shadow-[0_40px_100px_-40px_rgba(111,95,184,0.5)]'"
     @pointerdown.passive="takeControl"
     @keydown.passive="takeControl"
   >
-    <aside class="row-span-2 flex flex-col gap-2 bg-zinc-900 px-2 py-4 text-zinc-300 tablet:px-3">
-      <span class="flex items-center gap-2 text-[13px] font-semibold text-white"><i class="inline-block size-4 rounded-[5px] bg-primary" />Planify</span>
+    <aside class="row-span-2 flex flex-col gap-2 bg-zinc-900 px-1.5 py-4 text-zinc-300 tablet:px-3">
+      <span class="flex items-center gap-2 text-[13px] font-semibold text-white"><i class="inline-block size-4 rounded-[5px] bg-primary" /><span class="max-tablet:hidden">Planify</span></span>
       <div class="mt-2.5 mb-1.5 flex flex-col gap-0.5">
-        <button type="button" class="flex cursor-pointer items-center gap-2 rounded-[7px] px-2 py-1.5 text-left hover:bg-zinc-800" :class="view === 'calendar' ? 'bg-zinc-800 text-white' : 'text-zinc-400'" @click="setView('calendar')">▦ Calendar</button>
-        <button type="button" class="flex cursor-pointer items-center gap-2 rounded-[7px] px-2 py-1.5 text-left hover:bg-zinc-800" :class="view === 'dashboard' ? 'bg-zinc-800 text-white' : 'text-zinc-400'" @click="setView('dashboard')">▥ Dashboard</button>
+        <button type="button" class="flex cursor-pointer items-center gap-2 rounded-[7px] px-2 py-1.5 text-left hover:bg-zinc-800 max-tablet:justify-center" :class="view === 'calendar' ? 'bg-zinc-800 text-white' : 'text-zinc-400'" @click="setView('calendar')">▦<span class="max-tablet:hidden">Calendar</span></button>
+        <button type="button" class="flex cursor-pointer items-center gap-2 rounded-[7px] px-2 py-1.5 text-left hover:bg-zinc-800 max-tablet:justify-center" :class="view === 'dashboard' ? 'bg-zinc-800 text-white' : 'text-zinc-400'" @click="setView('dashboard')">▥<span class="max-tablet:hidden">Dashboard</span></button>
       </div>
-      <span class="mt-1 text-[11px] text-zinc-500">Calendars</span>
+      <span class="mt-1 text-[11px] text-zinc-500 max-tablet:hidden">Calendars</span>
       <div class="flex flex-col">
         <button
           v-for="account in accounts"
           :key="account.id"
           type="button"
-          class="flex w-full cursor-pointer items-center gap-2 rounded-[7px] px-2 py-1.5 text-left hover:bg-zinc-800"
+          class="flex w-full cursor-pointer items-center gap-2 rounded-[7px] px-2 py-1.5 text-left hover:bg-zinc-800 max-tablet:justify-center"
           :class="visibleIds.includes(account.id) ? 'text-zinc-200' : 'text-zinc-500'"
           @click="toggleAccount(account.id)"
         >
           <span class="size-2.5 shrink-0 rounded-[3px] border-2 transition-colors duration-200" :style="{ borderColor: account.color, background: visibleIds.includes(account.id) ? account.color : 'transparent' }" />
-          <span class="truncate">{{ account.name }}</span>
-          <small class="ml-auto text-[10px] text-zinc-500">{{ eventCount(account.id) }}</small>
+          <span class="truncate max-tablet:hidden">{{ account.name }}</span>
+          <small class="ml-auto text-[10px] text-zinc-500 max-tablet:hidden">{{ eventCount(account.id) }}</small>
         </button>
       </div>
     </aside>
@@ -386,9 +387,9 @@ onBeforeUnmount(() => {
               :data-day="event.day"
               :data-start="event.start"
               :data-hit="hasQuery && hits.includes(event) ? '' : undefined"
-              class="absolute touch-none overflow-hidden rounded-md border-l-[3px] px-1.5 py-1 text-[10.5px] leading-tight font-medium select-none transition-[opacity,filter,transform,box-shadow,top,left] duration-250 hover:shadow-[0_6px_16px_-8px_rgba(0,0,0,0.35)]"
+              class="absolute overflow-hidden rounded-md border-l-[3px] px-1.5 py-1 text-[10.5px] leading-tight font-medium select-none transition-[opacity,filter,transform,box-shadow,top,left] duration-250 hover:shadow-[0_6px_16px_-8px_rgba(0,0,0,0.35)]"
               :class="[
-                findAccount(event.account).own ? 'cursor-grab' : 'cursor-pointer',
+                findAccount(event.account).own ? 'cursor-grab touch-none' : 'cursor-pointer touch-pan-y',
                 hasQuery && !hits.includes(event) ? 'opacity-15 grayscale' : '',
                 hasQuery && hits.includes(event) ? 'shadow-[0_0_0_2px_#fff,0_0_0_4px_var(--primary)]' : '',
                 selectedId === event.id ? 'shadow-[0_0_0_2px_#fff,0_0_0_4px_var(--foreground)]' : '',
@@ -397,7 +398,11 @@ onBeforeUnmount(() => {
                 popIn ? 'pop-in' : '',
               ]"
               :style="eventStyle(event)"
+              role="button"
+              tabindex="0"
               @pointerdown="onEventDown($event, event)"
+              @keydown.enter="openPanel(event.id)"
+              @keydown.space.prevent="openPanel(event.id)"
             >
               {{ event.title }}
               <span v-if="event.length >= 1" class="block text-[9.5px] font-normal opacity-75">{{ formatHour(event.start) }}–{{ formatHour(event.start + event.length) }}</span>
@@ -407,7 +412,7 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="absolute inset-0 flex flex-col bg-white px-5 py-[18px] transition-opacity duration-350" :class="view === 'dashboard' ? 'opacity-100' : 'pointer-events-none opacity-0'">
-          <h4 class="text-[15px] font-semibold tracking-[-0.02em]">This week · {{ totalHours }} h planned</h4>
+          <h3 class="text-[15px] font-semibold tracking-[-0.02em]">This week · {{ totalHours }} h planned</h3>
           <div class="mt-0.5 text-placeholder">Hours by calendar. Drag a violet event and come back: this updates.</div>
           <div class="flex min-h-0 flex-1 items-end gap-3 px-1 pt-5 tablet:gap-[18px]">
             <div v-for="day in dayHours" :key="day.day" class="flex h-full flex-1 flex-col items-stretch justify-end gap-1.5">

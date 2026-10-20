@@ -46,7 +46,7 @@ function moveLight(event: PointerEvent) {
           class="pointer-events-none absolute inset-0 bg-[radial-gradient(300px_circle_at_var(--x,50%)_var(--y,50%),rgba(150,136,207,0.22),transparent_60%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         />
         <div class="relative mb-4 grid size-[30px] place-items-center rounded-full bg-primary text-[13px] font-semibold text-white">{{ index + 1 }}</div>
-        <h4 class="relative mb-1.5 text-base font-semibold tracking-[-0.035em]">{{ step.title }}</h4>
+        <h3 class="relative mb-1.5 text-base font-semibold tracking-[-0.035em]">{{ step.title }}</h3>
         <p class="relative text-sm leading-[1.5] text-placeholder">{{ step.text }}</p>
       </div>
     </div>

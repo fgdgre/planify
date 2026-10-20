@@ -20,7 +20,9 @@ function findEvent(wrapper: ReturnType<typeof mountApp>, title: string) {
 }
 
 async function pointer(wrapper: { element: Element }, type: string, clientX = 10, clientY = 10) {
-  wrapper.element.dispatchEvent(new MouseEvent(type, { bubbles: true, clientX, clientY }))
+  const event = new MouseEvent(type, { bubbles: true, clientX, clientY })
+  Object.defineProperty(event, 'isPrimary', { value: true })
+  wrapper.element.dispatchEvent(event)
   await nextTick()
 }
 
@@ -94,6 +96,24 @@ describe('LandingDemoApp', () => {
 
     await wrapper.setProps({ step: 1 })
     expect(wrapper.findAll('[data-note]')).toHaveLength(2)
+    wrapper.unmount()
+  })
+
+  it('opens the panel from the keyboard', async () => {
+    const wrapper = mountApp()
+    await findEvent(wrapper, 'Studio call').trigger('keydown', { key: 'Enter' })
+    expect(wrapper.find('[data-panel]').exists()).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('ignores drags that start with a non-primary button', async () => {
+    const wrapper = mountApp()
+    const event = findEvent(wrapper, 'Deep work')
+    const down = new MouseEvent('pointerdown', { bubbles: true, button: 2, clientX: 10, clientY: 10 })
+    Object.defineProperty(down, 'isPrimary', { value: true })
+    event.element.dispatchEvent(down)
+    await pointer(event, 'pointerup')
+    expect(wrapper.find('[data-panel]').exists()).toBe(false)
     wrapper.unmount()
   })
 })

@@ -54,7 +54,7 @@ onMounted(() => {
         sceneTimers.push(setTimeout(() => scene && (scene.go.value = true), 350))
       })
     },
-    { rootMargin: '-25% 0px -25% 0px', threshold: 0.6 },
+    { rootMargin: '-25% 0px -25% 0px', threshold: 0.3 },
   )
   scenes.forEach((scene) => scene.el && sceneObserver?.observe(scene.el))
 })
