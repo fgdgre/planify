@@ -3,9 +3,15 @@ import { landingEffects } from '../effects'
 
 export function useReveal(el: Ref<HTMLElement | null>): Ref<boolean> {
   const reducedMotion = usePreferredReducedMotion()
-  const off = !landingEffects.reveal || reducedMotion.value === 'reduce'
-  const shown = ref(off)
+  const off = computed(() => !landingEffects.reveal || reducedMotion.value === 'reduce')
+  const shown = ref(off.value)
   let observer: IntersectionObserver | undefined
+
+  watch(off, (isOff) => {
+    if (!isOff) return
+    shown.value = true
+    observer?.disconnect()
+  })
 
   onMounted(() => {
     if (shown.value || !el.value) return

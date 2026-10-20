@@ -94,8 +94,8 @@ onBeforeUnmount(() => {
           <div class="absolute inset-x-3.5 top-11 h-9 rounded-lg border border-dashed border-zinc-300">
             <span class="absolute -top-5 left-0 text-[10px] text-placeholder">2:00 pm</span>
           </div>
-          <div class="absolute top-[46px] left-4 h-8 w-[44%] rounded-[7px] border-l-[3px] border-[#e5484d] bg-[#fdeaea] px-2.5 py-2 text-[11px] font-medium text-[#b4232a] transition-[translate] duration-[1100ms] ease-[cubic-bezier(.2,.8,.2,1)]" :class="go2 ? 'translate-x-0 go-bump' : '-translate-x-[140%]'">Acme demo</div>
-          <div class="absolute top-[46px] right-4 h-8 w-[44%] rounded-[7px] border-l-[3px] border-[#30a46c] bg-[#e6f5ee] px-2.5 py-2 text-[11px] font-medium text-[#1d7a4d] transition-[translate] duration-[1100ms] ease-[cubic-bezier(.2,.8,.2,1)]" :class="go2 ? 'translate-x-0 go-bump' : 'translate-x-[140%]'">Studio QA</div>
+          <div class="absolute top-[46px] left-4 h-8 w-[44%] rounded-[7px] border-l-[3px] border-[#e5484d] bg-[#fdeaea] px-2.5 py-2 text-[11px] font-medium text-[#b4232a] transition-[translate] duration-[1100ms] ease-[cubic-bezier(.2,.8,.2,1)]" :class="go2 ? ['translate-x-0', scenesOn && 'go-bump'] : '-translate-x-[140%]'">Acme demo</div>
+          <div class="absolute top-[46px] right-4 h-8 w-[44%] rounded-[7px] border-l-[3px] border-[#30a46c] bg-[#e6f5ee] px-2.5 py-2 text-[11px] font-medium text-[#1d7a4d] transition-[translate] duration-[1100ms] ease-[cubic-bezier(.2,.8,.2,1)]" :class="go2 ? ['translate-x-0', scenesOn && 'go-bump'] : 'translate-x-[140%]'">Studio QA</div>
           <div class="absolute top-3 left-1/2 -translate-x-1/2 rounded-full border border-[#f6c5c7] bg-white px-2 py-[3px] text-[10px] font-semibold whitespace-nowrap text-[#b4232a] transition-all duration-400 delay-1500" :class="go2 ? 'translate-y-0 opacity-100' : '-translate-y-1.5 opacity-0'">⚠ Same time, two calendars</div>
         </div>
         <h3 class="mt-4 mb-1.5 text-lg font-semibold tracking-[-0.035em]">The silent double-booking</h3>
