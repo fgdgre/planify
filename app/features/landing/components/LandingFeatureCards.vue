@@ -1,6 +1,21 @@
+<script setup lang="ts">
+import { useReveal } from '../composables/useReveal'
+
+const header = ref<HTMLElement | null>(null)
+const tile1 = ref<HTMLElement | null>(null)
+const tile2 = ref<HTMLElement | null>(null)
+const tile3 = ref<HTMLElement | null>(null)
+const tile4 = ref<HTMLElement | null>(null)
+const headerShown = useReveal(header)
+const tile1Shown = useReveal(tile1)
+const tile2Shown = useReveal(tile2)
+const tile3Shown = useReveal(tile3)
+const tile4Shown = useReveal(tile4)
+</script>
+
 <template>
   <section class="mx-auto max-w-[1260px] px-5 pt-5 pb-16 tablet:px-10 tablet:pb-[120px]">
-    <div class="mx-auto max-w-[680px] text-center">
+    <div ref="header" class="mx-auto max-w-[680px] text-center transition-[opacity,translate] duration-800 ease-[cubic-bezier(.2,.8,.2,1)]" :class="headerShown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'">
       <span class="text-[13px] font-semibold text-primary-deep">How Planify helps</span>
       <h2 class="mt-2.5 mb-3.5 text-3xl leading-[1.08] font-semibold tracking-[-0.035em] tablet:text-5xl">
         One grid. Every account.<br>
@@ -9,7 +24,7 @@
     </div>
 
     <div class="mt-11 grid gap-[18px] tablet:grid-cols-[1.2fr_1fr]">
-      <div class="flex flex-col gap-[18px] overflow-hidden rounded-[22px] bg-primary-soft p-7">
+      <div ref="tile1" class="flex flex-col gap-[18px] overflow-hidden rounded-[22px] bg-primary-soft p-7 transition-[opacity,translate] duration-800 ease-[cubic-bezier(.2,.8,.2,1)]" :class="tile1Shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'">
         <div>
           <h3 class="text-[22px] font-semibold tracking-[-0.025em]">Every account on one grid</h3>
           <p class="mt-1.5 text-sm leading-[1.5] text-placeholder">Connect up to three Google accounts. Each gets its own color.</p>
@@ -50,7 +65,7 @@
         </div>
       </div>
 
-      <div class="flex flex-col gap-[18px] overflow-hidden rounded-[22px] bg-primary-soft p-7">
+      <div ref="tile2" class="flex flex-col gap-[18px] overflow-hidden rounded-[22px] bg-primary-soft p-7 transition-[opacity,translate] duration-800 ease-[cubic-bezier(.2,.8,.2,1)]" :class="tile2Shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'">
         <div>
           <h3 class="text-[22px] font-semibold tracking-[-0.025em]">Notes inside the meeting</h3>
           <p class="mt-1.5 text-sm leading-[1.5] text-placeholder">Attach notes to any event. Next week, the context is right there.</p>
@@ -70,7 +85,7 @@
         </div>
       </div>
 
-      <div class="flex flex-col gap-[18px] overflow-hidden rounded-[22px] bg-primary-soft p-7">
+      <div ref="tile3" class="flex flex-col gap-[18px] overflow-hidden rounded-[22px] bg-primary-soft p-7 transition-[opacity,translate] duration-800 ease-[cubic-bezier(.2,.8,.2,1)]" :class="tile3Shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'">
         <div>
           <h3 class="text-[22px] font-semibold tracking-[-0.025em]">Search every calendar</h3>
           <p class="mt-1.5 text-sm leading-[1.5] text-placeholder">One box over all accounts. Find the last Acme call in two seconds.</p>
@@ -90,7 +105,7 @@
         </div>
       </div>
 
-      <div class="flex flex-col gap-[18px] overflow-hidden rounded-[22px] bg-primary-soft p-7">
+      <div ref="tile4" class="flex flex-col gap-[18px] overflow-hidden rounded-[22px] bg-primary-soft p-7 transition-[opacity,translate] duration-800 ease-[cubic-bezier(.2,.8,.2,1)]" :class="tile4Shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'">
         <div>
           <h3 class="text-[22px] font-semibold tracking-[-0.025em]">See where your week went</h3>
           <p class="mt-1.5 text-sm leading-[1.5] text-placeholder">Hours by calendar, so you know which client eats your time.</p>

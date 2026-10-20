@@ -1,9 +1,17 @@
 <script setup lang="ts">
 import { ROUTES } from '@shared/constants/routes'
+import { useReveal } from '../composables/useReveal'
+
+const cta = ref<HTMLElement | null>(null)
+const ctaShown = useReveal(cta)
 </script>
 
 <template>
-  <section class="mx-5 mb-10 rounded-[28px] bg-primary-deep px-5 py-16 text-center text-white tablet:mx-10 tablet:px-10 tablet:py-20">
+  <section
+    ref="cta"
+    class="mx-5 mb-10 rounded-[28px] bg-primary-deep px-5 py-16 text-center text-white tablet:mx-10 tablet:px-10 tablet:py-20 transition-[opacity,translate] duration-800 ease-[cubic-bezier(.2,.8,.2,1)]"
+    :class="ctaShown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
+  >
     <h2 class="text-3xl font-semibold tracking-[-0.035em] tablet:text-5xl">Stop juggling calendars.</h2>
     <p class="mt-3.5 mb-7 text-[17px] text-[#ece9f7]">Bring every account into one calm place.</p>
     <NuxtLink
