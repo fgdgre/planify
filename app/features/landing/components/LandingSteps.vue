@@ -36,7 +36,7 @@ function moveLight(event: PointerEvent) {
       <div
         v-for="(step, index) in steps"
         :key="step.title"
-        :ref="cardEls[index]"
+        :ref="(el) => (cardEls[index]!.value = el as HTMLElement | null)"
         class="group relative overflow-hidden rounded-[18px] border border-border bg-white p-6 transition-[opacity,translate] duration-800 ease-[cubic-bezier(.2,.8,.2,1)]"
         :class="cardsShown[index]!.value ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
         @pointermove="moveLight"

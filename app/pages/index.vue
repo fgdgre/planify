@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LandingNav, LandingHero, LandingPain, LandingFeatureCards, LandingSteps, LandingFooter } from '@features/landing'
+import { landingEffects, LandingNav, LandingHero, LandingPain, LandingDemo, LandingFeatureCards, LandingSteps, LandingFooter } from '@features/landing'
 
 definePageMeta({ layout: false })
 
@@ -28,7 +28,8 @@ useHead({
     <main>
       <LandingHero />
       <LandingPain />
-      <LandingFeatureCards />
+      <LandingDemo v-if="landingEffects.demo" />
+      <LandingFeatureCards v-else />
       <LandingSteps />
     </main>
     <LandingFooter />
