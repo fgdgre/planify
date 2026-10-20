@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LandingNav, LandingHero, LandingFooter } from '@features/landing'
+import { LandingNav, LandingHero, LandingPain, LandingFeatureCards, LandingSteps, LandingFooter } from '@features/landing'
 
 definePageMeta({ layout: false })
 
@@ -27,6 +27,9 @@ useHead({
     <LandingNav />
     <main>
       <LandingHero />
+      <LandingPain />
+      <LandingFeatureCards />
+      <LandingSteps />
     </main>
     <LandingFooter />
   </div>
