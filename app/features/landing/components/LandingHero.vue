@@ -113,60 +113,62 @@ function eventsAt(day: number, hour: number) {
 
 <template>
   <section
-    class="relative isolate overflow-hidden px-5 pt-10 text-center tablet:px-10 tablet:pt-14"
+    class="relative isolate flex h-[max(640px,calc(100dvh-4rem))] flex-col overflow-hidden px-5 pt-10 text-center tablet:px-10 tablet:pt-14"
     :style="landingEffects.aurora ? undefined : 'background: radial-gradient(ellipse 60% 50% at 50% 0%, #e3dcfb 0%, transparent 70%)'"
   >
     <div v-if="landingEffects.aurora" class="aurora pointer-events-none absolute -inset-x-[10%] -top-[20%] -z-10 h-[780px] opacity-65 blur-[60px]">
       <span /><span /><span />
     </div>
 
-    <span class="inline-flex items-center gap-2 rounded-full border border-border bg-white py-[5px] pr-3 pl-1.5 text-[13px] text-zinc-700">
-      <span class="rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-white">New</span>
-      Notes inside every meeting
-    </span>
-
-    <h1 class="mx-auto mt-5 max-w-[820px] text-4xl leading-[1.05] font-semibold tracking-[-0.035em] tablet:text-6xl">
-      All your
-      <span
-        v-if="rotatingOn"
-        ref="wordBox"
-        class="inline-grid h-[calc(1lh+.22em)] justify-items-start overflow-hidden align-top -mb-[.22em] transition-[width] duration-600 ease-[cubic-bezier(.2,.8,.2,1)]"
-        :style="{ width: wordWidth || undefined }"
-      >
-        <b
-          v-for="(word, index) in words"
-          :key="word"
-          class="col-start-1 row-start-1 font-semibold whitespace-nowrap transition-[transform,opacity] duration-600 ease-[cubic-bezier(.2,.8,.2,1)]"
-          :class="index === activeWord ? 'opacity-100' : index === leavingWord ? '-translate-y-[150%] opacity-0' : 'translate-y-[150%] opacity-0'"
-        >{{ word }}</b>
+    <div class="flex flex-1 flex-col items-center justify-center">
+      <span class="inline-flex items-center gap-2 rounded-full border border-border bg-white py-[5px] pr-3 pl-1.5 text-[13px] text-zinc-700">
+        <span class="rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-white">New</span>
+        Notes inside every meeting
       </span>
-      <b v-else class="font-semibold">Google</b>
-      calendars.<br>
-      <em class="bg-linear-to-r from-primary-deep to-primary bg-clip-text text-transparent not-italic">One calm place.</em>
-    </h1>
 
-    <p class="mx-auto mt-4 max-w-[560px] text-[17px] leading-[1.55] text-placeholder">
-      Stop flipping between client accounts. Planify shows every calendar on one grid and keeps your meeting notes right where you need them.
-    </p>
+      <h1 class="mx-auto mt-5 max-w-[820px] text-4xl leading-[1.05] font-semibold tracking-[-0.035em] tablet:text-6xl">
+        All your
+        <span
+          v-if="rotatingOn"
+          ref="wordBox"
+          class="inline-grid h-[calc(1lh+.22em)] justify-items-start overflow-hidden align-top -mb-[.22em] transition-[width] duration-600 ease-[cubic-bezier(.2,.8,.2,1)]"
+          :style="{ width: wordWidth || undefined }"
+        >
+          <b
+            v-for="(word, index) in words"
+            :key="word"
+            class="col-start-1 row-start-1 font-semibold whitespace-nowrap transition-[transform,opacity] duration-600 ease-[cubic-bezier(.2,.8,.2,1)]"
+            :class="index === activeWord ? 'opacity-100' : index === leavingWord ? '-translate-y-[150%] opacity-0' : 'translate-y-[150%] opacity-0'"
+          >{{ word }}</b>
+        </span>
+        <b v-else class="font-semibold">Google</b>
+        calendars.<br>
+        <em class="bg-linear-to-r from-primary-deep to-primary bg-clip-text text-transparent not-italic">One calm place.</em>
+      </h1>
 
-    <div class="mt-6 flex flex-wrap justify-center gap-2.5">
-      <NuxtLink
-        :to="ROUTES.SIGNUP"
-        class="rounded-[9px] bg-primary px-[18px] py-[11px] text-sm font-semibold text-white shadow-[0_8px_24px_-10px_var(--primary-deep)]"
-      >
-        Connect Google Calendar
-      </NuxtLink>
-      <a
-        href="#how-it-works"
-        class="rounded-[9px] border border-border bg-white px-[18px] py-[11px] text-sm font-semibold"
-      >
-        See how it works
-      </a>
+      <p class="mx-auto mt-4 max-w-[560px] text-[17px] leading-[1.55] text-placeholder">
+        Stop flipping between client accounts. Planify shows every calendar on one grid and keeps your meeting notes right where you need them.
+      </p>
+
+      <div class="mt-6 flex flex-wrap justify-center gap-2.5">
+        <NuxtLink
+          :to="ROUTES.SIGNUP"
+          class="rounded-[9px] bg-primary px-[18px] py-[11px] text-sm font-semibold text-white shadow-[0_8px_24px_-10px_var(--primary-deep)]"
+        >
+          Connect Google Calendar
+        </NuxtLink>
+        <a
+          href="#how-it-works"
+          class="rounded-[9px] border border-border bg-white px-[18px] py-[11px] text-sm font-semibold"
+        >
+          See how it works
+        </a>
+      </div>
     </div>
 
     <div
       ref="stage"
-      class="relative mx-auto mt-12 max-w-[1180px]"
+      class="relative mx-auto mt-8 min-h-[220px] w-full max-w-[1180px] shrink overflow-hidden pt-4"
       :class="{ merged: mergeOn && merged, 'merge-on': mergeOn }"
     >
       <template v-if="mergeOn">
@@ -187,7 +189,7 @@ function eventsAt(day: number, hour: number) {
         </div>
         <button
           type="button"
-          class="absolute top-[122px] right-3.5 z-20 hidden cursor-pointer rounded-[7px] border border-border bg-white px-2.5 py-1.5 text-[11px] tablet:block"
+          class="absolute top-[138px] right-3.5 z-20 hidden cursor-pointer rounded-[7px] border border-border bg-white px-2.5 py-1.5 text-[11px] tablet:block"
           @click="replayMerge"
         >
           ↻ Replay

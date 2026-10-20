@@ -6,7 +6,7 @@ const { y } = useWindowScroll()
 
 <template>
   <nav
-    class="sticky top-0 z-40 flex items-center justify-between border-b bg-white/70 px-5 py-3.5 text-sm backdrop-blur-md tablet:px-10"
+    class="sticky top-0 z-40 flex h-16 items-center justify-between border-b bg-white/70 px-5 text-sm backdrop-blur-md tablet:px-10"
     :class="y > 10 ? 'border-border' : 'border-transparent'"
   >
     <NuxtLink :to="ROUTES.LANDING" class="flex items-center gap-2 text-[15px] font-semibold">
