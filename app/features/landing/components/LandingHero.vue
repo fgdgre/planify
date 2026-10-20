@@ -46,12 +46,11 @@ const mergeOn = computed(() => landingEffects.merge && reducedMotion.value !== '
 const activeWord = ref(0)
 const leavingWord = ref(-1)
 const wordBox = ref<HTMLElement | null>(null)
-const wordEls = ref<HTMLElement[]>([])
 const wordWidth = ref('')
 let leaveTimer: ReturnType<typeof setTimeout> | undefined
 
 function fitWord() {
-  const word = wordEls.value[activeWord.value]
+  const word = wordBox.value?.children[activeWord.value]
   if (word) wordWidth.value = word.getBoundingClientRect().width + 'px'
 }
 
@@ -137,7 +136,6 @@ function eventsAt(day: number, hour: number) {
         <b
           v-for="(word, index) in words"
           :key="word"
-          ref="wordEls"
           class="col-start-1 row-start-1 font-semibold whitespace-nowrap transition-[transform,opacity] duration-600 ease-[cubic-bezier(.2,.8,.2,1)]"
           :class="index === activeWord ? 'opacity-100' : index === leavingWord ? '-translate-y-[150%] opacity-0' : 'translate-y-[150%] opacity-0'"
         >{{ word }}</b>
@@ -280,7 +278,7 @@ function eventsAt(day: number, hour: number) {
 .merge-on .side-row { opacity: 0.35; transition: opacity 0.8s 1.2s; }
 .merge-on .ev { opacity: 0; transform: translateY(-14px) scale(0.96); transition: opacity 0.4s, transform 0.4s cubic-bezier(.2, .8, .2, 1); }
 .merged .side-row { opacity: 1; }
-.merged .ev { opacity: 1; transform: none; transition-duration: 0.7s; transition-delay: calc(var(--i) * 90ms + 1300ms); }
+.merged .ev { opacity: 1; transform: none; transition-duration: 0.7s; transition-delay: calc(var(--i) * 150ms + 1300ms); }
 .merged .acct:nth-of-type(1) { transform: translate(140px, 190px) scale(0.4) rotate(0); opacity: 0; }
 .merged .acct:nth-of-type(2) { transform: translate(0, 210px) scale(0.4); opacity: 0; transition-delay: 0.2s; }
 .merged .acct:nth-of-type(3) { transform: translate(-140px, 190px) scale(0.4) rotate(0); opacity: 0; transition-delay: 0.4s; }
