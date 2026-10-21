@@ -14,7 +14,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   ssr: false,
   css: ['~/assets/css/main.css'],
-  modules: ['@nuxt/icon', '@pinia/nuxt', '@nuxtjs/supabase', '@vueuse/nuxt'],
+  modules: ['@nuxt/icon', '@pinia/nuxt', '@vueuse/nuxt'],
   app: {
     head: {
       meta: [
@@ -54,18 +54,6 @@ export default defineNuxtConfig({
     public: {
       supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL,
       supabaseAnonKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
-    },
-  },
-
-  supabase: {
-    url: process.env.NUXT_PUBLIC_SUPABASE_URL,
-    key: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
-    types: '~~/shared/types/database.types.ts',
-    redirect: false,
-    clientOptions: {
-      auth: {
-        flowType: 'pkce',
-      },
     },
   },
 })
