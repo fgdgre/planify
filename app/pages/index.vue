@@ -14,10 +14,10 @@ useHead({
     { property: 'og:description', content: description },
     { property: 'og:type', content: 'website' },
   ],
+  // Inter is self-hosted (see main.css): the CSP allows fonts from 'self' only,
+  // and the landing makes no third-party requests.
   link: [
-    { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-    { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
-    { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap' },
+    { rel: 'preload', href: '/fonts/inter-latin-var.woff2', as: 'font', type: 'font/woff2', crossorigin: '' },
   ],
 })
 </script>
