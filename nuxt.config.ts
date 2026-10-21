@@ -1,5 +1,6 @@
 import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "path";
+import { applyInlineScriptHashes } from "./scripts/csp-inline-hashes.mjs";
 
 const alias = {
   "@features": resolve(__dirname, "app/features"),
@@ -37,9 +38,20 @@ export default defineNuxtConfig({
       extensions: ['.vue'],
     },
   ],
+  hooks: {
+    // Netlify CSP: `nuxt generate` writes one inline bootstrap <script> into
+    // every page whose content changes per build. Hash it into the
+    // Content-Security-Policy of public/_headers so `script-src` stays strict
+    // without 'unsafe-inline'. In `nuxt generate` this hook runs after
+    // prerendering (HTML exists) and right after public/ was copied
+    // (_headers exists).
+    async 'nitro:build:public-assets'(nitro) {
+      const hashes = await applyInlineScriptHashes(nitro.options.output.publicDir)
+      nitro.logger.info(`CSP: injected ${hashes.length} inline script hash(es) into _headers`)
+    },
+  },
   runtimeConfig: {
     public: {
-      BASE_URL: process.env.NUXT_PUBLIC_API_BASE,
       supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL,
       supabaseAnonKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
     },

@@ -27,3 +27,21 @@ logs
 test-results
 playwright-report
 playwright/.cache
+
+# Personal notes in docs/ — OKRs, performance-review evidence, employer business
+# context, reading lists. These stay on disk but out of the repo: they name real
+# colleagues, comp figures and internal funnel data that do not belong in a
+# codebase that may be shared or made public.
+#
+# Default-deny by design, so a new personal note is never committed by accident.
+# To track a doc that is genuinely about THIS codebase, add a `!docs/<name>.md`
+# line below.
+#
+# Pattern is `docs/*.md`, not `docs/` — git cannot re-include a file whose parent
+# directory is excluded, so the negations below would silently do nothing.
+docs/*.md
+!docs/amplitude-integration.md
+!docs/api-usage-audit-2026-10-13.md
+!docs/diploma-collaboration-strategy.md
+!docs/feature-plan-calendar-ux-and-landing.md
+!docs/feature-plan-telegram-notifications-mobile.md

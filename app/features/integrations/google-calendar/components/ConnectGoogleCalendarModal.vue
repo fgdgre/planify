@@ -10,8 +10,7 @@ defineEmits<{
 const {
   connectGoogle,
   fetchConnectedAccounts,
-  fetchCalendarEvents,
-  syncEvents,
+  listCalendars,
 } = useGoogleCalendar()
 
 const googleCalendarStore = useGoogleCalendarStore()
@@ -62,7 +61,7 @@ onMounted(fetchConnectedAccounts)
 
           <SupaButton
             class="rounded border px-3 py-2"
-            @click="fetchCalendarEvents(account.id)"
+            @click="listCalendars(account.id)"
           >
             Load calendars
           </SupaButton>

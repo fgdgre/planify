@@ -1,39 +1,35 @@
 import { useGoogleCalendarStore, useGoogleCalendar } from "@features/integrations/google-calendar";
-import { useInternalEvents } from "@entities/calendar/composables/useInternalEvents";
-import { useSettings } from "@features/settings";
+import { useSettings, useSettingsStore } from "@features/settings";
 import { useUserStore } from "@features/auth/stores/user";
 
+/**
+ * Makes accounts, preferences and Google events available on the pages that
+ * render the calendar. Everything is cached for the session: accounts and
+ * preferences load once, and Google is only asked for new events when an
+ * account's cache is older than SYNC_TTL_MS. Query-only navigations (opening a
+ * sidebar, selecting an event) never touch the network.
+ */
 export default defineNuxtRouteMiddleware(async (to, from) => {
-  const googleCalendarStore = useGoogleCalendarStore()
-  const { fetchConnectedAccounts, fetchCalendarEvents, syncEvents } = useGoogleCalendar()
-  const { loadEvents: loadInternalEvents } = useInternalEvents()
-  const { getUserPreferences, syncAccountColors } = useSettings()
   const userStore = useUserStore()
+  if (!userStore.user) return
 
-  const isCalendarQueryOnlyNavigation = to.path === from.path && to.path === '/app/calendar'
+  const googleCalendarStore = useGoogleCalendarStore()
+  const settingsStore = useSettingsStore()
+  const { fetchConnectedAccounts, syncAllAccounts } = useGoogleCalendar()
+  const { getUserPreferences, syncAccountColors } = useSettings()
 
-  if (isCalendarQueryOnlyNavigation && googleCalendarStore.accounts.length) {
-    return
-  }
+  const isQueryOnlyNavigation = to.path === from.path
+  if (isQueryOnlyNavigation && googleCalendarStore.accountsLoaded) return
+
+  const userId = userStore.user.id
 
   await Promise.all([
     fetchConnectedAccounts(),
-    userStore.user ? getUserPreferences(userStore.user.id) : Promise.resolve(),
+    settingsStore.preferences ? Promise.resolve() : getUserPreferences(userId),
   ])
 
-  if (userStore.user) {
-    await syncAccountColors(userStore.user.id, googleCalendarStore.accounts)
-  }
+  await syncAccountColors(userId, googleCalendarStore.accounts)
 
-  const accounts = googleCalendarStore.accounts
-
-  // Load internal events + sync google accounts in parallel.
-  // Not fully awaited so navigation isn't blocked. The watch in calendar.vue picks up events reactively.
-  Promise.all([
-    loadInternalEvents(),
-    ...accounts.map(async (account) => {
-      await fetchCalendarEvents(account.id)
-      await syncEvents(account.id)
-    }),
-  ])
+  // Not awaited so navigation isn't blocked. Views reload through `syncVersion` once it finishes.
+  void syncAllAccounts()
 })
