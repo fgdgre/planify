@@ -9,7 +9,6 @@ import { useNotification } from "@features/notification";
 
 export const useForgotPassword = () => {
   const supabase = useSupabaseClient()
-  const runtimeConfig = useRuntimeConfig()
   const { showSuccessToast, showErrorToast } = useNotification()
 
   const loading = ref(false)
@@ -66,8 +65,11 @@ export const useForgotPassword = () => {
     try {
       loading.value = true
 
+      // Same origin-derived pattern as signup/google-auth. The previous
+      // runtimeConfig value was never set in CI, producing "undefined/reset-password".
+      // The URL must be in Supabase Auth → URL Configuration → Redirect URLs.
       const { error } = await supabase.auth.resetPasswordForEmail(payload.email, {
-        redirectTo: runtimeConfig.public.BASE_URL + ROUTES.RESET_PASSWORD,
+        redirectTo: `${window.location.origin}${ROUTES.RESET_PASSWORD}`,
       })
 
       if (error) {

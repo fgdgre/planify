@@ -9,9 +9,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     initializeApp
   } = useInitApp()
 
-  console.log('user', userStore.user)
   if (!userStore.user && !userStore.initPromise) {
-    console.log('initializeApp')
     userStore.setInitPromise(initializeApp())
     await userStore.initPromise!
     userStore.setInitPromise(null)

@@ -11,7 +11,6 @@ export const useInitApp = () => {
     userStore.setLoading(true)
     try {
       const { data: userData, error: userError } = await getUser()
-      console.log('userData', userData)
       if(userError) {
         showErrorToast({
           title: "Error",

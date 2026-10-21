@@ -11,6 +11,12 @@ verify_jwt = false
 import_map = "./functions/google-oauth-callback/deno.json"
 entrypoint = "./functions/google-oauth-callback/index.ts"
 
+[functions.google-oauth-complete]
+enabled = true
+verify_jwt = false
+import_map = "./functions/google-oauth-complete/deno.json"
+entrypoint = "./functions/google-oauth-complete/index.ts"
+
 [functions.google-list-calendars]
 enabled = true
 verify_jwt = false
