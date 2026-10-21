@@ -94,8 +94,6 @@ export const useLogin = () => {
         password: loginData.password,
       })
 
-      console.log(data)
-
       if (error) {
         console.error(error)
         if (error.message === 'Invalid login credentials') {

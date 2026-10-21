@@ -1,10 +1,17 @@
 <script setup lang="ts">
-import { useResetPassword } from "@features/auth";
+import { useResetPassword, useUserStore } from "@features/auth";
 import { ROUTES } from "~/shared/constants/routes";
 
 definePageMeta({
   layout: 'default',
 })
+
+const userStore = useUserStore()
+
+// The recovery email link signs the user in (PKCE code exchange) before this
+// page renders. Without a session `updateUser` would fail anyway, so show a
+// clear "link expired" state instead of a form that cannot succeed.
+const hasRecoverySession = computed(() => Boolean(userStore.user))
 
 const {
   loading,
@@ -35,94 +42,120 @@ const {
           <p class="text-[18px] font-medium">Planify</p>
         </div>
 
-        <div class="mt-10">
-          <h1 class="text-4xl font-medium">Set a new password</h1>
+        <template v-if="hasRecoverySession">
+          <div class="mt-10">
+            <h1 class="text-4xl font-medium">Set a new password</h1>
 
-          <p class="text-placeholder">Pick something secure and easy to remember.</p>
-        </div>
+            <p class="text-placeholder">Pick something secure and easy to remember.</p>
+          </div>
 
-        <div class="mt-9">
-          <SupaInlineAlert
-            v-if="formErrorMessage"
-            color="error"
-            icon="heroicons:exclamation-triangle"
-            :message="formErrorMessage"
-          />
+          <div class="mt-9">
+            <SupaInlineAlert
+              v-if="formErrorMessage"
+              color="error"
+              icon="heroicons:exclamation-triangle"
+              :message="formErrorMessage"
+            />
 
-          <form
-            class="flex flex-col gap-10 items-center justify-center w-full"
-            @submit.prevent="resetPassword"
-          >
-            <div class="flex flex-col gap-4 w-full">
-              <SupaInput
-                v-model="formData.password"
-                label="New password"
-                placeholder="Create a password"
-                :type="passwordInputType"
-                :error-message="errorMessages.password"
-                autocomplete="new-password"
-                :disabled="loading"
-                test-id="password-input"
-                size="xl"
-                leading-icon="mdi:password-outline"
-                @update:model-value="(v) => handleFieldChange(v, 'password')"
-                @blur="handleFieldBlur('password')"
-              >
-                <template #trailing>
-                  <SupaButton
-                    variant="transparent"
-                    :icon="passwordInputType === 'password' ? 'heroicons:eye' : 'heroicons:eye-slash'"
-                    @click="passwordInputType = passwordInputType === 'password' ? 'text' : 'password'"
-                  />
-                </template>
-              </SupaInput>
+            <form
+              class="flex flex-col gap-10 items-center justify-center w-full"
+              @submit.prevent="resetPassword"
+            >
+              <div class="flex flex-col gap-4 w-full">
+                <SupaInput
+                  v-model="formData.password"
+                  label="New password"
+                  placeholder="Create a password"
+                  :type="passwordInputType"
+                  :error-message="errorMessages.password"
+                  autocomplete="new-password"
+                  :disabled="loading"
+                  test-id="password-input"
+                  size="xl"
+                  leading-icon="mdi:password-outline"
+                  @update:model-value="(v) => handleFieldChange(v, 'password')"
+                  @blur="handleFieldBlur('password')"
+                >
+                  <template #trailing>
+                    <SupaButton
+                      variant="transparent"
+                      :icon="passwordInputType === 'password' ? 'heroicons:eye' : 'heroicons:eye-slash'"
+                      @click="passwordInputType = passwordInputType === 'password' ? 'text' : 'password'"
+                    />
+                  </template>
+                </SupaInput>
 
-              <SupaInput
-                v-model="formData.confirmPassword"
-                label="Confirm password"
-                placeholder="Repeat the password"
-                :type="confirmPasswordInputType"
-                :error-message="errorMessages.confirmPassword"
-                autocomplete="new-password"
-                :disabled="loading"
-                test-id="confirm-password-input"
-                size="xl"
-                leading-icon="mdi:password-outline"
-                @update:model-value="(v) => handleFieldChange(v, 'confirmPassword')"
-                @blur="handleFieldBlur('confirmPassword')"
-              >
-                <template #trailing>
-                  <SupaButton
-                    variant="transparent"
-                    :icon="confirmPasswordInputType === 'password' ? 'heroicons:eye' : 'heroicons:eye-slash'"
-                    @click="confirmPasswordInputType = confirmPasswordInputType === 'password' ? 'text' : 'password'"
-                  />
-                </template>
-              </SupaInput>
-            </div>
+                <SupaInput
+                  v-model="formData.confirmPassword"
+                  label="Confirm password"
+                  placeholder="Repeat the password"
+                  :type="confirmPasswordInputType"
+                  :error-message="errorMessages.confirmPassword"
+                  autocomplete="new-password"
+                  :disabled="loading"
+                  test-id="confirm-password-input"
+                  size="xl"
+                  leading-icon="mdi:password-outline"
+                  @update:model-value="(v) => handleFieldChange(v, 'confirmPassword')"
+                  @blur="handleFieldBlur('confirmPassword')"
+                >
+                  <template #trailing>
+                    <SupaButton
+                      variant="transparent"
+                      :icon="confirmPasswordInputType === 'password' ? 'heroicons:eye' : 'heroicons:eye-slash'"
+                      @click="confirmPasswordInputType = confirmPasswordInputType === 'password' ? 'text' : 'password'"
+                    />
+                  </template>
+                </SupaInput>
+              </div>
 
-            <div class="w-full flex flex-col gap-4">
-              <SupaButton
-                type="submit"
-                stretch="width"
-                :loading
-                rounded="full"
-              >
-                Update password
-              </SupaButton>
+              <div class="w-full flex flex-col gap-4">
+                <SupaButton
+                  type="submit"
+                  stretch="width"
+                  :loading
+                  rounded="full"
+                >
+                  Update password
+                </SupaButton>
 
-              <div class="flex w-full justify-between text-sm">
-                <div class="mx-auto">
-                  Remembered it?
+                <div class="flex w-full justify-between text-sm">
+                  <div class="mx-auto">
+                    Remembered it?
 
-                  <NuxtLink :to="ROUTES.LOGIN" class="text-primary">
-                    Back to login
-                  </NuxtLink>
+                    <NuxtLink :to="ROUTES.LOGIN" class="text-primary">
+                      Back to login
+                    </NuxtLink>
+                  </div>
                 </div>
               </div>
+            </form>
+          </div>
+        </template>
+
+        <template v-else>
+          <div class="mt-10">
+            <h1 class="text-4xl font-medium">This link has expired</h1>
+
+            <p class="text-placeholder mt-2">
+              Password reset links work once and only for a short time. Request a new one and open it from the same browser.
+            </p>
+          </div>
+
+          <div class="mt-9 flex flex-col gap-4">
+            <NuxtLink :to="ROUTES.FORGOT_PASSWORD">
+              <SupaButton stretch="width" rounded="full">
+                Request a new link
+              </SupaButton>
+            </NuxtLink>
+
+            <div class="text-sm text-center">
+              <NuxtLink :to="ROUTES.LOGIN" class="text-primary">
+                Back to login
+              </NuxtLink>
             </div>
-          </form>
-        </div>
+          </div>
+        </template>
       </div>
     </div>
 
