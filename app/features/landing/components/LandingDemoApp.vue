@@ -198,9 +198,16 @@ function onPanelKeydown(event: KeyboardEvent) {
   if (noting.value && event.key === 'Enter' && (event.metaKey || event.ctrlKey)) saveNote()
 }
 
+// create and edit use the same side panel as the event details, like the real app
 function openForm(draft: DemoEventDraft, id: number | null = null, confirmDelete = false) {
   tip.value.on = false
+  if (id === null) closePanel()
   form.value = { id, draft: { ...draft }, confirmDelete }
+}
+
+function closeSidebar() {
+  form.value = null
+  closePanel()
 }
 
 function openNewForm() {
@@ -235,6 +242,7 @@ function saveForm(draft: DemoEventDraft) {
     const id = nextEventId(events.value)
     events.value.push({ id, title: draft.title, account: 'planify', day: draft.day, start: draft.start, length: draft.end - draft.start, notes: [] })
     if (!visibleIds.value.includes('planify')) visibleIds.value = [...visibleIds.value, 'planify']
+    openPanel(id)
   }
   form.value = null
 }
@@ -518,104 +526,116 @@ onBeforeUnmount(() => {
         </div>
 
         <Transition enter-from-class="opacity-0" leave-to-class="opacity-0" enter-active-class="transition-opacity duration-250" leave-active-class="transition-opacity duration-250">
-          <div v-if="selectedEvent" class="absolute inset-0 z-25 bg-black/50" @click="closePanel" />
+          <div v-if="selectedEvent || form" class="absolute inset-0 z-25 bg-black/50" @click="closeSidebar" />
         </Transition>
         <Transition enter-from-class="translate-x-full" leave-to-class="translate-x-full" enter-active-class="transition-[translate,width] duration-250" leave-active-class="transition-[translate,width] duration-250">
           <div
-            v-if="selectedEvent"
+            v-if="selectedEvent || form"
             data-panel
             class="absolute inset-y-0 right-0 z-30 flex flex-col border-l border-border bg-white text-xs transition-[width] duration-250"
-            :class="noting ? 'w-[94%]' : 'w-[min(340px,62%)]'"
+            :class="noting && !form ? 'w-[94%]' : form ? 'w-[min(340px,92%)]' : 'w-[min(340px,62%)]'"
             @keydown="onPanelKeydown"
           >
             <div class="flex h-10 flex-none items-center justify-between gap-2 border-b border-border pr-1.5 pl-3.5">
-              <b class="truncate text-[12.5px] font-medium">{{ selectedEvent.title }}</b>
-              <button type="button" aria-label="Close" class="grid cursor-pointer place-items-center rounded-md p-[5px] hover:bg-zinc-100" @click="closePanel">
+              <b class="truncate text-[12.5px] font-medium">{{ form ? (form.id === null ? 'New event' : 'Edit event') : selectedEvent?.title }}</b>
+              <button type="button" aria-label="Close" class="grid cursor-pointer place-items-center rounded-md p-[5px] hover:bg-zinc-100" @click="closeSidebar">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-[15px]"><path d="M18 6 6 18M6 6l12 12" /></svg>
               </button>
             </div>
-            <div class="grid min-h-0 flex-1 grid-cols-1 overflow-hidden border-b border-border" :class="noting ? 'grid-cols-[minmax(0,1fr)_min(300px,46%)]' : ''">
-              <div v-if="noting" class="flex flex-col gap-3 overflow-auto border-r border-border p-4">
-                <div>
-                  <b class="block font-medium">Linked note</b>
-                  <small class="text-[10.5px] text-placeholder">Will be linked to {{ selectedEvent.title }}</small>
+            <LandingDemoEventForm
+              v-if="form"
+              :key="form.id ?? 'new'"
+              :draft="form.draft"
+              :editing="form.id !== null"
+              :confirm-delete="form.confirmDelete"
+              @save="saveForm"
+              @cancel="form = null"
+              @delete="deleteFromForm"
+            />
+            <template v-else-if="selectedEvent">
+              <div class="grid min-h-0 flex-1 grid-cols-1 overflow-hidden border-b border-border" :class="noting ? 'grid-cols-[minmax(0,1fr)_min(300px,46%)]' : ''">
+                <div v-if="noting" class="flex flex-col gap-3 overflow-auto border-r border-border p-4">
+                  <div>
+                    <b class="block font-medium">Linked note</b>
+                    <small class="text-[10.5px] text-placeholder">Will be linked to {{ selectedEvent.title }}</small>
+                  </div>
+                  <div>
+                    <label for="demo-note-title" class="mb-1.5 block font-medium">Title</label>
+                    <input id="demo-note-title" ref="noteTitleInput" v-model="noteTitle" placeholder="Note title" autocomplete="off" class="w-full rounded-md border border-border bg-transparent px-[9px] py-1.5 text-xs shadow-xs outline-none focus:ring-1 focus:ring-zinc-400">
+                  </div>
+                  <div>
+                    <label for="demo-note-body" class="mb-1.5 block font-medium">Content</label>
+                    <textarea id="demo-note-body" v-model="noteBody" placeholder="Write your note..." class="min-h-[130px] w-full resize-none rounded-md border border-border bg-transparent px-[9px] py-1.5 text-xs shadow-xs outline-none focus:ring-1 focus:ring-zinc-400" />
+                  </div>
                 </div>
-                <div>
-                  <label for="demo-note-title" class="mb-1.5 block font-medium">Title</label>
-                  <input id="demo-note-title" ref="noteTitleInput" v-model="noteTitle" placeholder="Note title" autocomplete="off" class="w-full rounded-md border border-border bg-transparent px-[9px] py-1.5 text-xs shadow-xs outline-none focus:ring-1 focus:ring-zinc-400">
-                </div>
-                <div>
-                  <label for="demo-note-body" class="mb-1.5 block font-medium">Content</label>
-                  <textarea id="demo-note-body" v-model="noteBody" placeholder="Write your note..." class="min-h-[130px] w-full resize-none rounded-md border border-border bg-transparent px-[9px] py-1.5 text-xs shadow-xs outline-none focus:ring-1 focus:ring-zinc-400" />
-                </div>
-              </div>
-              <div class="flex flex-col gap-[9px] overflow-auto" :class="noting ? 'bg-zinc-500/5 p-3' : 'p-4'">
-                <div class="flex items-start gap-[7px] leading-snug text-zinc-600">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-px size-[13px] flex-none"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
-                  <span>{{ DEMO_DAYS[selectedEvent.day] }}, Oct {{ dates[selectedEvent.day] }}, 2026, {{ formatHour(selectedEvent.start) }} - {{ formatHour(selectedEvent.start + selectedEvent.length) }}</span>
-                </div>
-                <div v-if="selectedEvent.where" class="flex items-start gap-[7px] leading-snug text-zinc-600">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-px size-[13px] flex-none"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" /><circle cx="12" cy="10" r="3" /></svg>
-                  <span>{{ selectedEvent.where }}</span>
-                </div>
-                <template v-if="!findAccount(selectedEvent.account).own">
+                <div class="flex flex-col gap-[9px] overflow-auto" :class="noting ? 'bg-zinc-500/5 p-3' : 'p-4'">
                   <div class="flex items-start gap-[7px] leading-snug text-zinc-600">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-px size-[13px] flex-none"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-                    <span>{{ findAccount(selectedEvent.account).email }}</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-px size-[13px] flex-none"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
+                    <span>{{ DEMO_DAYS[selectedEvent.day] }}, Oct {{ dates[selectedEvent.day] }}, 2026, {{ formatHour(selectedEvent.start) }} - {{ formatHour(selectedEvent.start + selectedEvent.length) }}</span>
                   </div>
-                  <span class="text-[11px] text-placeholder">Synced from Google · read-only here</span>
-                  <a href="#demo" class="text-blue-600 hover:underline" @click.prevent>Link to original event</a>
-                </template>
-                <div v-if="selectedEvent.description" class="mt-0.5 border-t border-border pt-[9px] leading-normal text-zinc-700">{{ selectedEvent.description }}</div>
-                <div v-if="selectedEvent.notes.length" class="mt-0.5 flex flex-col gap-[7px] border-t border-border pt-[9px]">
-                  <div class="flex items-center gap-1.5 font-medium text-zinc-500">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-[13px] flex-none"><path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4" /><path d="M2 6h4M2 10h4M2 14h4M2 18h4" /><path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z" /></svg>
-                    Notes
+                  <div v-if="selectedEvent.where" class="flex items-start gap-[7px] leading-snug text-zinc-600">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-px size-[13px] flex-none"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" /><circle cx="12" cy="10" r="3" /></svg>
+                    <span>{{ selectedEvent.where }}</span>
                   </div>
-                  <div v-for="(note, index) in selectedEvent.notes" :key="index" data-note class="note-in rounded-md border border-border bg-zinc-500/10 p-[9px] hover:border-primary/40 hover:bg-white">
-                    <div v-if="editingNote === index" class="flex flex-col gap-1.5">
-                      <input v-model="editNoteTitle" data-note-title aria-label="Note title" autocomplete="off" class="w-full rounded-md border border-border bg-white px-[9px] py-1.5 text-xs outline-none focus:ring-1 focus:ring-zinc-400">
-                      <textarea v-model="editNoteBody" data-note-body aria-label="Note content" class="min-h-[70px] w-full resize-none rounded-md border border-border bg-white px-[9px] py-1.5 text-xs outline-none focus:ring-1 focus:ring-zinc-400" />
-                      <div class="flex gap-1.5">
-                        <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md bg-primary px-3 text-xs font-medium text-white hover:bg-primary/80" @click="saveNoteEdit">Save</button>
-                        <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md px-3 text-xs font-medium hover:bg-zinc-100" @click="cancelNoteEdit">Cancel</button>
-                      </div>
+                  <template v-if="!findAccount(selectedEvent.account).own">
+                    <div class="flex items-start gap-[7px] leading-snug text-zinc-600">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-px size-[13px] flex-none"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                      <span>{{ findAccount(selectedEvent.account).email }}</span>
                     </div>
-                    <template v-else>
-                      <div class="flex items-start justify-between gap-1">
-                        <b class="block font-medium">{{ note.title }}</b>
-                        <span class="flex flex-none items-center gap-0.5">
-                          <button type="button" aria-label="Edit note" class="grid cursor-pointer place-items-center rounded p-1 text-zinc-500 hover:bg-zinc-100" @click="startNoteEdit(index)">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-3"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /></svg>
-                          </button>
-                          <button type="button" aria-label="Delete note" class="grid cursor-pointer place-items-center rounded p-1 text-zinc-500 hover:bg-zinc-100" @click="deletingNote = index">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-3"><path d="M18 6 6 18M6 6l12 12" /></svg>
-                          </button>
-                        </span>
+                    <span class="text-[11px] text-placeholder">Synced from Google · read-only here</span>
+                    <a href="#demo" class="text-blue-600 hover:underline" @click.prevent>Link to original event</a>
+                  </template>
+                  <div v-if="selectedEvent.description" class="mt-0.5 border-t border-border pt-[9px] leading-normal text-zinc-700">{{ selectedEvent.description }}</div>
+                  <div v-if="selectedEvent.notes.length" class="mt-0.5 flex flex-col gap-[7px] border-t border-border pt-[9px]">
+                    <div class="flex items-center gap-1.5 font-medium text-zinc-500">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-[13px] flex-none"><path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4" /><path d="M2 6h4M2 10h4M2 14h4M2 18h4" /><path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z" /></svg>
+                      Notes
+                    </div>
+                    <div v-for="(note, index) in selectedEvent.notes" :key="index" data-note class="note-in rounded-md border border-border bg-zinc-500/10 p-[9px] hover:border-primary/40 hover:bg-white">
+                      <div v-if="editingNote === index" class="flex flex-col gap-1.5">
+                        <input v-model="editNoteTitle" data-note-title aria-label="Note title" autocomplete="off" class="w-full rounded-md border border-border bg-white px-[9px] py-1.5 text-xs outline-none focus:ring-1 focus:ring-zinc-400">
+                        <textarea v-model="editNoteBody" data-note-body aria-label="Note content" class="min-h-[70px] w-full resize-none rounded-md border border-border bg-white px-[9px] py-1.5 text-xs outline-none focus:ring-1 focus:ring-zinc-400" />
+                        <div class="flex gap-1.5">
+                          <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md bg-primary px-3 text-xs font-medium text-white hover:bg-primary/80" @click="saveNoteEdit">Save</button>
+                          <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md px-3 text-xs font-medium hover:bg-zinc-100" @click="cancelNoteEdit">Cancel</button>
+                        </div>
                       </div>
-                      <div class="mt-[3px] line-clamp-3 text-[11px] text-placeholder">{{ note.body }}</div>
-                      <div v-if="deletingNote === index" class="mt-1.5 flex items-center gap-1.5">
-                        <span class="font-medium">Delete this note?</span>
-                        <button type="button" class="inline-flex h-6 cursor-pointer items-center rounded-md bg-[rgb(243,18,96)] px-2.5 text-xs font-medium text-white" @click="deleteNote(index)">Yes</button>
-                        <button type="button" class="inline-flex h-6 cursor-pointer items-center rounded-md px-2.5 text-xs font-medium hover:bg-zinc-100" @click="deletingNote = null">No</button>
-                      </div>
-                    </template>
+                      <template v-else>
+                        <div class="flex items-start justify-between gap-1">
+                          <b class="block font-medium">{{ note.title }}</b>
+                          <span class="flex flex-none items-center gap-0.5">
+                            <button type="button" aria-label="Edit note" class="grid cursor-pointer place-items-center rounded p-1 text-zinc-500 hover:bg-zinc-100" @click="startNoteEdit(index)">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-3"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /></svg>
+                            </button>
+                            <button type="button" aria-label="Delete note" class="grid cursor-pointer place-items-center rounded p-1 text-zinc-500 hover:bg-zinc-100" @click="deletingNote = index">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-3"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                            </button>
+                          </span>
+                        </div>
+                        <div class="mt-[3px] line-clamp-3 text-[11px] text-placeholder">{{ note.body }}</div>
+                        <div v-if="deletingNote === index" class="mt-1.5 flex items-center gap-1.5">
+                          <span class="font-medium">Delete this note?</span>
+                          <button type="button" class="inline-flex h-6 cursor-pointer items-center rounded-md bg-[rgb(243,18,96)] px-2.5 text-xs font-medium text-white" @click="deleteNote(index)">Yes</button>
+                          <button type="button" class="inline-flex h-6 cursor-pointer items-center rounded-md px-2.5 text-xs font-medium hover:bg-zinc-100" @click="deletingNote = null">No</button>
+                        </div>
+                      </template>
+                    </div>
                   </div>
-                </div>
-                <button v-if="!noting" type="button" class="flex cursor-pointer items-center justify-between rounded-sm bg-zinc-500/20 px-2.5 py-1.5 font-medium text-placeholder" @click="startNote">
-                  Add note
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-[13px]"><path d="M12 5v14M5 12h14" /></svg>
-                </button>
-                <div v-if="findAccount(selectedEvent.account).own" class="mt-0.5 flex gap-[7px] border-t border-border pt-[9px]">
-                  <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md bg-primary px-3 text-xs font-medium text-white hover:bg-primary/80" @click="openEditForm()">Edit</button>
-                  <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md bg-[rgb(243,18,96)] px-3 text-xs font-medium text-white" @click="openEditForm(true)">Delete</button>
+                  <button v-if="!noting" type="button" class="flex cursor-pointer items-center justify-between rounded-sm bg-zinc-500/20 px-2.5 py-1.5 font-medium text-placeholder" @click="startNote">
+                    Add note
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-[13px]"><path d="M12 5v14M5 12h14" /></svg>
+                  </button>
+                  <div v-if="findAccount(selectedEvent.account).own" class="mt-0.5 flex gap-[7px] border-t border-border pt-[9px]">
+                    <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md bg-primary px-3 text-xs font-medium text-white hover:bg-primary/80" @click="openEditForm()">Edit</button>
+                    <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md bg-[rgb(243,18,96)] px-3 text-xs font-medium text-white" @click="openEditForm(true)">Delete</button>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div v-if="noting" class="flex flex-none justify-end gap-1.5 px-2 py-1.5">
-              <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md bg-primary px-3 text-xs font-medium text-white hover:bg-primary/80 disabled:cursor-default disabled:opacity-45" :disabled="!canSaveNote" @click="saveNote">Save note</button>
-              <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md px-3 text-xs font-medium hover:bg-zinc-100" @click="noting = false">Cancel</button>
-            </div>
+              <div v-if="noting" class="flex flex-none justify-end gap-1.5 px-2 py-1.5">
+                <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md bg-primary px-3 text-xs font-medium text-white hover:bg-primary/80 disabled:cursor-default disabled:opacity-45" :disabled="!canSaveNote" @click="saveNote">Save note</button>
+                <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md px-3 text-xs font-medium hover:bg-zinc-100" @click="noting = false">Cancel</button>
+              </div>
+            </template>
           </div>
         </Transition>
       </div>
@@ -627,10 +647,6 @@ onBeforeUnmount(() => {
         <span class="font-semibold text-primary-deep">● You're in control</span>
         <button type="button" data-resume class="ml-auto cursor-pointer rounded-[7px] border border-border bg-white px-[11px] py-1.5 font-semibold" @click="resumeTour">▶ Resume tour</button>
       </template>
-    </div>
-
-    <div v-if="form" role="dialog" aria-modal="true" :aria-label="form.id === null ? 'New event' : 'Edit event'" class="absolute inset-0 z-50 grid place-items-center bg-black/50" @keydown.esc="form = null">
-      <LandingDemoEventForm :draft="form.draft" :editing="form.id !== null" :confirm-delete="form.confirmDelete" @save="saveForm" @cancel="form = null" @delete="deleteFromForm" />
     </div>
 
     <div class="pointer-events-none absolute z-40 rounded-[7px] bg-foreground px-[9px] py-1.5 text-[11px] whitespace-nowrap text-white transition-[opacity,translate] duration-200" :class="tip.on ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'" :style="{ left: `${tip.x}px`, top: `${tip.y}px` }">{{ tip.text }}</div>
