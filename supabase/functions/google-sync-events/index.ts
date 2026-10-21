@@ -1,9 +1,10 @@
 import {
   createAdminClient,
-  createUserClient,
   ensureFreshAccessToken,
+  requireUser,
 } from '../_shared/google.ts'
-import { corsHeaders } from '../_shared/cors.ts'
+import { buildCorsHeaders } from '../_shared/cors.ts'
+import { HttpError, errorResponse, jsonResponse, readJsonBody, requireUuid } from '../_shared/http.ts'
 
 function normalizeGoogleEvent(event: any) {
   const startDateTime = event.start?.dateTime ?? null
@@ -30,34 +31,38 @@ function normalizeGoogleEvent(event: any) {
 }
 
 Deno.serve(async (req) => {
+  const cors = buildCorsHeaders(req)
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: cors })
   }
 
   try {
-    const authHeader = req.headers.get('Authorization')
-
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
-        status: 401,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        },
-      })
+    if (req.method !== 'POST') {
+      throw new HttpError(405, 'method_not_allowed')
     }
 
-    const supabaseUser = createUserClient(authHeader)
-    const { data: userData, error: userError } = await supabaseUser.auth.getUser()
+    const { user, supabase: supabaseUser } = await requireUser(req.headers.get('Authorization'))
 
-    if (userError || !userData.user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      })
+    const body = await readJsonBody<{ googleAccountId?: unknown }>(req)
+    const googleAccountId = requireUuid(body.googleAccountId)
+
+    // Ownership check through the user client (RLS): the account must be the
+    // caller's own. Without this any logged-in user could sync and read the
+    // cached events of someone else's account by guessing its id.
+    const { data: ownedAccount, error: ownedError } = await supabaseUser
+      .from('google_accounts')
+      .select('id')
+      .eq('id', googleAccountId)
+      .maybeSingle()
+
+    if (ownedError) {
+      throw new HttpError(500, 'db_error', ownedError.message)
     }
 
-    const { googleAccountId } = await req.json()
+    if (!ownedAccount) {
+      throw new HttpError(404, 'google_account_not_found')
+    }
 
     const { data: calendars, error: calendarsError } = await supabaseUser
       .from('google_calendars')
@@ -66,10 +71,10 @@ Deno.serve(async (req) => {
       .eq('selected', true)
 
     if (calendarsError) {
-      throw new Error(calendarsError.message)
+      throw new HttpError(500, 'db_error', calendarsError.message)
     }
 
-    const { accessToken, account } = await ensureFreshAccessToken(googleAccountId)
+    const { accessToken, account } = await ensureFreshAccessToken(googleAccountId, user.id)
 
     const admin = createAdminClient()
     const timeMin = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
@@ -98,7 +103,7 @@ Deno.serve(async (req) => {
       const json = await response.json()
 
       if (!response.ok) {
-        throw new Error(`Failed syncing ${calendar.calendar_id}: ${JSON.stringify(json)}`)
+        throw new HttpError(502, 'google_sync_failed', `Failed syncing ${calendar.calendar_id}: ${JSON.stringify(json)}`)
       }
 
       const items = Array.isArray(json.items) ? json.items : []
@@ -129,7 +134,7 @@ Deno.serve(async (req) => {
         })
 
       if (upsertError) {
-        throw new Error(upsertError.message)
+        throw new HttpError(500, 'db_error', upsertError.message)
       }
     }
 
@@ -137,23 +142,17 @@ Deno.serve(async (req) => {
       .from('calendar_events')
       .select('*')
       .eq('google_account_id', googleAccountId)
+      .eq('user_id', user.id)
       .gte('start_at', timeMin)
       .lte('end_at', timeMax)
       .order('start_at', { ascending: true })
 
     if (selectError) {
-      throw new Error(selectError.message)
+      throw new HttpError(500, 'db_error', selectError.message)
     }
 
-    return new Response(JSON.stringify({ synced: allRows.length, events: events ?? [] }), {
-      headers: { 'Content-Type': 'application/json', ...corsHeaders },
-    })
+    return jsonResponse({ synced: allRows.length, events: events ?? [] }, { headers: cors })
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders },
-    })
+    return errorResponse(error, cors)
   }
 })

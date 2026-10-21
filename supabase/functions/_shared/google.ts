@@ -1,11 +1,13 @@
 /// <reference lib="deno.ns" />
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { HttpError } from './http.ts'
 
 export function getEnv(name: string): string {
   const value = Deno.env.get(name)
   if (!value) {
-    throw new Error(`Missing env variable: ${name}`)
+    // Logged server-side only; the client sees a generic 500.
+    throw new HttpError(500, 'server_misconfigured', `Missing env variable: ${name}`)
   }
   return value
 }
@@ -31,16 +33,21 @@ export function createUserClient(authHeader: string) {
   )
 }
 
-export async function requireUser(authHeader: string) {
+/** Verifies the caller's JWT and returns the user. Throws 401 otherwise. */
+export async function requireUser(authHeader: string | null) {
+  if (!authHeader) {
+    throw new HttpError(401, 'unauthorized')
+  }
+
   const supabase = createUserClient(authHeader)
 
   const { data, error } = await supabase.auth.getUser()
 
   if (error || !data.user) {
-    throw new Error('Unauthorized')
+    throw new HttpError(401, 'unauthorized')
   }
 
-  return data.user
+  return { user: data.user, supabase }
 }
 
 export function buildGoogleAuthUrl(state: string) {
@@ -89,7 +96,8 @@ export async function exchangeCodeForTokens(code: string) {
   const json = await response.json()
 
   if (!response.ok) {
-    throw new Error(`Google token exchange failed: ${JSON.stringify(json)}`)
+    // Google's error JSON stays in the function logs, never in the HTTP response.
+    throw new HttpError(502, 'google_token_exchange_failed', `Google token exchange failed: ${JSON.stringify(json)}`)
   }
 
   return json as {
@@ -122,7 +130,7 @@ export async function refreshAccessToken(refreshToken: string) {
   const json = await response.json()
 
   if (!response.ok) {
-    throw new Error(`Google token refresh failed: ${JSON.stringify(json)}`)
+    throw new HttpError(502, 'google_token_refresh_failed', `Google token refresh failed: ${JSON.stringify(json)}`)
   }
 
   return json as {
@@ -143,7 +151,7 @@ export async function getGoogleProfile(accessToken: string) {
   const json = await response.json()
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch Google profile: ${JSON.stringify(json)}`)
+    throw new HttpError(502, 'google_profile_failed', `Failed to fetch Google profile: ${JSON.stringify(json)}`)
   }
 
   return json as {
@@ -154,17 +162,30 @@ export async function getGoogleProfile(accessToken: string) {
   }
 }
 
-export async function ensureFreshAccessToken(googleAccountId: string) {
+/**
+ * Loads the Google account with the service-role client (the only client that
+ * may read token columns) and refreshes the access token when it is about to
+ * expire.
+ *
+ * `ownerUserId` is mandatory: the account must belong to the calling user.
+ * Callers should still do their own ownership check through the user client
+ * first (RLS), this is the second line of defence.
+ */
+export async function ensureFreshAccessToken(googleAccountId: string, ownerUserId: string) {
   const supabase = createAdminClient()
 
   const { data: account, error } = await supabase
     .from('google_accounts')
     .select('*')
     .eq('id', googleAccountId)
-    .single()
+    .maybeSingle()
 
-  if (error || !account) {
-    throw new Error('Google account not found')
+  if (error) {
+    throw new HttpError(500, 'db_error', error.message)
+  }
+
+  if (!account || account.user_id !== ownerUserId) {
+    throw new HttpError(404, 'google_account_not_found')
   }
 
   const expiresAt = new Date(account.expires_at).getTime()
@@ -191,9 +212,10 @@ export async function ensureFreshAccessToken(googleAccountId: string) {
       scopes: refreshed.scope ? refreshed.scope.split(' ') : account.scopes,
     })
     .eq('id', googleAccountId)
+    .eq('user_id', ownerUserId)
 
   if (updateError) {
-    throw new Error(updateError.message)
+    throw new HttpError(500, 'db_error', updateError.message)
   }
 
   return {
