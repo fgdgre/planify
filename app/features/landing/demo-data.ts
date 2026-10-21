@@ -28,6 +28,8 @@ export interface DemoEvent {
 export const DEMO_START_HOUR = 9
 export const DEMO_END_HOUR = 16
 export const DEMO_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+export const DEMO_TODAY = 2
+export const DEMO_NOW_HOUR = 11
 
 export function createDemoAccounts(): DemoAccount[] {
   return [
@@ -128,15 +130,27 @@ export function snapStart(rawHour: number, length: number): number {
   return Math.min(Math.max(snapped, DEMO_START_HOUR), DEMO_END_HOUR - length)
 }
 
-export function hoursByDay(events: DemoEvent[], visible: DemoAccountId[]) {
-  return DEMO_DAYS.map((_, day) => {
-    const byAccount: Partial<Record<DemoAccountId, number>> = {}
-    let total = 0
-    events.forEach((event) => {
-      if (event.day !== day || !visible.includes(event.account)) return
-      byAccount[event.account] = (byAccount[event.account] ?? 0) + event.length
-      total += event.length
-    })
-    return { day, total, byAccount }
-  })
+export function countByDay(events: DemoEvent[], visible: DemoAccountId[]): number[] {
+  return DEMO_DAYS.map((_, day) => events.filter((event) => event.day === day && visible.includes(event.account)).length)
+}
+
+export function todaysSchedule(events: DemoEvent[], visible: DemoAccountId[]): DemoEvent[] {
+  return events
+    .filter((event) => event.day === DEMO_TODAY && visible.includes(event.account))
+    .sort((a, b) => a.start - b.start)
+}
+
+export function upcomingToday(events: DemoEvent[], visible: DemoAccountId[]): DemoEvent[] {
+  return todaysSchedule(events, visible).filter((event) => event.start >= DEMO_NOW_HOUR)
+}
+
+export function validateEventDraft(draft: { title: string; day: number; start: number; end: number }): string | null {
+  if (draft.title.trim() === '') return 'Add a title'
+  if (draft.end <= draft.start) return 'End must be after start'
+  if (draft.start < DEMO_START_HOUR || draft.end > DEMO_END_HOUR) return 'Pick a time between 9 am and 4 pm'
+  return null
+}
+
+export function nextEventId(events: DemoEvent[]): number {
+  return events.reduce((max, event) => Math.max(max, event.id), 0) + 1
 }

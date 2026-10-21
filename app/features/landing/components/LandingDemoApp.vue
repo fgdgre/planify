@@ -5,19 +5,22 @@ import {
   DEMO_DAYS,
   DEMO_END_HOUR,
   DEMO_START_HOUR,
+  DEMO_TODAY,
   createDemoAccounts,
   createDemoEvents,
   formatHour,
-  hoursByDay,
   layoutDay,
   matchesQuery,
+  nextEventId,
   snapStart,
   type DemoAccount,
   type DemoAccountId,
   type DemoEvent,
 } from '../demo-data'
+import LandingDemoDashboard from './LandingDemoDashboard.vue'
+import LandingDemoEventForm, { type DemoEventDraft } from './LandingDemoEventForm.vue'
 
-const props = defineProps<{ step: 1 | 2 | 3 | 4 | null }>()
+const props = defineProps<{ step: 1 | 2 | 3 | 4 | 5 | null }>()
 const emit = defineEmits<{ takeControl: []; resume: [] }>()
 
 const dates = [19, 20, 21, 22, 23]
@@ -44,6 +47,13 @@ const query = ref('')
 const view = ref<'calendar' | 'dashboard'>('calendar')
 const mode = ref<'tour' | 'live'>('tour')
 
+const form = ref<{ id: number | null; draft: DemoEventDraft; confirmDelete: boolean } | null>(null)
+
+const editingNote = ref<number | null>(null)
+const editNoteTitle = ref('')
+const editNoteBody = ref('')
+const deletingNote = ref<number | null>(null)
+
 const noting = ref(false)
 const noteTitle = ref('')
 const noteBody = ref('')
@@ -53,7 +63,6 @@ const root = ref<HTMLElement | null>(null)
 const days = ref<HTMLElement | null>(null)
 const rowHeight = ref(40)
 const popIn = ref(false)
-const barsGrown = ref(true)
 const tip = ref({ text: '', x: 0, y: 0, on: false })
 const shakingId = ref<number | null>(null)
 
@@ -71,8 +80,6 @@ const visibleEvents = computed(() => events.value.filter((event) => visibleIds.v
 const selectedEvent = computed(() => events.value.find((event) => event.id === selectedId.value))
 const hits = computed(() => visibleEvents.value.filter((event) => matchesQuery(event, findAccount(event.account), query.value)))
 const hasQuery = computed(() => query.value.trim() !== '')
-const dayHours = computed(() => hoursByDay(events.value, visibleIds.value))
-const totalHours = computed(() => dayHours.value.reduce((sum, day) => sum + day.total, 0))
 
 const layouts = computed(() => {
   const placed = new Map<number, { column: number; columns: number }>()
@@ -84,10 +91,6 @@ const layouts = computed(() => {
 
 function eventCount(id: DemoAccountId) {
   return events.value.filter((event) => event.account === id).length
-}
-
-function accountHours(id: DemoAccountId) {
-  return dayHours.value.reduce((sum, day) => sum + (day.byAccount[id] ?? 0), 0)
 }
 
 function eventStyle(event: DemoEvent) {
@@ -133,12 +136,6 @@ function setView(next: 'calendar' | 'dashboard') {
     closePanel()
     return
   }
-  barsGrown.value = false
-  if (!animated.value) {
-    barsGrown.value = true
-    return
-  }
-  requestAnimationFrame(() => requestAnimationFrame(() => (barsGrown.value = true)))
 }
 
 function openPanel(id: number) {
@@ -146,11 +143,13 @@ function openPanel(id: number) {
   noting.value = false
   noteTitle.value = ''
   noteBody.value = ''
+  cancelNoteEdit()
 }
 
 function closePanel() {
   selectedId.value = null
   noting.value = false
+  cancelNoteEdit()
 }
 
 function startNote() {
@@ -168,13 +167,88 @@ function saveNote() {
   noteBody.value = ''
 }
 
+function startNoteEdit(index: number) {
+  const note = selectedEvent.value?.notes[index]
+  if (!note) return
+  editingNote.value = index
+  editNoteTitle.value = note.title
+  editNoteBody.value = note.body
+  deletingNote.value = null
+}
+
+function cancelNoteEdit() {
+  editingNote.value = null
+  deletingNote.value = null
+}
+
+function saveNoteEdit() {
+  const note = editingNote.value === null ? undefined : selectedEvent.value?.notes[editingNote.value]
+  if (!note || (editNoteTitle.value.trim() === '' && editNoteBody.value.trim() === '')) return
+  note.title = editNoteTitle.value.trim() || 'Untitled'
+  note.body = editNoteBody.value.trim()
+  editingNote.value = null
+}
+
+function deleteNote(index: number) {
+  selectedEvent.value?.notes.splice(index, 1)
+  deletingNote.value = null
+}
+
 function onPanelKeydown(event: KeyboardEvent) {
   if (noting.value && event.key === 'Enter' && (event.metaKey || event.ctrlKey)) saveNote()
 }
 
-function deleteSelected() {
-  events.value = events.value.filter((event) => event.id !== selectedId.value)
-  closePanel()
+function openForm(draft: DemoEventDraft, id: number | null = null, confirmDelete = false) {
+  tip.value.on = false
+  form.value = { id, draft: { ...draft }, confirmDelete }
+}
+
+function openNewForm() {
+  openForm({ title: '', day: DEMO_TODAY, start: 10, end: 11 })
+}
+
+function openEditForm(confirmDelete = false) {
+  const event = selectedEvent.value
+  if (!event) return
+  openForm({ title: event.title, day: event.day, start: event.start, end: event.start + event.length }, event.id, confirmDelete)
+}
+
+function onGridClick(click: MouseEvent) {
+  if ((click.target as HTMLElement).closest('[data-event]') || !days.value) return
+  const box = days.value.getBoundingClientRect()
+  const day = Math.min(4, Math.max(0, Math.floor(((click.clientX - box.left) / (box.width || 1)) * DEMO_DAYS.length)))
+  const rawHour = DEMO_START_HOUR + (click.clientY - box.top) / rowHeight.value
+  const start = snapStart(Math.floor(rawHour * 2) / 2, 1)
+  openForm({ title: '', day, start, end: start + 1 })
+}
+
+function saveForm(draft: DemoEventDraft) {
+  const current = form.value
+  if (!current) return
+  const existing = current.id === null ? undefined : events.value.find((event) => event.id === current.id)
+  if (existing) {
+    existing.title = draft.title
+    existing.day = draft.day
+    existing.start = draft.start
+    existing.length = draft.end - draft.start
+  } else {
+    const id = nextEventId(events.value)
+    events.value.push({ id, title: draft.title, account: 'planify', day: draft.day, start: draft.start, length: draft.end - draft.start, notes: [] })
+    if (!visibleIds.value.includes('planify')) visibleIds.value = [...visibleIds.value, 'planify']
+  }
+  form.value = null
+}
+
+function deleteFromForm() {
+  const id = form.value?.id
+  form.value = null
+  events.value = events.value.filter((event) => event.id !== id)
+  if (selectedId.value === id) closePanel()
+}
+
+function openFromDashboard(id: number) {
+  setView('calendar')
+  openPanel(id)
 }
 
 function openFirstHit() {
@@ -260,12 +334,36 @@ function resumeTour() {
   emit('resume')
 }
 
-function applyStep(step: 1 | 2 | 3 | 4) {
+function runCreateStep() {
+  const draft = { title: 'Client call', day: 2, start: 14, end: 15 }
+  const existing = events.value.find((event) => event.title === draft.title)
+  if (existing) {
+    panelTimer = setTimeout(() => showTipForEvent('Your own event', existing.id), 250)
+    return
+  }
+  if (!animated.value) {
+    openForm(draft)
+    saveForm(draft)
+    return
+  }
+  openForm({ ...draft, title: '' })
+  let typed = 0
+  typingTimer = setInterval(() => {
+    typed += 1
+    if (form.value) form.value.draft.title = draft.title.slice(0, typed)
+    if (typed < draft.title.length) return
+    stopTyping()
+    panelTimer = setTimeout(() => saveForm(draft), 600)
+  }, 120)
+}
+
+function applyStep(step: 1 | 2 | 3 | 4 | 5) {
   clearTourTimers()
+  form.value = null
   query.value = ''
   visibleIds.value = accounts.value.map((account) => account.id)
 
-  if (step === 4) {
+  if (step === 5) {
     closePanel()
     setView('dashboard')
     return
@@ -280,11 +378,12 @@ function applyStep(step: 1 | 2 | 3 | 4) {
       popTimer = setTimeout(() => (popIn.value = false), 1400)
     })
   }
-  if (step === 2) {
+  if (step === 2) runCreateStep()
+  if (step === 3) {
     if (!animated.value) return openPanel(1)
     panelTimer = setTimeout(() => openPanel(1), 250)
   }
-  if (step === 3) {
+  if (step === 4) {
     if (!animated.value) {
       query.value = 'acme'
       return
@@ -356,6 +455,7 @@ onBeforeUnmount(() => {
           <span v-if="hasQuery" class="text-[11px] whitespace-nowrap text-placeholder">{{ hits.length }} result{{ hits.length === 1 ? '' : 's' }}</span>
         </label>
         <span class="hidden text-xs font-medium whitespace-nowrap text-placeholder tablet:inline">Oct 19 – 23</span>
+        <button type="button" class="inline-flex h-8 flex-none cursor-pointer items-center rounded-md bg-primary px-3 text-xs font-medium whitespace-nowrap text-white hover:bg-primary/80" @click="openNewForm">+ New event</button>
       </div>
 
       <div class="relative min-h-0 flex-1 overflow-hidden">
@@ -371,11 +471,13 @@ onBeforeUnmount(() => {
           </div>
           <div
             ref="days"
+            data-grid
             class="relative"
             :style="{ backgroundImage: `repeating-linear-gradient(to bottom, #f1f1f3 0 1px, transparent 1px ${rowHeight}px)` }"
             @pointermove="onPointerMove"
             @pointerup="onPointerUp"
             @pointercancel="onPointerUp"
+            @click="onGridClick"
           >
             <div class="pointer-events-none absolute inset-0 grid grid-cols-5">
               <div v-for="(day, index) in DEMO_DAYS" :key="day" class="border-l border-zinc-100" :class="dropDay === index ? 'bg-[#faf9fe]' : ''" />
@@ -411,25 +513,8 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <div class="absolute inset-0 flex flex-col bg-white px-5 py-[18px] transition-opacity duration-350" :class="view === 'dashboard' ? 'opacity-100' : 'pointer-events-none opacity-0'">
-          <h3 class="text-[15px] font-semibold tracking-[-0.02em]">This week · {{ totalHours }} h planned</h3>
-          <div class="mt-0.5 text-placeholder">Hours by calendar. Drag a violet event and come back: this updates.</div>
-          <div class="flex min-h-0 flex-1 items-end gap-3 px-1 pt-5 tablet:gap-[18px]">
-            <div v-for="day in dayHours" :key="day.day" class="flex h-full flex-1 flex-col items-stretch justify-end gap-1.5">
-              <div class="flex flex-col-reverse overflow-hidden rounded-t-md transition-[height] duration-800 ease-[cubic-bezier(.2,.8,.2,1)]" :style="{ height: barsGrown ? `${Math.min(100, (day.total / 8) * 100)}%` : '0%' }">
-                <template v-for="account in accounts" :key="account.id">
-                  <span v-if="visibleIds.includes(account.id) && day.byAccount[account.id]" class="block transition-[height] duration-500 ease-[cubic-bezier(.2,.8,.2,1)]" :style="{ height: `${((day.byAccount[account.id] ?? 0) / day.total) * 100}%`, background: account.color }" />
-                </template>
-              </div>
-              <div class="text-center text-[10.5px] text-placeholder">{{ DEMO_DAYS[day.day] }} · {{ day.total }}h</div>
-            </div>
-          </div>
-          <div class="mt-3 flex flex-wrap gap-x-3.5 gap-y-1 text-[11px] text-zinc-700">
-            <span v-for="account in accounts.filter((item) => visibleIds.includes(item.id))" :key="account.id" class="flex items-center gap-1.5">
-              <span class="inline-block size-2 rounded-xs" :style="{ background: account.color }" />
-              {{ account.name }} {{ accountHours(account.id) }}h
-            </span>
-          </div>
+        <div class="absolute inset-0 bg-white transition-opacity duration-350" :class="view === 'dashboard' ? 'opacity-100' : 'pointer-events-none opacity-0'">
+          <LandingDemoDashboard :events="events" :accounts="accounts" :visible-ids="visibleIds" @open="openFromDashboard" />
         </div>
 
         <Transition enter-from-class="opacity-0" leave-to-class="opacity-0" enter-active-class="transition-opacity duration-250" leave-active-class="transition-opacity duration-250">
@@ -488,8 +573,33 @@ onBeforeUnmount(() => {
                     Notes
                   </div>
                   <div v-for="(note, index) in selectedEvent.notes" :key="index" data-note class="note-in rounded-md border border-border bg-zinc-500/10 p-[9px] hover:border-primary/40 hover:bg-white">
-                    <b class="block font-medium">{{ note.title }}</b>
-                    <div class="mt-[3px] line-clamp-3 text-[11px] text-placeholder">{{ note.body }}</div>
+                    <div v-if="editingNote === index" class="flex flex-col gap-1.5">
+                      <input v-model="editNoteTitle" data-note-title aria-label="Note title" autocomplete="off" class="w-full rounded-md border border-border bg-white px-[9px] py-1.5 text-xs outline-none focus:ring-1 focus:ring-zinc-400">
+                      <textarea v-model="editNoteBody" data-note-body aria-label="Note content" class="min-h-[70px] w-full resize-none rounded-md border border-border bg-white px-[9px] py-1.5 text-xs outline-none focus:ring-1 focus:ring-zinc-400" />
+                      <div class="flex gap-1.5">
+                        <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md bg-primary px-3 text-xs font-medium text-white hover:bg-primary/80" @click="saveNoteEdit">Save</button>
+                        <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md px-3 text-xs font-medium hover:bg-zinc-100" @click="cancelNoteEdit">Cancel</button>
+                      </div>
+                    </div>
+                    <template v-else>
+                      <div class="flex items-start justify-between gap-1">
+                        <b class="block font-medium">{{ note.title }}</b>
+                        <span class="flex flex-none items-center gap-0.5">
+                          <button type="button" aria-label="Edit note" class="grid cursor-pointer place-items-center rounded p-1 text-zinc-500 hover:bg-zinc-100" @click="startNoteEdit(index)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-3"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /></svg>
+                          </button>
+                          <button type="button" aria-label="Delete note" class="grid cursor-pointer place-items-center rounded p-1 text-zinc-500 hover:bg-zinc-100" @click="deletingNote = index">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-3"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                          </button>
+                        </span>
+                      </div>
+                      <div class="mt-[3px] line-clamp-3 text-[11px] text-placeholder">{{ note.body }}</div>
+                      <div v-if="deletingNote === index" class="mt-1.5 flex items-center gap-1.5">
+                        <span class="font-medium">Delete this note?</span>
+                        <button type="button" class="inline-flex h-6 cursor-pointer items-center rounded-md bg-[rgb(243,18,96)] px-2.5 text-xs font-medium text-white" @click="deleteNote(index)">Yes</button>
+                        <button type="button" class="inline-flex h-6 cursor-pointer items-center rounded-md px-2.5 text-xs font-medium hover:bg-zinc-100" @click="deletingNote = null">No</button>
+                      </div>
+                    </template>
                   </div>
                 </div>
                 <button v-if="!noting" type="button" class="flex cursor-pointer items-center justify-between rounded-sm bg-zinc-500/20 px-2.5 py-1.5 font-medium text-placeholder" @click="startNote">
@@ -497,8 +607,8 @@ onBeforeUnmount(() => {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-[13px]"><path d="M12 5v14M5 12h14" /></svg>
                 </button>
                 <div v-if="findAccount(selectedEvent.account).own" class="mt-0.5 flex gap-[7px] border-t border-border pt-[9px]">
-                  <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md bg-primary px-3 text-xs font-medium text-white hover:bg-primary/80" @click="showTipForEvent('Opens the edit form in Planify', selectedEvent.id)">Edit</button>
-                  <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md bg-[rgb(243,18,96)] px-3 text-xs font-medium text-zinc-900" @click="deleteSelected">Delete</button>
+                  <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md bg-primary px-3 text-xs font-medium text-white hover:bg-primary/80" @click="openEditForm()">Edit</button>
+                  <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md bg-[rgb(243,18,96)] px-3 text-xs font-medium text-white" @click="openEditForm(true)">Delete</button>
                 </div>
               </div>
             </div>
@@ -517,6 +627,10 @@ onBeforeUnmount(() => {
         <span class="font-semibold text-primary-deep">● You're in control</span>
         <button type="button" data-resume class="ml-auto cursor-pointer rounded-[7px] border border-border bg-white px-[11px] py-1.5 font-semibold" @click="resumeTour">▶ Resume tour</button>
       </template>
+    </div>
+
+    <div v-if="form" class="absolute inset-0 z-50 grid place-items-center bg-black/50" @click.self="form = null">
+      <LandingDemoEventForm :draft="form.draft" :editing="form.id !== null" :confirm-delete="form.confirmDelete" @save="saveForm" @cancel="form = null" @delete="deleteFromForm" />
     </div>
 
     <div class="pointer-events-none absolute z-40 rounded-[7px] bg-foreground px-[9px] py-1.5 text-[11px] whitespace-nowrap text-white transition-[opacity,translate] duration-200" :class="tip.on ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'" :style="{ left: `${tip.x}px`, top: `${tip.y}px` }">{{ tip.text }}</div>

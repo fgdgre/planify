@@ -3,7 +3,13 @@ import {
   createDemoAccounts,
   createDemoEvents,
   formatHour,
-  hoursByDay,
+  DEMO_NOW_HOUR,
+  DEMO_TODAY,
+  countByDay,
+  nextEventId,
+  todaysSchedule,
+  upcomingToday,
+  validateEventDraft,
   layoutDay,
   matchesQuery,
   snapStart,
@@ -63,9 +69,62 @@ describe('snapStart', () => {
   })
 })
 
-describe('hoursByDay', () => {
-  it('sums visible account hours per day', () => {
-    expect(hoursByDay(createDemoEvents(), ['acme'])[0]).toEqual({ day: 0, total: 1.5, byAccount: { acme: 1.5 } })
+describe('countByDay', () => {
+  it('counts events per day for all accounts', () => {
+    expect(countByDay(createDemoEvents(), ['acme', 'studio', 'personal', 'planify'])).toEqual([2, 3, 3, 2, 3])
+  })
+
+  it('counts only visible accounts', () => {
+    expect(countByDay(createDemoEvents(), ['acme'])).toEqual([1, 0, 1, 1, 1])
+    expect(countByDay(createDemoEvents(), [])).toEqual([0, 0, 0, 0, 0])
+  })
+})
+
+describe('today helpers', () => {
+  const all = ['acme', 'studio', 'personal', 'planify'] as const
+
+  it('uses Wednesday 11:00 as now', () => {
+    expect(DEMO_TODAY).toBe(2)
+    expect(DEMO_NOW_HOUR).toBe(11)
+  })
+
+  it('lists upcoming events today sorted by start', () => {
+    expect(upcomingToday(createDemoEvents(), [...all]).map(e => e.title)).toEqual(['Acme 1:1', 'Gym'])
+    expect(upcomingToday(createDemoEvents(), ['personal']).map(e => e.title)).toEqual(['Gym'])
+  })
+
+  it('lists the whole schedule today sorted by start', () => {
+    expect(todaysSchedule(createDemoEvents(), [...all]).map(e => e.title)).toEqual(['Studio review', 'Acme 1:1', 'Gym'])
+    expect(todaysSchedule(createDemoEvents(), ['acme']).map(e => e.title)).toEqual(['Acme 1:1'])
+  })
+})
+
+describe('validateEventDraft', () => {
+  const ok = { title: 'Call', day: 1, start: 10, end: 11 }
+
+  it('accepts a valid draft', () => {
+    expect(validateEventDraft(ok)).toBeNull()
+  })
+
+  it('rejects an empty title', () => {
+    expect(validateEventDraft({ ...ok, title: '   ' })).toBe('Add a title')
+  })
+
+  it('rejects an end that is not after the start', () => {
+    expect(validateEventDraft({ ...ok, end: 10 })).toBe('End must be after start')
+    expect(validateEventDraft({ ...ok, start: 12, end: 11 })).toBe('End must be after start')
+  })
+
+  it('rejects times outside the visible range', () => {
+    expect(validateEventDraft({ ...ok, start: 8, end: 9 })).toBe('Pick a time between 9 am and 4 pm')
+    expect(validateEventDraft({ ...ok, start: 15, end: 16.5 })).toBe('Pick a time between 9 am and 4 pm')
+  })
+})
+
+describe('nextEventId', () => {
+  it('returns max id + 1, or 1 when empty', () => {
+    expect(nextEventId(createDemoEvents())).toBe(14)
+    expect(nextEventId([])).toBe(1)
   })
 })
 

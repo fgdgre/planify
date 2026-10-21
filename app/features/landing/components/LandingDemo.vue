@@ -4,9 +4,10 @@ import LandingDemoApp from './LandingDemoApp.vue'
 
 const steps = [
   { number: '01 · Unified calendar', title: 'Every account on one grid', text: 'Connect up to three Google accounts. Each gets its own color, so you see whose meeting it is at a glance.', hint: 'Try it: switch an account off in the sidebar.' },
-  { number: '02 · Notes', title: 'Notes that live inside the meeting', text: 'Attach notes to any event, or write one while creating it. Open the meeting next week and the context is right there.', hint: 'Try it: click any event and add a note.' },
-  { number: '03 · Search', title: 'Find anything, across every account', text: 'One search box over all your calendars. "When did I last talk to Acme?" takes two seconds.', hint: 'Try it: type "studio" and press Enter.' },
-  { number: '04 · Your own events + dashboard', title: 'Plan your time, then see where it went', text: 'Drag your own events around the week. The dashboard shows your hours by calendar, so you know which client really eats your time.', hint: 'Try it: drag a violet event, then open Dashboard.' },
+  { number: '02 · Your own events', title: 'Plan your own time', text: 'Click any free slot to add an event, then edit, drag or delete it. Synced Google events stay read-only.', hint: 'Try it: click an empty slot in the grid.' },
+  { number: '03 · Notes', title: 'Notes that live inside the meeting', text: 'Attach notes to any event, or write one while creating it. Open the meeting next week and the context is right there.', hint: 'Try it: click any event and add a note.' },
+  { number: '04 · Search', title: 'Find anything, across every account', text: 'One search box over all your calendars. "When did I last talk to Acme?" takes two seconds.', hint: 'Try it: type "studio" and press Enter.' },
+  { number: '05 · Dashboard', title: 'Your week at a glance', text: 'Events per day, what\'s coming up today and your schedule, across every account.', hint: 'Try it: open Dashboard, then add an event and watch it update.' },
 ]
 
 const header = ref<HTMLElement | null>(null)
@@ -14,7 +15,7 @@ const headerShown = useReveal(header)
 
 const isDesk = useMediaQuery('(min-width: 1150px)')
 const stepBlocks = ref<HTMLElement[]>([])
-const activeStep = ref<1 | 2 | 3 | 4 | null>(null)
+const activeStep = ref<1 | 2 | 3 | 4 | 5 | null>(null)
 const controlled = ref(false)
 const appStep = computed(() => (isDesk.value && !controlled.value ? activeStep.value : null))
 
@@ -26,7 +27,7 @@ onMounted(() => {
       entries.forEach((entry) => {
         if (!entry.isIntersecting) return
         const index = stepBlocks.value.indexOf(entry.target as HTMLElement)
-        if (index >= 0) activeStep.value = (index + 1) as 1 | 2 | 3 | 4
+        if (index >= 0) activeStep.value = (index + 1) as 1 | 2 | 3 | 4 | 5
       })
     },
     { rootMargin: '-45% 0px -45% 0px' },
