@@ -172,10 +172,9 @@ Client-side змінні Nuxt:
 ```env
 NUXT_PUBLIC_SUPABASE_URL=
 NUXT_PUBLIC_SUPABASE_ANON_KEY=
-NUXT_PUBLIC_API_BASE=
 ```
 
-Секрети для Supabase Edge Functions:
+Секрети для Supabase Edge Functions (`supabase secrets set ...`):
 
 ```env
 SUPABASE_URL=
@@ -184,9 +183,14 @@ SUPABASE_SERVICE_ROLE_KEY=
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GOOGLE_REDIRECT_URI=
+APP_BASE_URL=            # origin production-застосунку, напр. https://planiifyy.netlify.app
+APP_ALLOWED_ORIGINS=     # опційно: додаткові origin через кому (preview deploys)
+OAUTH_STATE_SECRET=      # випадковий секрет для підпису OAuth state, напр. `openssl rand -hex 32`
 ```
 
 `SUPABASE_SERVICE_ROLE_KEY` має використовуватися тільки на server-side у Supabase Edge Functions. Його не можна передавати в Nuxt client.
+
+`APP_BASE_URL`, `APP_ALLOWED_ORIGINS` і `http://localhost:3000` формують allow-list origin-ів: тільки вони можуть викликати Edge Functions з браузера (CORS) і бути ціллю редиректу після Google OAuth.
 
 ## Скрипти
 
@@ -197,6 +201,28 @@ GOOGLE_REDIRECT_URI=
 | `pnpm typecheck` | Запускає Nuxt TypeScript checks. |
 | `pnpm prepare` | Генерує Nuxt project artifacts. |
 | `pnpm db:types` | Генерує Supabase database types. |
+| `deno test --no-lock supabase/functions/_shared/` | Юніт-тести спільних модулів Edge Functions (підпис OAuth state, allow-list origin-ів, CORS). |
+
+## Безпека
+
+Що гарантує застосунок:
+
+- **Google OAuth.** Параметр `state` підписаний HMAC-SHA256 (`OAUTH_STATE_SECRET`) і дійсний 10 хвилин. Callback (`google-oauth-callback`) нічого не записує в базу: він лише перевіряє підпис і повертає браузер на `/app/settings`. Підключення завершує `google-oauth-complete` з JWT користувача, і `user_id` у `state` має збігатися з користувачем сесії. Тому чужий consent-link не може прив'язати Google-акаунт жертви до акаунта атакуючого.
+- **Ownership.** `google-list-calendars` і `google-sync-events` перевіряють, що `googleAccountId` належить користувачу (через RLS user-клієнт і повторно в `ensureFreshAccessToken`).
+- **Токени не потрапляють у браузер.** `authenticated` має SELECT лише на не-секретні колонки `google_accounts` (міграція `supabase/migrations/20261013000000_google_accounts_token_column_grants.sql`); клієнт завжди запитує явний список колонок (`app/shared/constants/google-accounts.ts`).
+- **Редиректи.** Усі origin-и для редиректу та CORS беруться з allow-list (`APP_BASE_URL`, `APP_ALLOWED_ORIGINS`, localhost). Wildcard CORS не використовується.
+- **Помилки.** Edge Functions повертають лише короткі коди (`{ "error": "google_account_not_found" }`); деталі (відповіді Google, назви env) лишаються в логах функцій.
+- **HTTP headers.** `public/_headers` додає на Netlify HSTS, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy` і Content-Security-Policy зі `script-src 'self'` та `connect-src`, обмеженим Supabase і Iconify.
+- **Рендеринг HTML.** `v-html` використовується лише через DOMPurify з allow-list тегів; посилання з редактора отримують `rel="noopener noreferrer"`.
+- **Сесії.** Об'єкти сесії/користувача не логуються в консоль; reset-password редирект будується з `window.location.origin`, а сторінка `/reset-password` показує форму лише за наявності сесії з recovery-посилання.
+
+Чеклист деплою після змін у безпеці:
+
+1. `supabase secrets set OAUTH_STATE_SECRET=$(openssl rand -hex 32) APP_BASE_URL=https://planiifyy.netlify.app`
+2. `supabase functions deploy google-oauth-start google-oauth-callback google-oauth-complete google-list-calendars google-sync-events`
+3. Виконати SQL з `supabase/migrations/20261013000000_google_accounts_token_column_grants.sql` (SQL Editor або `supabase db push`).
+4. Supabase Auth → URL Configuration → Redirect URLs: додати `https://planiifyy.netlify.app/reset-password` і `http://localhost:3000/reset-password` (а також `/confirm` і `/app`, якщо їх ще немає).
+5. Після деплою перевірити заголовки: `curl -sI https://planiifyy.netlify.app | grep -i -E 'strict-transport|content-security|x-frame'`.
 
 ## Приватність
 
