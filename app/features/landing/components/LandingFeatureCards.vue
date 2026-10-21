@@ -107,31 +107,17 @@ const tile4Shown = useReveal(tile4)
 
       <div ref="tile4" class="flex flex-col gap-[18px] overflow-hidden rounded-[22px] bg-primary-soft p-7 transition-[opacity,translate] duration-800 ease-[cubic-bezier(.2,.8,.2,1)]" :class="tile4Shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'">
         <div>
-          <h3 class="text-[22px] font-semibold tracking-[-0.025em]">See where your week went</h3>
-          <p class="mt-1.5 text-sm leading-[1.5] text-placeholder">Hours by calendar, so you know which client eats your time.</p>
+          <h3 class="text-[22px] font-semibold tracking-[-0.025em]">Your week at a glance</h3>
+          <p class="mt-1.5 text-sm leading-[1.5] text-placeholder">Events per day and what's coming up today, across every account.</p>
         </div>
         <div class="overflow-hidden rounded-xl border border-[#ece9f7] bg-white text-xs shadow-[0_10px_30px_-12px_rgba(111,95,184,0.35)]">
-          <div class="flex h-[110px] items-end gap-3 px-4 pt-4 pb-2.5">
-            <div class="flex h-[70%] flex-1 flex-col-reverse overflow-hidden rounded-t-[5px]">
-              <span class="block h-1/2 bg-[#e5484d]" />
-              <span class="block h-[30%] bg-[#30a46c]" />
-              <span class="block h-1/5 bg-[#3e7bfa]" />
-            </div>
-            <div class="flex h-[92%] flex-1 flex-col-reverse overflow-hidden rounded-t-[5px]">
-              <span class="block h-[60%] bg-[#e5484d]" />
-              <span class="block h-[40%] bg-[#30a46c]" />
-            </div>
-            <div class="flex h-[55%] flex-1 flex-col-reverse overflow-hidden rounded-t-[5px]">
-              <span class="block h-1/2 bg-[#30a46c]" />
-              <span class="block h-1/2 bg-[#3e7bfa]" />
-            </div>
-            <div class="flex h-[80%] flex-1 flex-col-reverse overflow-hidden rounded-t-[5px]">
-              <span class="block h-1/2 bg-primary" />
-              <span class="block h-1/2 bg-[#e5484d]" />
-            </div>
-            <div class="flex h-[40%] flex-1 flex-col-reverse overflow-hidden rounded-t-[5px]">
-              <span class="block h-[60%] bg-[#30a46c]" />
-              <span class="block h-[40%] bg-[#3e7bfa]" />
+          <div class="px-4 pt-4 pb-2.5">
+            <svg viewBox="0 0 300 100" preserveAspectRatio="none" class="h-[90px] w-full overflow-visible" aria-hidden="true">
+              <path d="M 14 60 C 40 60, 55 30, 82 30 S 120 40, 150 30 S 195 70, 225 70 S 262 25, 286 30 L 286 100 L 14 100 Z" fill="#9688CF" fill-opacity="0.15" />
+              <path d="M 14 60 C 40 60, 55 30, 82 30 S 120 40, 150 30 S 195 70, 225 70 S 262 25, 286 30" fill="none" stroke="#9688CF" stroke-width="2.5" stroke-linecap="round" vector-effect="non-scaling-stroke" />
+            </svg>
+            <div class="mt-1 grid grid-cols-5 text-center text-[10px] text-placeholder">
+              <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span>
             </div>
           </div>
         </div>
