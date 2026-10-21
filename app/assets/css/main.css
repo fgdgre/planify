@@ -1,8 +1,20 @@
 @import "tailwindcss";
 @import './global.css';
 
+/* Self-hosted Inter (variable, latin subset). The browser only downloads it on pages that use it. */
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url('/fonts/inter-latin-var.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 html {
     --primary: #9688CF;
+    --primary-deep: #6f5fb8;
+    --primary-soft: #f3f1fb;
     --primary-light: #facc15;
     --primary-text: rgb(147, 99, 22);
     --primary-dark: #a9a02d;
@@ -65,6 +77,8 @@ html {
     --color-modal: var(--modal);
     --color-black: var(--black);
     --color-primary: var(--primary);
+    --color-primary-deep: var(--primary-deep);
+    --color-primary-soft: var(--primary-soft);
     --color-primary-light: var(--primary-light);
     --color-error: var(--error);
     --color-background: var(--background);
@@ -118,5 +132,12 @@ html {
     }
     .scrollbar-muted {
         scrollbar-color: var(--sidebar-scrollbar) transparent;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .landing *, .landing *::before, .landing *::after {
+        animation: none !important;
+        transition: none !important;
     }
 }

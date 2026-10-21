@@ -1,19 +1,37 @@
+<script setup lang="ts">
+import { landingEffects, LandingNav, LandingHero, LandingPain, LandingDemo, LandingFeatureCards, LandingSteps, LandingFooter } from '@features/landing'
+
+definePageMeta({ layout: false })
+
+const title = 'Planify — all your calendars in one place'
+const description = 'Planify brings several Google Calendars into one view and keeps notes attached to the events they belong to.'
+
+useHead({
+  title,
+  meta: [
+    { name: 'description', content: description },
+    { property: 'og:title', content: title },
+    { property: 'og:description', content: description },
+    { property: 'og:type', content: 'website' },
+  ],
+  // Inter is self-hosted (see main.css): the CSP allows fonts from 'self' only,
+  // and the landing makes no third-party requests.
+  link: [
+    { rel: 'preload', href: '/fonts/inter-latin-var.woff2', as: 'font', type: 'font/woff2', crossorigin: '' },
+  ],
+})
+</script>
+
 <template>
-  <main class="mx-auto max-w-3xl px-6 py-16">
-    <h1 class="text-4xl font-bold">Planify</h1>
-    <p class="mt-4 text-lg">
-      Planify helps users manage multiple Google Calendars in one place,
-      sync events, and organize their schedule more easily.
-    </p>
-
-    <div class="mt-8 flex gap-4">
-      <NuxtLink to="/login">Log in</NuxtLink>
-      <NuxtLink to="/app">Open app</NuxtLink>
-    </div>
-
-    <footer class="mt-12 flex gap-6">
-      <NuxtLink to="/privacy-policy">Privacy Policy</NuxtLink>
-      <NuxtLink to="/terms-of-service">Terms of Service</NuxtLink>
-    </footer>
-  </main>
+  <div class="landing font-['Inter'] bg-white text-foreground">
+    <LandingNav />
+    <main>
+      <LandingHero />
+      <LandingPain />
+      <LandingDemo v-if="landingEffects.demo" />
+      <LandingFeatureCards v-else />
+      <LandingSteps />
+    </main>
+    <LandingFooter />
+  </div>
 </template>
