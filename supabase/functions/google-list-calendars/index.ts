@@ -1,50 +1,44 @@
 import {
   createAdminClient,
-  createUserClient,
   ensureFreshAccessToken,
+  requireUser,
 } from '../_shared/google.ts'
-import { corsHeaders } from '../_shared/cors.ts'
+import { buildCorsHeaders } from '../_shared/cors.ts'
+import { HttpError, errorResponse, jsonResponse, readJsonBody, requireUuid } from '../_shared/http.ts'
 
 Deno.serve(async (req) => {
+  const cors = buildCorsHeaders(req)
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: cors })
   }
 
   try {
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      })
+    if (req.method !== 'POST') {
+      throw new HttpError(405, 'method_not_allowed')
     }
 
-    const supabaseUser = createUserClient(authHeader)
-    const { data: userData, error: userError } = await supabaseUser.auth.getUser()
+    const { user, supabase: supabaseUser } = await requireUser(req.headers.get('Authorization'))
 
-    if (userError || !userData.user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      })
-    }
+    const body = await readJsonBody<{ googleAccountId?: unknown }>(req)
+    const googleAccountId = requireUuid(body.googleAccountId)
 
-    const { googleAccountId } = await req.json()
-
+    // Ownership check through the user client (RLS).
     const { data: ownedAccount, error: ownedError } = await supabaseUser
       .from('google_accounts')
       .select('id')
       .eq('id', googleAccountId)
-      .single()
+      .maybeSingle()
 
-    if (ownedError || !ownedAccount) {
-      return new Response(JSON.stringify({ error: 'Google account not found' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      })
+    if (ownedError) {
+      throw new HttpError(500, 'db_error', ownedError.message)
     }
 
-    const { accessToken, account } = await ensureFreshAccessToken(googleAccountId)
+    if (!ownedAccount) {
+      throw new HttpError(404, 'google_account_not_found')
+    }
+
+    const { accessToken, account } = await ensureFreshAccessToken(googleAccountId, user.id)
 
     const response = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList', {
       headers: {
@@ -55,7 +49,7 @@ Deno.serve(async (req) => {
     const json = await response.json()
 
     if (!response.ok) {
-      throw new Error(JSON.stringify(json))
+      throw new HttpError(502, 'google_calendar_list_failed', JSON.stringify(json))
     }
 
     const items = Array.isArray(json.items) ? json.items : []
@@ -79,19 +73,12 @@ Deno.serve(async (req) => {
         .upsert(rows, { onConflict: 'google_account_id,calendar_id' })
 
       if (upsertError) {
-        throw new Error(upsertError.message)
+        throw new HttpError(500, 'db_error', upsertError.message)
       }
     }
 
-    return new Response(JSON.stringify({ items }), {
-      headers: { 'Content-Type': 'application/json', ...corsHeaders },
-    })
+    return jsonResponse({ items }, { headers: cors })
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders },
-    })
+    return errorResponse(error, cors)
   }
 })
