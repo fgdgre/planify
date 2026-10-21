@@ -1,3 +1,4 @@
+import { useDb } from '@shared/api/supabase'
 import {
   validateField,
   validateForm,
@@ -11,7 +12,7 @@ import { ROUTES } from "@shared/constants/routes";
 type FieldKey = 'password' | 'confirmPassword'
 
 export const useResetPassword = () => {
-  const supabase = useSupabaseClient()
+  const supabase = useDb()
   const { showSuccessToast, showErrorToast } = useNotification()
 
   const loading = ref(false)

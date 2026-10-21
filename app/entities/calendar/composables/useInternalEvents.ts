@@ -1,10 +1,10 @@
+import { useDb } from '@shared/api/supabase'
 import { useNotification } from '@features/notification'
 import { useUserStore } from '@features/auth/stores/user'
 import type { CalendarEvent } from '@features/integrations/google-calendar'
-import type { Database } from '@shared/api/supabase/types/database'
 
 export const useInternalEvents = () => {
-  const supabase = useSupabaseClient<Database>()
+  const supabase = useDb()
   const userStore = useUserStore()
   const { showErrorToast, showSuccessToast } = useNotification()
 

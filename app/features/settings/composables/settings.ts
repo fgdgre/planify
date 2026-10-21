@@ -1,3 +1,4 @@
+import { useDb } from '@shared/api/supabase'
 import { useSettingsStore } from "@features/settings/stores/settings";
 import type { EventColorConfig, UserPreferences } from "@features/settings/types";
 import { PRESET_COLORS, INTERNAL_CALENDAR_COLOR } from '../constants/default-accounts-colors'
@@ -5,11 +6,10 @@ import { userPreferencesSchema } from "@features/settings/schemas/preferences";
 import { defaultPreferences } from "@features/settings/constants/preferences";
 import { useNotification } from "@features/notification";
 import type { GoogleAccount } from "@shared/types/google";
-import type { Database } from "@shared/api/supabase/types/database";
 
 export const useSettings = () => {
   const settingsStore = useSettingsStore()
-  const supabase = useSupabaseClient<Database>()
+  const supabase = useDb()
 
   const getUserPreferences = async (userId: string) => {
     settingsStore.setLoading(true)

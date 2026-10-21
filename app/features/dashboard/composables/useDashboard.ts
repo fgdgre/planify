@@ -1,3 +1,4 @@
+import { useDb } from '@shared/api/supabase'
 import {
   useGoogleCalendarStore,
   useGoogleCalendar,
@@ -10,7 +11,6 @@ import type { Note } from '@features/notes'
 import { useUserStore } from '@features/auth'
 import { useSettings, useSettingsStore } from '@features/settings'
 import { ACCOUNT_COLORS, INTERNAL_CALENDAR_COLOR } from '@entities/calendar/stores/calendar'
-import type { Database } from '@shared/api/supabase/types/database'
 
 const stripZone = (iso: string) => iso.replace(/\[.*\]$/, '')
 
@@ -51,7 +51,7 @@ export const useDashboard = () => {
   const { preferences } = storeToRefs(settingsStore)
   const { getUserPreferences } = useSettings()
 
-  const supabase = useSupabaseClient<Database>()
+  const supabase = useDb()
 
   const route = useRoute()
   const router = useRouter()

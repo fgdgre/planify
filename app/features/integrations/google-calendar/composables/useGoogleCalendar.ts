@@ -1,8 +1,8 @@
+import { useDb } from '@shared/api/supabase'
 import { useNotification } from "@features/notification";
 import { useGoogleCalendarStore } from "@features/integrations/google-calendar/stores/google-calendar";
 import { pickStaleAccountIds } from "@features/integrations/google-calendar/helpers/sync";
 import { GOOGLE_ACCOUNT_SELECT } from "@shared/constants/google-accounts";
-import type { Database } from "@shared/api/supabase/types/database";
 
 /** Error thrown when an Edge Function answers with a non-2xx status. */
 export class EdgeFunctionError extends Error {
@@ -25,7 +25,7 @@ type EdgeFunctionRequest = {
 let inflightSync: Promise<boolean> | null = null
 
 export const useGoogleCalendar = () => {
-  const supabase = useSupabaseClient<Database>()
+  const supabase = useDb()
   const config = useRuntimeConfig()
 
   const { showErrorToast } = useNotification()

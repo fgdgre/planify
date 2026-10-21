@@ -1,5 +1,6 @@
+import { useDb } from '@shared/api/supabase'
 // types
-import type { Database, TablesInsert, TablesUpdate } from '@shared/api/supabase/types/database'
+import type { TablesInsert, TablesUpdate } from '@shared/api/supabase/types/database'
 // stores
 import { NOTES_PAGE_SIZE, useNotesStore } from '../stores/notes'
 // hooks
@@ -16,7 +17,7 @@ export const useNotes = () => {
   const userStore = useUserStore()
   const { user } = storeToRefs(userStore)
 
-  const supabase = useSupabaseClient<Database>()
+  const supabase = useDb()
 
   const userId = computed(() => user.value?.id)
 

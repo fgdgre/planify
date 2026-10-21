@@ -1,8 +1,9 @@
+import { useDb } from '@shared/api/supabase'
 import { useNotification } from "@features/notification"
 import { useUserStore } from "../stores/user";
 
 export const useLogout = () => {
-  const supabase = useSupabaseClient()
+  const supabase = useDb()
   const userStore = useUserStore()
   const { showErrorToast } = useNotification()
 

@@ -1,8 +1,8 @@
+import { useDb } from '@shared/api/supabase'
 import { useStorage } from '@vueuse/core'
 import { useUserStore } from '@features/auth'
 import { mapCalendarEventRowToDisplay } from '@entities/calendar/helpers'
 import type { CalendarEventDisplay } from '@entities/calendar'
-import type { Database } from '@shared/api/supabase/types/database'
 import { notesForm } from './notes-form'
 import { useNotes } from './notes'
 import type { Note } from '../types'
@@ -24,7 +24,7 @@ const emptyDraft = (): NoteSidebarDraft => ({
 export const useNoteSidebar = () => {
   const route = useRoute()
   const router = useRouter()
-  const supabase = useSupabaseClient<Database>()
+  const supabase = useDb()
   const userStore = useUserStore()
   const { fetchNoteById, createNote, updateNote } = useNotes()
 

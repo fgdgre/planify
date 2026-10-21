@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { useDb } from '@shared/api/supabase'
 import type { CalendarEventDisplay } from '@entities/calendar'
 import type { Note } from '@features/notes'
 import { useCalendarStore } from '@entities/calendar/stores/calendar'
@@ -14,7 +15,7 @@ const emit = defineEmits<{
   close: []
 }>()
 
-const supabase = useSupabaseClient()
+const supabase = useDb()
 const calendarStore = useCalendarStore()
 const { deleteEvent } = useInternalEvents()
 const { fetchEvents } = useCalendar()

@@ -1,3 +1,4 @@
+import { useDb } from '@shared/api/supabase'
 import {
   validateField,
   validateForm,
@@ -8,7 +9,7 @@ import { AUTH_VALIDATION_MESSAGES } from "@shared/constants/auth-error-messages"
 import { ROUTES } from "@shared/constants/routes";
 
 export const useLogin = () => {
-  const supabase = useSupabaseClient()
+  const supabase = useDb()
 
   const userStore = useUserStore()
 

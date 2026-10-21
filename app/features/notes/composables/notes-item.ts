@@ -1,9 +1,9 @@
+import { useDb } from '@shared/api/supabase'
 import type { Ref } from 'vue'
-import type { Database } from '@shared/api/supabase/types/database'
 import type { Note } from '../types'
 
 export const useNotesItem = (note: Ref<Note>) => {
-  const supabase = useSupabaseClient<Database>()
+  const supabase = useDb()
 
   const linkedEvent = ref<{ title: string; start_at: string } | null>(null)
 
