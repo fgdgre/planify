@@ -1,9 +1,11 @@
 import { useCalendarStore } from '../stores/calendar'
+import { groupEventsBySource } from '../helpers/events'
 import { useGoogleCalendarStore } from '@features/integrations/google-calendar'
-import { useGoogleCalendar } from '@features/integrations/google-calendar'
-import { useInternalEvents } from './useInternalEvents'
-import type { CalendarEventDisplay } from '../types'
+import { useUserStore } from '@features/auth/stores/user'
+import { useNotification } from '@features/notification'
+import type { CalendarEventDisplay, ViewDateRange } from '../types'
 import type { CalendarEvent } from '@features/integrations/google-calendar'
+import type { Database } from '@shared/api/supabase/types/database'
 
 const mapEventToDisplay = (event: CalendarEvent): CalendarEventDisplay => ({
   id: event.id,
@@ -20,25 +22,46 @@ const mapEventToDisplay = (event: CalendarEvent): CalendarEventDisplay => ({
 })
 
 export const useCalendar = () => {
+  const supabase = useSupabaseClient<Database>()
   const calendarStore = useCalendarStore()
   const googleCalendarStore = useGoogleCalendarStore()
-  const { accounts, allEvents } = storeToRefs(googleCalendarStore)
-  const { loadEventsFromDb } = useGoogleCalendar()
-  const { loadEvents: loadInternalEvents } = useInternalEvents()
+  const userStore = useUserStore()
+  const { allEvents } = storeToRefs(googleCalendarStore)
+  const { showErrorToast } = useNotification()
+
+  /**
+   * One query for everything the user can see in `range`: internal events and
+   * every connected Google account together. Replaces the earlier fan-out of
+   * one request per account plus one for internal events.
+   */
+  const loadEventsInRange = async (range: ViewDateRange) => {
+    const userId = userStore.user?.id
+    if (!userId) return
+
+    const { data, error } = await supabase
+      .from('calendar_events')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('start_at', range.start)
+      .lte('end_at', range.end)
+      .order('start_at', { ascending: true })
+
+    if (error) {
+      showErrorToast({ title: 'Error', description: error.message })
+      return
+    }
+
+    googleCalendarStore.replaceCalendarEvents(groupEventsBySource(data ?? []))
+  }
 
   const fetchEvents = async () => {
     const range = calendarStore.viewRange
     if (!range) return
 
-    // Load google + internal events in parallel
-    await Promise.allSettled([
-      ...accounts.value.map((account) => loadEventsFromDb(account.id, range)),
-      loadInternalEvents(range),
-    ])
+    await loadEventsInRange(range)
 
     // All events (google + internal) are now in the google calendar store, mapped uniformly
-    const mapped = allEvents.value.map(mapEventToDisplay)
-    calendarStore.setEvents(mapped)
+    calendarStore.setEvents(allEvents.value.map(mapEventToDisplay))
   }
 
   const loadViewEvents = async (range: { start: Temporal.ZonedDateTime, end: Temporal.ZonedDateTime }) => {
@@ -50,16 +73,14 @@ export const useCalendar = () => {
     await fetchEvents()
   }
 
-  const fetchEventsForRange = async (range: { start: string, end: string }) => {
-    await Promise.allSettled([
-      ...accounts.value.map((account) => loadEventsFromDb(account.id, range)),
-      loadInternalEvents(range),
-    ])
+  const fetchEventsForRange = async (range: ViewDateRange) => {
+    await loadEventsInRange(range)
 
     return allEvents.value.map(mapEventToDisplay)
   }
 
   return {
+    loadEventsInRange,
     loadViewEvents,
     fetchEvents,
     fetchEventsForRange,

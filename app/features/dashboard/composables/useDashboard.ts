@@ -3,7 +3,7 @@ import {
   useGoogleCalendar,
   type CalendarEvent,
 } from '@features/integrations/google-calendar'
-import { useInternalEvents } from '@entities/calendar/composables/useInternalEvents'
+import { useCalendar } from '@entities/calendar/composables/calendar'
 import { useWeeklyEventsChart } from '@entities/charts'
 import { useNotes, useNotesStore } from '@features/notes'
 import type { Note } from '@features/notes'
@@ -37,8 +37,8 @@ const endOfToday = () => {
 export const useDashboard = () => {
   const googleCalendarStore = useGoogleCalendarStore()
   const { accounts, allEvents } = storeToRefs(googleCalendarStore)
-  const { fetchConnectedAccounts, loadEventsFromDb } = useGoogleCalendar()
-  const { loadEvents: loadInternalEvents } = useInternalEvents()
+  const { fetchConnectedAccounts } = useGoogleCalendar()
+  const { loadEventsInRange } = useCalendar()
 
   const notesStore = useNotesStore()
   const { notes } = storeToRefs(notesStore)
@@ -158,22 +158,36 @@ export const useDashboard = () => {
     todaysEventNotes.value = (data ?? []) as Note[]
   }
 
+  // One query for this week's events across every source, then the notes attached to today's.
+  const loadWeekEvents = async () => {
+    const { start, end } = weekRange.value
+
+    await loadEventsInRange({
+      start: new Date(start).toISOString(),
+      end: new Date(end).toISOString(),
+    })
+
+    await fetchTodaysEventNotes(todaysEvents.value.map((e) => e.id))
+  }
+
   const load = async () => {
     if (!user.value?.id) return
 
     await Promise.all([
-      accounts.value.length === 0 ? fetchConnectedAccounts() : Promise.resolve(),
+      fetchConnectedAccounts(),
       preferences.value ? Promise.resolve() : getUserPreferences(user.value.id),
     ])
 
     await Promise.all([
-      loadInternalEvents(),
-      ...accounts.value.map((account) => loadEventsFromDb(account.id)),
+      loadWeekEvents(),
       notes.value.length === 0 ? refreshNotes() : Promise.resolve(),
     ])
-
-    await fetchTodaysEventNotes(todaysEvents.value.map((e) => e.id))
   }
+
+  // A background sync bumps syncVersion when Google had new data; reload the week in place.
+  watch(() => googleCalendarStore.syncVersion, () => {
+    void loadWeekEvents()
+  })
 
   const openEventView = (event: CalendarEvent, note?: Note) => {
     router.replace({
