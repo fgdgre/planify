@@ -100,7 +100,7 @@ function account(id: DemoAccountId) {
         <span class="h-7 w-1 flex-none rounded-full" :style="{ background: account(event.account).color }" />
         <span class="min-w-0 flex-1">
           <b class="block truncate font-medium">{{ event.title }}</b>
-          <span class="block truncate text-[10.5px] text-placeholder">{{ account(event.account).email ?? 'Planify' }}</span>
+          <span v-if="account(event.account).email" class="block truncate text-[10.5px] text-placeholder">{{ account(event.account).email }}</span>
         </span>
         <span v-for="(note, index) in event.notes" :key="index" class="hidden rounded-[3px] bg-zinc-100 px-1.5 py-0.5 text-[10px] text-zinc-600 tablet:inline">{{ note.title }}</span>
       </button>

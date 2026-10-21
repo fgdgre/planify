@@ -629,7 +629,7 @@ onBeforeUnmount(() => {
       </template>
     </div>
 
-    <div v-if="form" class="absolute inset-0 z-50 grid place-items-center bg-black/50" @click.self="form = null">
+    <div v-if="form" role="dialog" aria-modal="true" :aria-label="form.id === null ? 'New event' : 'Edit event'" class="absolute inset-0 z-50 grid place-items-center bg-black/50" @keydown.esc="form = null">
       <LandingDemoEventForm :draft="form.draft" :editing="form.id !== null" :confirm-delete="form.confirmDelete" @save="saveForm" @cancel="form = null" @delete="deleteFromForm" />
     </div>
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { DEMO_DAYS, DEMO_END_HOUR, DEMO_START_HOUR, validateEventDraft } from '../demo-data'
 
 export interface DemoEventDraft {
@@ -16,8 +16,11 @@ const title = ref(props.draft.title)
 const day = ref(props.draft.day)
 const start = ref(props.draft.start)
 const end = ref(props.draft.end)
+const titleInput = ref<HTMLInputElement | null>(null)
 const touched = ref(false)
 const confirming = ref(props.confirmDelete ?? false)
+
+onMounted(() => titleInput.value?.focus({ preventScroll: true }))
 
 // the tour types the title from outside
 watch(() => props.draft.title, (value) => (title.value = value))
@@ -43,7 +46,7 @@ function save() {
     <b class="text-[13px] font-semibold">{{ editing ? 'Edit event' : 'New event' }}</b>
     <div>
       <label for="demo-event-title" class="mb-1.5 block font-medium">Title</label>
-      <input id="demo-event-title" v-model="title" placeholder="Event title" autocomplete="off" class="w-full rounded-md border border-border bg-transparent px-[9px] py-1.5 text-xs shadow-xs outline-none focus:ring-1 focus:ring-zinc-400" @input="touched = true">
+      <input id="demo-event-title" ref="titleInput" v-model="title" placeholder="Event title" autocomplete="off" class="w-full rounded-md border border-border bg-transparent px-[9px] py-1.5 text-xs shadow-xs outline-none focus:ring-1 focus:ring-zinc-400" @input="touched = true">
     </div>
     <div class="grid grid-cols-3 gap-2">
       <div>

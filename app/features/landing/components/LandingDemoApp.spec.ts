@@ -217,6 +217,18 @@ describe('LandingDemoApp', () => {
     wrapper.unmount()
   })
 
+  it('keeps ids unique after deleting and creating', async () => {
+    const wrapper = mountApp()
+    await openEvent(wrapper, 'Write proposal')
+    await findButton(wrapper, 'Delete').trigger('click')
+    await findButton(wrapper, 'Yes').trigger('click')
+    await createEvent(wrapper, 'Fresh')
+    await createEvent(wrapper, 'Fresher')
+    const ids = wrapper.findAll('[data-event]').map((item) => item.attributes('data-event'))
+    expect(new Set(ids).size).toBe(ids.length)
+    wrapper.unmount()
+  })
+
   describe('tour step 2', () => {
     afterEach(() => vi.useRealTimers())
 
@@ -231,6 +243,30 @@ describe('LandingDemoApp', () => {
       await wrapper.setProps({ step: 2 })
       await vi.advanceTimersByTimeAsync(3000)
       expect(wrapper.findAll('[data-event]')).toHaveLength(14)
+      wrapper.unmount()
+    })
+
+    it('saves without typing under reduced motion', async () => {
+      const original = window.matchMedia
+      window.matchMedia = ((query: string) => ({ matches: query.includes('reduce'), media: query, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} })) as unknown as typeof window.matchMedia
+      try {
+        const wrapper = mount(LandingDemoApp, { props: { step: 2 }, attachTo: document.body })
+        await nextTick()
+        expect(wrapper.find('[data-event-form]').exists()).toBe(false)
+        expect(wrapper.findAll('[data-event]').filter((item) => item.text().includes('Client call'))).toHaveLength(1)
+        wrapper.unmount()
+      } finally {
+        window.matchMedia = original
+      }
+    })
+
+    it('does not run in live mode', async () => {
+      vi.useFakeTimers()
+      const wrapper = mountApp()
+      await pointer(wrapper, 'pointerdown')
+      await wrapper.setProps({ step: 2 })
+      await vi.advanceTimersByTimeAsync(3000)
+      expect(wrapper.findAll('[data-event]')).toHaveLength(13)
       wrapper.unmount()
     })
   })
