@@ -32,7 +32,8 @@ jobs:
       - name: Install Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # pinned: `latest` changes the generated types format and breaks the check below
+          version: 2.121.0
 
       - name: Generate Supabase types
         env:
