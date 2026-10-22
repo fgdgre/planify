@@ -202,7 +202,7 @@ function eventsAt(day: number, hour: number) {
       >
         <div class="hidden flex-col gap-2.5 bg-sidebar-background p-4 text-xs text-zinc-300 tablet:flex">
           <span class="flex items-center gap-2 text-[13px] font-semibold text-white">
-            <span class="inline-block size-4 rounded bg-primary" />
+            <SupaLogo class="size-4" />
             Planify
           </span>
           <span class="mt-2 text-zinc-500">Calendars</span>

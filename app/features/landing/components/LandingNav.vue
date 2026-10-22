@@ -10,7 +10,7 @@ const { y } = useWindowScroll()
     :class="y > 10 ? 'border-border' : 'border-transparent'"
   >
     <NuxtLink :to="ROUTES.LANDING" class="flex items-center gap-2 text-[15px] font-semibold">
-      <span class="inline-block size-[22px] rounded-md bg-primary" />
+      <SupaLogo class="size-[22px]" />
       Planify
     </NuxtLink>
 
