@@ -11,7 +11,8 @@ test.skip(process.env.E2E_STATIC !== '1', 'needs the production build served wit
 
 /** Hosts the landing must never contact: the real backend and Google. */
 const FORBIDDEN_HOST = /supabase\.co$|google/
-const STEP_TIMEOUT = 20_000
+/** The tour is paced for people (cursor glides, typing, pauses), so one step takes several seconds. */
+const STEP_TIMEOUT = 30_000
 
 interface DemoMessage {
   source: string
@@ -91,6 +92,9 @@ test.describe('Landing demo', () => {
       .poll(() => demo.getByText('Client call').count(), { timeout: STEP_TIMEOUT })
       .toBeGreaterThanOrEqual(2)
 
+    // The ghost cursor guided the click and typing.
+    await expect(demo.locator('.tour-cursor--visible')).toHaveCount(1)
+
     // 3: the notes sidebar of the Acme standup, with its note open.
     await scrollToStep(page, 3)
     await waitForMessage(page, 'step-done', 3)
@@ -145,6 +149,8 @@ test.describe('Landing demo', () => {
     await demo.locator('body').click({ position: { x: 640, y: 400 } })
 
     await expect(page.getByText("You're in control")).toBeVisible()
+    // The tour's cursor and glow leave the screen as soon as the visitor takes over.
+    await expect(demo.locator('.tour-cursor--visible, .tour-glow--visible')).toHaveCount(0)
     const resume = page.getByRole('button', { name: /Resume tour/ })
     await expect(resume).toBeVisible()
 

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { onClickOutside } from '@vueuse/core'
 import { useCalendarStore } from '../stores/calendar'
+import { useTourTarget } from '@shared/api/demo'
 import { calendarSearchControls, registerControls } from '../composables/tour-controls'
 import type { CalendarEventDisplay } from '../types'
 
@@ -14,6 +15,9 @@ const { events } = storeToRefs(calendarStore)
 const query = ref('')
 const isOpen = ref(false)
 const wrapperRef = useTemplateRef('wrapperRef')
+const resultsRef = useTemplateRef('resultsRef')
+useTourTarget('searchBox', wrapperRef)
+useTourTarget('searchResults', resultsRef)
 
 onClickOutside(wrapperRef, () => {
   isOpen.value = false
@@ -86,6 +90,7 @@ registerControls(calendarSearchControls, {
 
     <div
       v-if="isOpen && query.trim()"
+      ref="resultsRef"
       class="absolute left-0 right-0 top-full mt-1 z-50 bg-background border border-border rounded-md shadow-lg max-h-96 overflow-auto"
     >
       <div

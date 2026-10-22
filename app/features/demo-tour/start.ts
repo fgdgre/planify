@@ -1,7 +1,9 @@
 import type { Router } from 'vue-router'
 import { calendarControls, calendarSearchControls, eventSidebarControls, useCalendarStore } from '@entities/calendar'
+import { getTourTarget } from '@shared/api/demo'
 import { createTourDirector } from './director'
 import { getLandingWindow, sendToLanding } from './landing-window'
+import { mountTourOverlay } from './overlay'
 
 /**
  * Events that can only come from a visitor (`isTrusted` cannot be faked by a script).
@@ -21,7 +23,10 @@ export function startDemoDirector(router: Router): void {
   const calendarStore = useCalendarStore()
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
+  const visuals = mountTourOverlay(reducedMotion)
+
   const director = createTourDirector({
+    onTakeControl: visuals.hide,
     send: (message) => sendToLanding(landing, message),
     createEnv: (signal) => ({
       navigate: (location) => router.push(location),
@@ -31,6 +36,8 @@ export function startDemoDirector(router: Router): void {
       events: () => calendarStore.events,
       viewRange: () => calendarStore.viewRange,
       searchBox: () => calendarSearchControls.value,
+      target: getTourTarget,
+      visuals,
       now: () => new Date(),
       reducedMotion,
       signal,

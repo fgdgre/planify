@@ -7,6 +7,8 @@ export interface TourDirectorOptions {
   createEnv: (signal: AbortSignal) => TourEnv
   /** Delivers a message to the landing page. */
   send: (body: DemoMessageBody) => void
+  /** Called when the visitor takes over, to clear whatever the tour left on screen. */
+  onTakeControl?: () => void
 }
 
 /**
@@ -16,7 +18,7 @@ export interface TourDirectorOptions {
  * Never throws: a step that cannot run is reported as `step-failed` so the
  * landing can fall back instead of showing a half-driven app.
  */
-export function createTourDirector({ createEnv, send }: TourDirectorOptions) {
+export function createTourDirector({ createEnv, send, onTakeControl }: TourDirectorOptions) {
   let hasControl = true
   let running: AbortController | null = null
 
@@ -49,6 +51,7 @@ export function createTourDirector({ createEnv, send }: TourDirectorOptions) {
 
     hasControl = false
     abortRunning()
+    onTakeControl?.()
     post({ type: 'user-took-control' })
   }
 

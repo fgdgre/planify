@@ -2,6 +2,7 @@
 import DOMPurify from 'dompurify'
 import type { CalendarEventDisplay } from '@entities/calendar'
 import type { Note } from '@features/notes'
+import { useTourTarget } from '@shared/api/demo'
 
 const props = withDefaults(
   defineProps<{
@@ -16,6 +17,9 @@ const props = withDefaults(
     eventNotes: () => [],
   }
 )
+
+const notesRef = useTemplateRef('notesRef')
+useTourTarget('eventNotes', notesRef)
 
 const emit = defineEmits<{
   edit: []
@@ -110,7 +114,7 @@ const formattedTime = computed(() => {
         <div class="prose prose-sm max-w-none text-gray-700" v-html="sanitize(selectedEvent.description)" />
       </div>
 
-      <div v-if="eventNotes.length" class="border-t pt-3 mt-3 space-y-2">
+      <div v-if="eventNotes.length" ref="notesRef" class="border-t pt-3 mt-3 space-y-2">
         <div class="flex items-center gap-1.5 text-gray-500">
           <Icon name="lucide:notebook-pen" class="size-4 shrink-0" />
           <span class="font-medium">Notes</span>

@@ -12,9 +12,19 @@ import type { CalendarEventDisplay } from '../types'
  * ready yet".
  */
 
+/** A position in viewport pixels. */
+export interface ScreenPoint {
+  x: number
+  y: number
+}
+
 export interface CalendarControls {
   /** Switches Schedule-X to the week view around today. */
   showCurrentWeek: () => void
+  /** Where `date`'s time is in the week grid right now, or null when it is not on screen. */
+  slotPoint: (date: Date) => ScreenPoint | null
+  /** The rendered element of an event, or null when it is not on screen. */
+  eventElement: (id: string) => HTMLElement | null
 }
 
 export interface EventSidebarControls {

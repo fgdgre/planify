@@ -3,6 +3,7 @@ import { ScheduleXCalendar } from '@schedule-x/vue'
 import { useCalendarApp } from '@entities/calendar'
 import CalendarSearch from '@entities/calendar/components/CalendarSearch.vue'
 import type { CalendarEventDisplay } from '@entities/calendar'
+import { useTourTarget } from '@shared/api/demo'
 
 definePageMeta({
   layout: 'app',
@@ -11,6 +12,9 @@ definePageMeta({
 })
 
 const { calendarApp, goToDate, openEventView, refreshEvents, isRefreshing } = useCalendarApp()
+
+const gridRef = useTemplateRef('gridRef')
+useTourTarget('calendarGrid', gridRef)
 
 const handleSearchSelect = (event: CalendarEventDisplay) => {
   goToDate(event.start_at)
@@ -31,7 +35,7 @@ const handleSearchSelect = (event: CalendarEventDisplay) => {
     />
   </Teleport>
 
-  <div class="flex-1 min-h-0 overflow-hidden">
+  <div ref="gridRef" class="flex-1 min-h-0 overflow-hidden">
     <ScheduleXCalendar :calendar-app="calendarApp" />
   </div>
 </template>

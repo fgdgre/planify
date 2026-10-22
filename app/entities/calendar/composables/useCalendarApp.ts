@@ -18,6 +18,7 @@ import { useCalendar } from './calendar'
 import { useInternalEvents } from './useInternalEvents'
 import { mapToScheduleXEvent } from '../helpers'
 import { scrollToWorkingHoursWhenRendered } from '../helpers/scroll'
+import { findEventElement, findSlotPoint } from '../helpers/tour-geometry'
 import { showWeekView } from '../helpers/view'
 import { calendarControls, registerControls } from './tour-controls'
 import { useGoogleCalendarStore, useGoogleCalendar } from '@features/integrations/google-calendar'
@@ -88,8 +89,9 @@ export const useCalendarApp = () => {
 
   // Opens the time grid on working hours. Called only on first render and when
   // the view/date changes, so the user's own scrolling is left alone.
-  const scrollToWorkingHours = () =>
-    scrollToWorkingHoursWhenRendered(() => (calendarApp as any).$app?.elements.calendarWrapper)
+  const calendarRoot = (): HTMLElement | undefined => (calendarApp as any).$app?.elements.calendarWrapper
+
+  const scrollToWorkingHours = () => scrollToWorkingHoursWhenRendered(calendarRoot)
 
   const buildCalendarsConfig = () => {
     const accounts = googleCalendarStore.accounts
@@ -254,6 +256,8 @@ export const useCalendarApp = () => {
 
   registerControls(calendarControls, {
     showCurrentWeek: () => showWeekView(calendarApp, Temporal.Now.plainDateISO()),
+    slotPoint: (date) => findSlotPoint(calendarRoot(), date),
+    eventElement: (id) => findEventElement(calendarRoot(), id),
   })
 
   return { calendarApp, goToDate, openEventView, refreshEvents, isRefreshing }

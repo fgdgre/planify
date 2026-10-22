@@ -1,4 +1,4 @@
-import { resolveAppPath, type TourStep } from '@shared/api/demo'
+import { resolveAppPath, type TourStep, type TourTarget } from '@shared/api/demo'
 import { ROUTES } from '@shared/constants/routes'
 import type {
   CalendarControls,
@@ -6,9 +6,19 @@ import type {
   CalendarSearchControls,
   EventSidebarControls,
 } from '@entities/calendar'
-import { typeText, waitFor } from './timing'
+import { beat, click, findOptional, glideTo, highlight, pulse } from './choreography'
+import {
+  AFTER_SAVE_MS,
+  BEFORE_SAVE_MS,
+  CLOSE_SETTLE_MS,
+  SIDEBAR_SETTLE_MS,
+  STEP_SETTLE_MS,
+  typeText,
+  waitFor,
+} from './timing'
+import type { TourVisuals } from './visuals'
 
-/** Everything a step may touch. All of it is typed app API, never the DOM. */
+/** Everything a step may touch. All of it is typed app API, never the DOM or a selector. */
 export interface TourEnv {
   navigate: (location: { path: string; query?: Record<string, string> }) => Promise<unknown>
   currentPath: () => string
@@ -18,9 +28,15 @@ export interface TourEnv {
   /** The range the calendar currently shows (ISO instants), once known. */
   viewRange: () => { start: string; end: string } | null
   searchBox: () => CalendarSearchControls | null
+  /** Elements components published for the tour to point at; null when not on screen. */
+  target: (name: TourTarget) => HTMLElement | null
+  /** Ghost cursor, rings and glow. */
+  visuals: TourVisuals
   now: () => Date
   reducedMotion: boolean
   signal: AbortSignal
+  /** Source of typing jitter; defaults to `Math.random`. */
+  random?: () => number
 }
 
 const CLIENT_CALL_TITLE = 'Client call'
@@ -33,9 +49,22 @@ const startMs = (event: CalendarEventDisplay) => new Date(stripTimezone(event.st
 const atHour = (day: Date, hour: number) =>
   new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour, 0, 0, 0)
 
+/**
+ * Closes the event/note sidebar if one is open and waits for it to be gone, so
+ * two panels (or a panel and a popover) are never on screen at once.
+ */
+async function closeSidebars(env: TourEnv): Promise<void> {
+  if (!env.eventSidebar()?.mode) return
+
+  await env.navigate({ path: env.currentPath(), query: {} })
+  await waitFor(() => !env.eventSidebar()?.mode, { what: 'the sidebar to close', signal: env.signal })
+  await beat(CLOSE_SETTLE_MS, env)
+}
+
 /** Calendar page with the week view on screen, sidebar closed and search empty. */
 async function showWeekView(env: TourEnv): Promise<void> {
   env.searchBox()?.setQuery('')
+  await closeSidebars(env)
   await env.navigate({ path: resolveAppPath(ROUTES.CALENDAR), query: {} })
 
   const calendar = await waitFor(env.calendar, { what: 'the calendar', signal: env.signal })
@@ -65,7 +94,11 @@ async function waitForEvents(env: TourEnv): Promise<CalendarEventDisplay[]> {
   )
 }
 
-async function createClientCall(env: TourEnv, start: Date, end: Date): Promise<void> {
+/** Calendar handle; the week view is on screen by now, so it must exist. */
+const calendarOf = (env: TourEnv) => waitFor(env.calendar, { what: 'the calendar', signal: env.signal })
+
+/** Opens the create sidebar on `start`, types the title, saves; returns the new event's id. */
+async function createClientCall(env: TourEnv, start: Date, end: Date): Promise<string> {
   await env.navigate({
     path: resolveAppPath(ROUTES.CALENDAR),
     query: {
@@ -80,47 +113,82 @@ async function createClientCall(env: TourEnv, start: Date, end: Date): Promise<v
     () => env.eventSidebar()?.mode === 'create' && env.eventSidebar(),
     { what: 'the create event sidebar', signal: env.signal },
   )
+  await beat(SIDEBAR_SETTLE_MS, env)
 
   await typeText(CLIENT_CALL_TITLE, sidebar.setTitle, env)
+  await beat(BEFORE_SAVE_MS, env)
+
+  await glideTo(env, await findOptional(() => env.target('sidebarSubmit'), env))
+  await click(env)
   await sidebar.submit()
 
-  await waitFor(
-    () => env.eventSidebar()?.mode === 'view' && env.eventSidebar()?.selectedEvent?.title === CLIENT_CALL_TITLE,
+  const saved = await waitFor(
+    () => {
+      const current = env.eventSidebar()
+      return current?.mode === 'view' && current.selectedEvent?.title === CLIENT_CALL_TITLE && current.selectedEvent
+    },
     { what: 'the saved event', signal: env.signal },
   )
+  return saved.id
+}
+
+/** Points at an event in the grid with a single pulse, once it has rendered. */
+async function pulseEvent(env: TourEnv, id: string): Promise<void> {
+  const calendar = await calendarOf(env)
+  await pulse(env, await findOptional(() => calendar.eventElement(id), env))
 }
 
 const steps: Record<TourStep, (env: TourEnv) => Promise<void>> = {
+  /** The unified week grid, ringed so the eye knows where to look. */
   1: async (env) => {
     await showWeekView(env)
+    await beat(STEP_SETTLE_MS, env)
+    await highlight(env, await findOptional(() => env.target('calendarGrid'), env))
   },
 
-  /** Creates today's 14:00 "Client call"; idempotent, so repeating the tour only opens it. */
+  /**
+   * Clicks a free slot today at 14:00 and creates "Client call" like a visitor
+   * would. Idempotent: when it already exists the tour only points at it.
+   */
   2: async (env) => {
     await showWeekView(env)
     const events = await waitForEvents(env)
+    await beat(STEP_SETTLE_MS, env)
 
     const start = atHour(env.now(), 14)
     const end = atHour(env.now(), 15)
     const existing = events.find((event) => event.title === CLIENT_CALL_TITLE && startMs(event) === start.getTime())
+    const calendar = await calendarOf(env)
+
+    await glideTo(env, calendar.slotPoint(start))
+    await click(env)
 
     if (existing) {
-      await env.navigate({ path: resolveAppPath(ROUTES.CALENDAR), query: { eventId: existing.id } })
+      await pulseEvent(env, existing.id)
       return
     }
 
-    await createClientCall(env, start, end)
+    const createdId = await createClientCall(env, start, end)
+    await beat(AFTER_SAVE_MS, env)
+    // The sidebar covers the grid's right side: close it so the new event is seen landing.
+    await closeSidebars(env)
+    await pulseEvent(env, createdId)
   },
 
+  /** Opens the Acme standup, rings its notes and opens the first one. */
   3: async (env) => {
     await showWeekView(env)
     const events = await waitForEvents(env)
+    await beat(STEP_SETTLE_MS, env)
 
     const standup = events
       .filter((event) => event.title === STANDUP_TITLE)
       .sort((a, b) => startMs(a) - startMs(b))[0]
     if (!standup) throw new Error(`No "${STANDUP_TITLE}" event found`)
 
+    const calendar = await calendarOf(env)
+    await glideTo(env, await findOptional(() => calendar.eventElement(standup.id), env))
+    await click(env)
     await env.navigate({ path: resolveAppPath(ROUTES.CALENDAR), query: { eventId: standup.id } })
 
     const sidebar = await waitFor(
@@ -130,23 +198,50 @@ const steps: Record<TourStep, (env: TourEnv) => Promise<void>> = {
       },
       { what: 'the event notes', signal: env.signal },
     )
+    await beat(SIDEBAR_SETTLE_MS, env)
 
+    const notes = await findOptional(() => env.target('eventNotes'), env)
+    await highlight(env, notes)
+    await glideTo(env, notes)
+    await click(env)
+    env.visuals.clearGlow()
     await sidebar.openNote(sidebar.eventNotes[0]!)
+    await beat(SIDEBAR_SETTLE_MS, env)
   },
 
+  /** Types "acme" into the search box and rings the matches. */
   4: async (env) => {
     await showWeekView(env)
     await waitForEvents(env)
+    await beat(STEP_SETTLE_MS, env)
 
     const searchBox = await waitFor(env.searchBox, { what: 'the calendar search', signal: env.signal })
+    await glideTo(env, await findOptional(() => env.target('searchBox'), env))
+    await click(env)
     await typeText(SEARCH_TEXT, searchBox.setQuery, env)
+
+    await highlight(env, await findOptional(() => env.target('searchResults'), env))
   },
 
+  /** Goes to the dashboard through its nav item and rings the stats. */
   5: async (env) => {
     env.searchBox()?.setQuery('')
+    await closeSidebars(env)
+    await beat(STEP_SETTLE_MS, env)
+
+    await glideTo(env, await findOptional(() => env.target('dashboardNav'), env))
+    await click(env)
     await env.navigate({ path: resolveAppPath(ROUTES.HOME), query: {} })
+
+    await highlight(env, await findOptional(() => env.target('statsRow'), env, 4000))
   },
 }
 
-/** Performs one tour step. Rejects when the step cannot run; the director turns that into `step-failed`. */
-export const runTourStep = (step: TourStep, env: TourEnv): Promise<void> => steps[step](env)
+/**
+ * Performs one tour step. Rejects when the step cannot run; the director turns
+ * that into `step-failed`. Whatever the previous step left on screen is cleared first.
+ */
+export const runTourStep = (step: TourStep, env: TourEnv): Promise<void> => {
+  env.visuals.clearGlow()
+  return steps[step](env)
+}

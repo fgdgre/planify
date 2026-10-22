@@ -1,3 +1,18 @@
+/**
+ * The tour's tempo. The old hand-made demo felt friendly because every action
+ * had room to land; these are those beats, in one place so pacing is tuned here.
+ */
+export const CURSOR_TRAVEL_MS = 700
+export const CLICK_BEAT_MS = 220
+export const SIDEBAR_SETTLE_MS = 400
+export const CLOSE_SETTLE_MS = 300
+export const STEP_SETTLE_MS = 250
+export const BEFORE_SAVE_MS = 600
+export const AFTER_SAVE_MS = 700
+export const GLOW_HOLD_MS = 1200
+export const TYPE_CHAR_MS = 110
+export const TYPE_JITTER_MS = 30
+
 /** Thrown when a step is cancelled (visitor took control, or a newer step started). */
 export class TourAbortedError extends Error {
   constructor() {
@@ -53,12 +68,19 @@ export async function waitFor<T>(
 
 /**
  * Types `text` into a field one character at a time through `write`, like a
- * visitor would. With reduced motion the whole text is written at once.
+ * visitor would: a steady rhythm with a little jitter so it does not look
+ * mechanical. With reduced motion the whole text is written at once.
  */
 export async function typeText(
   text: string,
   write: (value: string) => void,
-  { signal, reducedMotion, charDelayMs = 80 }: { signal: AbortSignal; reducedMotion: boolean; charDelayMs?: number },
+  {
+    signal,
+    reducedMotion,
+    charDelayMs = TYPE_CHAR_MS,
+    jitterMs = TYPE_JITTER_MS,
+    random = Math.random,
+  }: { signal: AbortSignal; reducedMotion: boolean; charDelayMs?: number; jitterMs?: number; random?: () => number },
 ): Promise<void> {
   if (reducedMotion) {
     throwIfAborted(signal)
@@ -69,6 +91,6 @@ export async function typeText(
   for (let length = 1; length <= text.length; length++) {
     throwIfAborted(signal)
     write(text.slice(0, length))
-    if (length < text.length) await sleep(charDelayMs, signal)
+    if (length < text.length) await sleep(charDelayMs + (random() * 2 - 1) * jitterMs, signal)
   }
 }
