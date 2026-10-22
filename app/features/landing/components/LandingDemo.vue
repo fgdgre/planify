@@ -48,7 +48,7 @@ onBeforeUnmount(() => sentinelObserver?.disconnect())
           <LandingDemoStepper :active="activeStep" />
         </div>
         <div class="absolute inset-0 flex flex-col" aria-hidden="true">
-          <div v-for="step in TOUR_STEPS" :key="step" ref="sentinels" class="h-[60vh] shrink-0" />
+          <div v-for="step in TOUR_STEPS" :key="step" ref="sentinels" data-testid="demo-step-sentinel" class="h-[60vh] shrink-0" />
         </div>
       </div>
       <div>
