@@ -26,6 +26,14 @@ export default defineNuxtConfig({
     }
   },
   alias,
+  icon: {
+    // Ship every icon the source uses inside the client bundle and never ask
+    // api.iconify.design at runtime: the sandboxed demo iframe (and the app)
+    // must not depend on a third-party API, and CSP connect-src stays closed.
+    // Icon names also live in plain .ts files (sidebar sections, dashboard cards).
+    clientBundle: { scan: { globInclude: ['app/**/*.{vue,ts}'] } },
+    fallbackToApi: false,
+  },
   vite: {
     // @ts-expect-error
     plugins: [tailwindcss()],

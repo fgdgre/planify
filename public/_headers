@@ -8,7 +8,8 @@
 # CSP notes:
 #   - script-src 'self' + hash      no 'unsafe-inline' for scripts
 #   - style-src 'unsafe-inline'     Vue/Tailwind/Tiptap/ScheduleX set inline styles
-#   - connect-src                   Supabase (REST, Auth, Functions, Realtime) + Iconify
+#   - connect-src                   Supabase (REST, Auth, Functions, Realtime); icons are
+#                                   bundled at build time (nuxt.config.ts), no Iconify API
 #   - img-src googleusercontent     Google account avatars (picture_url)
 #   - frame-ancestors 'self'        only same-origin pages may frame the app: the
 #                                   landing embeds /demo/** in a sandboxed iframe
@@ -23,7 +24,7 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' __NUXT_INLINE_SCRIPT_HASHES__; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.googleusercontent.com; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com; frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' __NUXT_INLINE_SCRIPT_HASHES__; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.googleusercontent.com; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests
 
 /_nuxt/*
   Access-Control-Allow-Origin: *

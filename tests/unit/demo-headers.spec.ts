@@ -31,4 +31,8 @@ describe('public/_headers', () => {
     expect(csp).not.toMatch(/script-src[^;]*unsafe-inline/)
     expect(csp).toContain('upgrade-insecure-requests')
   })
+
+  it('never lists the Iconify API (icons are bundled)', () => {
+    expect(headersFor(rules, '/')['Content-Security-Policy']).not.toContain('iconify')
+  })
 })
