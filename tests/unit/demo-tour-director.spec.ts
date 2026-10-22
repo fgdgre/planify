@@ -498,7 +498,7 @@ describe('replaying a step', () => {
     await vi.runAllTimersAsync()
 
     expect(sidebar.deleteEvent).toHaveBeenCalledTimes(1)
-    expect(sidebar.deleteEvent).toHaveBeenCalledWith('new1')
+    expect(sidebar.deleteEvent).toHaveBeenCalledWith('new1', { silent: true })
     expect(events.map((e) => e.id)).toContain('mine')
     expect(clientCalls(events)).toHaveLength(2)
   })
@@ -526,6 +526,46 @@ describe('replaying a step', () => {
     await vi.runAllTimersAsync()
 
     expect(sent.at(-1)).toEqual({ type: 'step-failed', step: 2, reason: 'Could not delete the event the tour created' })
+  })
+
+  it('records the created event even when the step is aborted right after saving', async () => {
+    const { director, step, events, sidebar, log } = setup()
+    const save = sidebar.submit.getMockImplementation()!
+    sidebar.submit.mockImplementationOnce(async () => {
+      await save()
+      director.takeControlFromTour()
+    })
+    step(2)
+    await vi.runAllTimersAsync()
+    expect(events.map((e) => e.id)).toContain('new1')
+
+    director.handleLandingMessage(landing({ type: 'resume' }))
+    step(2)
+    await vi.runAllTimersAsync()
+
+    expect(log).toContain('delete:new1')
+    expect(events.filter((e) => e.title === 'Client call').map((e) => e.id)).toEqual(['new2'])
+  })
+
+  it('an interrupted cleanup keeps the id, so the next play still deletes the event', async () => {
+    const { director, step, events, sidebar } = setup()
+    step(2)
+    await vi.runAllTimersAsync()
+
+    sidebar.deleteEvent.mockImplementationOnce(async () => {
+      director.takeControlFromTour()
+      return false
+    })
+    step(2)
+    await vi.runAllTimersAsync()
+    expect(events.map((e) => e.id)).toContain('new1')
+
+    director.handleLandingMessage(landing({ type: 'resume' }))
+    step(2)
+    await vi.runAllTimersAsync()
+
+    expect(sidebar.deleteEvent).toHaveBeenLastCalledWith('new1', { silent: true })
+    expect(events.filter((e) => e.title === 'Client call' && e.id.startsWith('new')).map((e) => e.id)).toEqual(['new2'])
   })
 
   it('step 4 clears the query and types it again', async () => {

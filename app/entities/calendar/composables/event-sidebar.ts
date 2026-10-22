@@ -750,8 +750,8 @@ export const useEventSidebar = () => {
     setTitle: (title: string) => { formData.value.title = title },
     submit: handleSubmit,
     openNote,
-    deleteEvent: async (id: string) => {
-      const success = await deleteEvent(id)
+    deleteEvent: async (id: string, options?: { silent?: boolean }) => {
+      const success = await deleteEvent(id, options)
       if (success) await fetchEvents()
       return success
     },

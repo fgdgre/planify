@@ -40,6 +40,11 @@ const formatEventDate = (iso: string, allDay: boolean): string => {
   return d.toLocaleString(undefined, opts)
 }
 
+// Typing after Esc must show the results again without leaving and re-entering the box.
+watch(query, (value) => {
+  if (value.trim()) isOpen.value = true
+})
+
 const onFocus = () => {
   isOpen.value = true
 }

@@ -15,6 +15,7 @@ import {
   PAGE_FADE_OUT_MS,
   SIDEBAR_SETTLE_MS,
   STEP_SETTLE_MS,
+  throwIfAborted,
   typeText,
   waitFor,
 } from './timing'
@@ -112,7 +113,7 @@ async function waitForEvents(env: TourEnv): Promise<CalendarEventDisplay[]> {
 const calendarOf = (env: TourEnv) => waitFor(env.calendar, { what: 'the calendar', signal: env.signal })
 
 /** Opens the create sidebar on `start`, types the title, saves; returns the new event's id. */
-async function createClientCall(env: TourEnv, start: Date, end: Date): Promise<string> {
+async function createClientCall(env: TourEnv, start: Date, end: Date, record: StepRecord): Promise<void> {
   await env.navigate({
     path: resolveAppPath(ROUTES.CALENDAR),
     query: {
@@ -134,7 +135,13 @@ async function createClientCall(env: TourEnv, start: Date, end: Date): Promise<s
 
   await glideTo(env, await findOptional(() => env.target('sidebarSubmit'), env))
   await click(env)
+  const remember = (id: string) => {
+    if (!record.createdEventIds.includes(id)) record.createdEventIds.push(id)
+  }
+
   await sidebar.submit()
+  // Recorded the moment the event exists, before any wait that an abort could cut short.
+  if (sidebar.selectedEvent?.title === CLIENT_CALL_TITLE) remember(sidebar.selectedEvent.id)
 
   const saved = await waitFor(
     () => {
@@ -143,7 +150,7 @@ async function createClientCall(env: TourEnv, start: Date, end: Date): Promise<s
     },
     { what: 'the saved event', signal: env.signal },
   )
-  return saved.id
+  remember(saved.id)
 }
 
 /** Points at an event in the grid with a single pulse, once it has rendered. */
@@ -176,12 +183,11 @@ const steps: Record<TourStep, (env: TourEnv, record: StepRecord) => Promise<void
     await click(env)
 
     record.openedSidebar = true
-    const createdId = await createClientCall(env, start, end)
-    record.createdEventIds.push(createdId)
+    await createClientCall(env, start, end, record)
     await beat(AFTER_SAVE_MS, env)
     // The sidebar covers the grid's right side: close it so the new event is seen landing.
     await closeSidebars(env)
-    await pulseEvent(env, createdId)
+    await pulseEvent(env, record.createdEventIds.at(-1)!)
   },
 
   /** Opens the Acme standup, rings its notes and opens the first one. */
@@ -284,10 +290,10 @@ async function cleanupStep(record: StepRecord, env: TourEnv): Promise<void> {
 
   if (record.createdEventIds.length) {
     const sidebar = await waitFor(env.eventSidebar, { what: 'the event sidebar', signal: env.signal })
-    while (record.createdEventIds.length) {
-      const id = record.createdEventIds[0]!
-      if (!(await sidebar.deleteEvent(id))) throw new Error('Could not delete the event the tour created')
-      record.createdEventIds.shift()
+    for (const id of [...record.createdEventIds]) {
+      throwIfAborted(env.signal)
+      if (!(await sidebar.deleteEvent(id, { silent: true }))) throw new Error('Could not delete the event the tour created')
+      record.createdEventIds = record.createdEventIds.filter((recorded) => recorded !== id)
     }
   }
 

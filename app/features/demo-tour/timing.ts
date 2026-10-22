@@ -23,7 +23,7 @@ export class TourAbortedError extends Error {
   }
 }
 
-const throwIfAborted = (signal: AbortSignal) => {
+export const throwIfAborted = (signal: AbortSignal) => {
   if (signal.aborted) throw new TourAbortedError()
 }
 

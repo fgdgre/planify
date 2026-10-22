@@ -39,7 +39,7 @@ export interface EventSidebarControls {
   submit: () => Promise<void>
   openNote: (note: Note) => Promise<void>
   /** Deletes an own event and reloads the grid; true when it is gone (a missing id counts as gone). */
-  deleteEvent: (id: string) => Promise<boolean>
+  deleteEvent: (id: string, options?: { silent?: boolean }) => Promise<boolean>
 }
 
 export interface CalendarSearchControls {
