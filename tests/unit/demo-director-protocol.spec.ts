@@ -9,6 +9,10 @@ describe('parseLandingMessage', () => {
     expect(parseLandingMessage(landing({ type: 'step', step }))).toEqual(landing({ type: 'step', step }))
   })
 
+  it('accepts take-control', () => {
+    expect(parseLandingMessage(landing({ type: 'take-control' }))).toEqual(landing({ type: 'take-control' }))
+  })
+
   it('accepts resume', () => {
     expect(parseLandingMessage(landing({ type: 'resume' }))).toEqual(landing({ type: 'resume' }))
   })

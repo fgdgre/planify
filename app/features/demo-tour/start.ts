@@ -3,8 +3,11 @@ import { calendarControls, calendarSearchControls, eventSidebarControls, useCale
 import { createTourDirector } from './director'
 import { getLandingWindow, sendToLanding } from './landing-window'
 
-/** Events that can only come from a visitor (`isTrusted` cannot be faked by a script). */
-const VISITOR_EVENTS = ['pointerdown', 'keydown', 'wheel'] as const
+/**
+ * Events that can only come from a visitor (`isTrusted` cannot be faked by a script).
+ * Not `wheel`: scrolling the landing page with the cursor over the frame must not stop the tour.
+ */
+const VISITOR_EVENTS = ['pointerdown', 'keydown'] as const
 
 /**
  * Wires the tour director to the real app and to the landing page that frames

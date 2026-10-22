@@ -157,6 +157,20 @@ describe('useDemoFrame', () => {
     expect(api().status.value).toBe('ready')
   })
 
+  it('takeControl pauses the tour locally and tells the demo', async () => {
+    const { api, nearAndIdle, fromFrame, spyOnFrame, posted } = setup()
+    await nearAndIdle()
+    await nextTick()
+    await fromFrame({ type: 'ready' })
+    spyOnFrame()
+
+    api().takeControl()
+    api().takeControl()
+
+    expect(api().controlled.value).toBe(true)
+    expect(posted).toEqual([{ source: 'planify-landing', version: 1, type: 'take-control' }])
+  })
+
   it('pauses the tour on user-took-control and resumes with the current step', async () => {
     const { api, nearAndIdle, fromFrame, spyOnFrame, posted } = setup()
     await nearAndIdle()

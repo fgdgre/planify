@@ -20,7 +20,7 @@ const isDesk = useMediaQuery('(min-width: 1150px)')
 const saveData = typeof navigator !== 'undefined' && (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true
 const enabled = computed(() => isDesk.value && !saveData)
 
-const { status, iframeSrc, controlled, goToStep, resume } = useDemoFrame({ section, frame, enabled, demoUrl: DEMO_URL })
+const { status, iframeSrc, controlled, goToStep, takeControl, resume } = useDemoFrame({ section, frame, enabled, demoUrl: DEMO_URL })
 
 watch(() => props.step, goToStep)
 
@@ -36,6 +36,8 @@ const showLink = computed(() => status.value === 'fallback' || !enabled.value)
         alt="Planify calendar showing the week with events from several accounts"
         width="1280"
         height="800"
+        loading="lazy"
+        decoding="async"
         class="absolute inset-0 size-full object-cover object-top-left transition-opacity duration-300"
         :class="status === 'ready' ? 'opacity-0' : 'opacity-100'"
       >
@@ -49,8 +51,20 @@ const showLink = computed(() => status.value === 'fallback' || !enabled.value)
         sandbox="allow-scripts"
         class="absolute top-0 left-0 origin-top-left border-0 transition-opacity duration-300"
         :style="{ width: `${APP_WIDTH}px`, height: `${APP_HEIGHT}px`, transform: `scale(${scale})` }"
-        :class="status === 'ready' ? 'opacity-100' : 'pointer-events-none opacity-0'"
+        :class="status !== 'ready' ? 'pointer-events-none opacity-0' : controlled ? 'opacity-100' : 'pointer-events-none opacity-100'"
       />
+
+      <!-- While the tour drives the demo the frame ignores the pointer, so wheel scrolling over it scrolls the page; this button hands the demo over to the visitor. -->
+      <button
+        v-if="status === 'ready' && !controlled"
+        type="button"
+        class="group absolute inset-0 flex cursor-pointer items-end justify-center pb-5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
+        @click="takeControl"
+      >
+        <span class="rounded-full bg-foreground px-4 py-2 text-[13px] font-semibold text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+          Click to try it yourself
+        </span>
+      </button>
 
       <div v-if="controlled" class="absolute right-4 bottom-4 flex items-center gap-3 rounded-full bg-foreground px-4 py-2 text-[13px] font-semibold text-white shadow-lg">
         <span><span class="text-primary-soft">●</span> You're in control</span>

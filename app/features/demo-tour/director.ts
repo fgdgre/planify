@@ -43,6 +43,15 @@ export function createTourDirector({ createEnv, send }: TourDirectorOptions) {
     }
   }
 
+  /** The visitor interacted: stop driving the app until the landing sends `resume`. */
+  const takeControlFromTour = () => {
+    if (!hasControl) return
+
+    hasControl = false
+    abortRunning()
+    post({ type: 'user-took-control' })
+  }
+
   return {
     /** Handles an untrusted `MessageEvent.data` from the landing page. */
     handleLandingMessage(data: unknown) {
@@ -54,18 +63,16 @@ export function createTourDirector({ createEnv, send }: TourDirectorOptions) {
         return
       }
 
+      if (message.type === 'take-control') {
+        takeControlFromTour()
+        return
+      }
+
       if (hasControl) void runStep(message.step)
       else post({ type: 'step-ignored', step: message.step })
     },
 
-    /** The visitor interacted: stop driving the app until the landing sends `resume`. */
-    takeControlFromTour() {
-      if (!hasControl) return
-
-      hasControl = false
-      abortRunning()
-      post({ type: 'user-took-control' })
-    },
+    takeControlFromTour,
 
     reportReady: () => post({ type: 'ready' }),
   }

@@ -101,6 +101,13 @@ export function useDemoFrame({ section, frame, enabled, demoUrl }: DemoFrameOpti
     if (status.value === 'ready' && !controlled.value) post({ type: 'step', step })
   }
 
+  /** The visitor chose to use the demo themselves: pause the tour on both sides of the frame. */
+  function takeControl() {
+    if (status.value !== 'ready' || controlled.value) return
+    controlled.value = true
+    post({ type: 'take-control' })
+  }
+
   function resume() {
     if (status.value !== 'ready') return
     controlled.value = false
@@ -131,5 +138,5 @@ export function useDemoFrame({ section, frame, enabled, demoUrl }: DemoFrameOpti
     stopWaiting()
   })
 
-  return { status, iframeSrc, controlled, goToStep, resume }
+  return { status, iframeSrc, controlled, goToStep, takeControl, resume }
 }

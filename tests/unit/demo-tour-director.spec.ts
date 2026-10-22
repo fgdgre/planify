@@ -202,6 +202,16 @@ describe('visitor control', () => {
     expect(types()).toEqual(['user-took-control', 'step-ignored', 'step-done'])
   })
 
+  it('hands control over when the landing says the visitor chose to take it', async () => {
+    const { director, step, types } = setup()
+
+    director.handleLandingMessage(landing({ type: 'take-control' }))
+    step(1)
+    await vi.runAllTimersAsync()
+
+    expect(types()).toEqual(['user-took-control', 'step-ignored'])
+  })
+
   it('reports control again after a resume', () => {
     const { director, types } = setup()
     director.takeControlFromTour()
