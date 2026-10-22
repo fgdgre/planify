@@ -2,6 +2,8 @@
 import { useDashboard } from '@features/dashboard'
 import { EventsLineChart } from '@entities/charts'
 import { NotesItem } from '@features/notes'
+import { resolveAppPath, useTourTarget } from '@shared/api/demo'
+import { ROUTES } from '@shared/constants/routes'
 
 definePageMeta({
   title: 'Home',
@@ -24,6 +26,9 @@ const {
   handleDeleteNote,
   load,
 } = useDashboard()
+
+const statsRef = useTemplateRef('statsRef')
+useTourTarget('statsRow', statsRef)
 
 await load()
 </script>
@@ -84,20 +89,22 @@ await load()
       </div>
     </section>
 
-    <section class="flex flex-wrap gap-6 px-6 py-16">
-      <div
-        v-for="(stat, i) in stats"
-        :key="stat.label"
-        class="flex-1 min-w-[280px] border border-black/10 rounded-[14px] p-8 flex flex-col gap-4 bg-white"
-      >
+    <section class="px-6 py-16">
+      <div ref="statsRef" class="flex flex-wrap gap-6">
         <div
-          class="size-12 rounded-[10px] flex items-center justify-center"
-          :class="i % 2 === 0 ? 'bg-[rgba(150,136,207,0.08)]' : ''"
+          v-for="(stat, i) in stats"
+          :key="stat.label"
+          class="flex-1 min-w-[280px] border border-black/10 rounded-[14px] p-8 flex flex-col gap-4 bg-white"
         >
-          <SupaIcon :name="stat.icon" :ui="{ icon: 'size-6 text-foreground' }" />
+          <div
+            class="size-12 rounded-[10px] flex items-center justify-center"
+            :class="i % 2 === 0 ? 'bg-[rgba(150,136,207,0.08)]' : ''"
+          >
+            <SupaIcon :name="stat.icon" :ui="{ icon: 'size-6 text-foreground' }" />
+          </div>
+          <p class="text-4xl leading-10 font-medium text-black">{{ stat.value }}</p>
+          <p class="text-sm leading-5 text-black/50">{{ stat.label }}</p>
         </div>
-        <p class="text-4xl leading-10 font-medium text-black">{{ stat.value }}</p>
-        <p class="text-sm leading-5 text-black/50">{{ stat.label }}</p>
       </div>
     </section>
 
@@ -106,7 +113,7 @@ await load()
     >
       <div class="flex items-center justify-between gap-4">
         <h2 class="text-3xl leading-9 font-medium text-black">Today's Schedule</h2>
-        <NuxtLink class="text-sm text-primary underline underline-offset-2" to="/app/calendar">
+        <NuxtLink class="text-sm text-primary underline underline-offset-2" :to="resolveAppPath(ROUTES.CALENDAR)">
           View all
         </NuxtLink>
       </div>
@@ -167,7 +174,7 @@ await load()
       <div class="flex flex-col gap-4 pb-16">
         <div class="flex items-center justify-between gap-4">
           <h2 class="text-3xl leading-9 font-medium text-black">Notes for today's events</h2>
-          <NuxtLink class="text-sm text-primary underline underline-offset-2" to="/app/notes">
+          <NuxtLink class="text-sm text-primary underline underline-offset-2" :to="resolveAppPath(ROUTES.NOTES)">
             View all
           </NuxtLink>
         </div>

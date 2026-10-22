@@ -168,7 +168,7 @@ function eventsAt(day: number, hour: number) {
 
     <div
       ref="stage"
-      class="relative mx-auto mt-8 min-h-[220px] w-full max-w-[1180px] shrink overflow-hidden pt-4"
+      class="relative mx-auto mt-[3.75rem] min-h-[220px] w-full max-w-[1180px] shrink pt-4"
       :class="{ merged: mergeOn && merged, 'merge-on': mergeOn }"
     >
       <template v-if="mergeOn">

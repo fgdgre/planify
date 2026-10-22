@@ -1,3 +1,4 @@
+import { FunctionsHttpError } from '@supabase/supabase-js'
 import { useDb } from '@shared/api/supabase'
 import { useNotification } from "@features/notification";
 import { useGoogleCalendarStore } from "@features/integrations/google-calendar/stores/google-calendar";
@@ -15,6 +16,20 @@ export class EdgeFunctionError extends Error {
   }
 }
 
+/** Reads the status and the `{ error: code }` body the Edge Functions answer failures with. */
+async function toEdgeFunctionError({ context }: FunctionsHttpError): Promise<EdgeFunctionError> {
+  const response = context as Response
+  let payload: { error?: unknown } | null = null
+
+  try {
+    payload = await response.json()
+  } catch {
+    payload = null
+  }
+
+  return new EdgeFunctionError(response.status, typeof payload?.error === 'string' ? payload.error : 'request_failed')
+}
+
 type EdgeFunctionRequest = {
   method?: 'GET' | 'POST'
   query?: Record<string, string>
@@ -26,66 +41,28 @@ let inflightSync: Promise<boolean> | null = null
 
 export const useGoogleCalendar = () => {
   const supabase = useDb()
-  const config = useRuntimeConfig()
 
   const { showErrorToast } = useNotification()
   const googleCalendarStore = useGoogleCalendarStore()
 
-  // Reads the cached session. supabase-js refreshes it on its own only when the
-  // access token is about to expire, so on a healthy session this costs no
-  // network call. (`refreshSession()` forced a token rotation on every call.)
-  const getAccessToken = async () => {
-    const { data, error } = await supabase.auth.getSession()
-
-    if (error) {
-      console.error('Failed to read session:', error.message)
-    }
-
-    const token = data.session?.access_token
-
-    if (!token) {
-      throw new Error('No active session')
-    }
-
-    return token
-  }
-
+  /**
+   * Calls an Edge Function through the client, which adds the session's JWT and
+   * the API key itself (and, in demo mode, answers from memory). The client's
+   * `invoke` has no query option, so the query rides on the function name.
+   * HTTP failures surface as `EdgeFunctionError` carrying the server's `error` code.
+   */
   const callEdgeFunction = async <T = Record<string, unknown>>(
     name: string,
     { method = 'POST', query, body }: EdgeFunctionRequest = {},
   ): Promise<T> => {
-    if (!config.public.supabaseUrl) {
-      throw new Error('Missing public.supabaseUrl')
+    const path = query ? `${name}?${new URLSearchParams(query)}` : name
+    const { data, error } = await supabase.functions.invoke<T>(path, { method, body })
+
+    if (error) {
+      throw error instanceof FunctionsHttpError ? await toEdgeFunctionError(error) : error
     }
 
-    const accessToken = await getAccessToken()
-    const url = new URL(`${config.public.supabaseUrl}/functions/v1/${name}`)
-
-    for (const [key, value] of Object.entries(query ?? {})) {
-      url.searchParams.set(key, value)
-    }
-
-    const response = await fetch(url, {
-      method,
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        ...(body ? { 'Content-Type': 'application/json' } : {}),
-      },
-      body: body ? JSON.stringify(body) : undefined,
-    })
-
-    let payload: any = null
-    try {
-      payload = await response.json()
-    } catch {
-      payload = null
-    }
-
-    if (!response.ok) {
-      throw new EdgeFunctionError(response.status, typeof payload?.error === 'string' ? payload.error : 'request_failed')
-    }
-
-    return payload as T
+    return data as T
   }
 
   const connectGoogle = async () => {

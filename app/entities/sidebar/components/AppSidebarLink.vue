@@ -3,6 +3,9 @@
 import { tv } from 'tailwind-variants'
 import AppSidebarItemIcon from "./AppSidebarItemIcon.vue";
 import { sidebarVariants } from '@shared/ui/sidebar'
+import { resolveAppPath } from '@shared/api/demo'
+import { ROUTES } from '@shared/constants/routes'
+import { isSidebarLinkActive } from '../helpers/is-link-active'
 
 const props = defineProps<{
   name: string
@@ -17,12 +20,14 @@ const props = defineProps<{
 
 const sidebarGroupItem = computed(() => tv({ extend: sidebarVariants.groupItem }))
 
-const isActive = computed(() => useRoute().path.includes(props.link))
+const target = computed(() => resolveAppPath(props.link))
+const route = useRoute()
+const isActive = computed(() => isSidebarLinkActive(route.path, target.value, resolveAppPath(ROUTES.HOME)))
 </script>
 
 
 <template>
-  <NuxtLink :class="[sidebarGroupItem({ subListItem, activeItem: isActive, wrap })]" :to="link" :data-testid="testId">
+  <NuxtLink :class="[sidebarGroupItem({ subListItem, activeItem: isActive, wrap })]" :to="target" :data-testid="testId">
     <AppSidebarItemIcon v-if="icon || defaultIcon" :icon />
 
     <p class="py-1">

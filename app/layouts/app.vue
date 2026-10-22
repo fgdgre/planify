@@ -2,10 +2,14 @@
 import { useAppSidebar, AppSidebar } from "@entities/sidebar";
 import EventSidebar from '@entities/calendar/components/EventSidebar.vue'
 import NoteSidebar from '@features/notes/components/NoteSidebar.vue'
+import { useTourTarget } from '@shared/api/demo'
 
 const route = useRoute()
 
 const layoutTitle = computed(() => route.meta.title)
+
+const mainRef = useTemplateRef('mainRef')
+useTourTarget('pageContent', mainRef)
 
 const sidebarStore = useAppSidebar()
 const { isSidebarCollapsed } = storeToRefs(sidebarStore)
@@ -20,7 +24,7 @@ const { isSidebarCollapsed } = storeToRefs(sidebarStore)
     <EventSidebar />
     <NoteSidebar />
 
-    <main class="main pl-[var(--sidebar-width)]">
+    <main ref="mainRef" class="main pl-[var(--sidebar-width)]">
       <div class="flex items-center justify-between gap-4 p-4 border-b border-border">
         <h1 class="text-2xl font-medium">{{ layoutTitle }}</h1>
         <div id="page-header-actions" class="flex items-center gap-2" />

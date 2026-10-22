@@ -84,9 +84,67 @@ jobs:
       - name: Run Deno tests (shared OAuth state, origin allow-list, CORS, HTTP helpers)
         run: deno test --no-lock supabase/functions/_shared/
 
+  landing-demo-e2e:
+    name: E2E (landing demo + auth, production build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # The landing demo needs no Supabase: it runs on a fake client. The build only
+      # needs the public config to be present, so harmless placeholders are enough
+      # (nothing is ever requested from them; the e2e fails on any *.supabase.co call).
+      - name: Generate static site
+        env:
+          NUXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NUXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+        run: pnpm exec nuxt generate
+
+      - name: Verify CSP hashes were injected
+        run: |
+          grep -q "sha256-" .output/public/_headers || (echo "::error::CSP inline script hash was not injected into _headers" && exit 1)
+
+      # The demo (fake backend, tour director, calendar/editor code) must stay in lazy
+      # chunks: the entry chunk is what every visitor downloads before first paint.
+      - name: Entry chunk size budget
+        run: |
+          entry=$(grep -o '/_nuxt/[^"]*\.js' .output/public/index.html | head -n 1)
+          size=$(wc -c < ".output/public${entry}")
+          echo "Entry chunk ${entry}: ${size} bytes (budget 665600)"
+          test "$size" -le 665600 || (echo "::error::Entry JS chunk is ${size} bytes, over the 650 KB budget. Did demo or heavy code leak into the entry bundle?" && exit 1)
+
+      # playwright.config.ts starts scripts/serve-with-headers.mjs, which applies the
+      # real _headers (CSP, sandbox framing, CORS), so this is what production serves.
+      - name: Run e2e tests against the production build
+        env:
+          E2E_STATIC: '1'
+        run: pnpm exec playwright test
+
+      - name: Upload Playwright traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
+
   deploy:
     name: Deploy to Netlify
-    needs: [typecheck, unit-tests, edge-functions]
+    needs: [typecheck, unit-tests, edge-functions, landing-demo-e2e]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:

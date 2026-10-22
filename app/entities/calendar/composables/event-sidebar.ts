@@ -1,9 +1,11 @@
 import { useDb } from '@shared/api/supabase'
 import { useStorage } from '@vueuse/core'
+import { getSafeStorage } from '@shared/lib/safe-storage'
 import { useUserStore } from '@features/auth'
 import { useNotes, type Note } from '@features/notes'
 import { mapCalendarEventRowToDisplay } from '../helpers'
 import { useCalendar } from './calendar'
+import { eventSidebarControls, registerControls } from './tour-controls'
 import { useInternalEvents } from './useInternalEvents'
 import type { CalendarEventDisplay } from '../types'
 
@@ -125,8 +127,8 @@ export const useEventSidebar = () => {
   const { fetchEvents } = useCalendar()
   const { createNote, updateNote, deleteNote } = useNotes()
 
-  const drafts = useStorage<Record<string, EventSidebarDraft>>('planify:event-sidebar-drafts', {})
-  const noteDrafts = useStorage<Record<string, EventSidebarNoteDraft>>('planify:event-sidebar-note-drafts', {})
+  const drafts = useStorage<Record<string, EventSidebarDraft>>('planify:event-sidebar-drafts', {}, getSafeStorage())
+  const noteDrafts = useStorage<Record<string, EventSidebarNoteDraft>>('planify:event-sidebar-note-drafts', {}, getSafeStorage())
 
   const isOpen = ref(false)
   const loading = ref(false)
@@ -738,6 +740,16 @@ export const useEventSidebar = () => {
     if (!open && activeMode.value) {
       closeSidebar()
     }
+  })
+
+  registerControls(eventSidebarControls, {
+    get mode() { return activeMode.value },
+    get selectedEvent() { return selectedEvent.value },
+    get eventNotes() { return eventNotes.value },
+    get saving() { return saving.value },
+    setTitle: (title: string) => { formData.value.title = title },
+    submit: handleSubmit,
+    openNote,
   })
 
   return {

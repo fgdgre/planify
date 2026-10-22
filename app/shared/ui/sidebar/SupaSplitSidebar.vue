@@ -1,5 +1,10 @@
 <script setup lang="ts">
+import { useTourTarget } from '@shared/api/demo'
+
 const isOpen = defineModel<boolean>()
+
+const submitButton = useTemplateRef('submitButton')
+useTourTarget('sidebarSubmit', submitButton)
 
 withDefaults(
   defineProps<{
@@ -99,7 +104,7 @@ defineEmits<{
     <template v-if="showFooter || $slots.footer" #footer>
       <slot name="footer">
         <div class="flex w-full justify-end gap-2">
-          <SupaButton color="primary" :loading="saving" @click="$emit('submit')">
+          <SupaButton ref="submitButton" color="primary" :loading="saving" @click="$emit('submit')">
             {{ submitLabel }}
           </SupaButton>
           <SupaButton variant="transparent" @click="$emit('cancel')">

@@ -17,6 +17,10 @@ import { useCalendarStore, ACCOUNT_COLORS, INTERNAL_CALENDAR_COLOR } from '../st
 import { useCalendar } from './calendar'
 import { useInternalEvents } from './useInternalEvents'
 import { mapToScheduleXEvent } from '../helpers'
+import { scrollToWorkingHoursWhenRendered } from '../helpers/scroll'
+import { findEventElement, findSlotPoint } from '../helpers/tour-geometry'
+import { showWeekView } from '../helpers/view'
+import { calendarControls, registerControls } from './tour-controls'
 import { useGoogleCalendarStore, useGoogleCalendar } from '@features/integrations/google-calendar'
 import { useUserStore } from '@features/auth/stores/user'
 import { useSettingsStore } from '@features/settings'
@@ -83,18 +87,16 @@ export const useCalendarApp = () => {
     eventAllDay: String(prefill.all_day),
   })
 
+  // Opens the time grid on working hours. Called only on first render and when
+  // the view/date changes, so the user's own scrolling is left alone.
+  const calendarRoot = (): HTMLElement | undefined => (calendarApp as any).$app?.elements.calendarWrapper
+
+  const scrollToWorkingHours = () => scrollToWorkingHoursWhenRendered(calendarRoot)
+
   const buildCalendarsConfig = () => {
     const accounts = googleCalendarStore.accounts
     const prefs = settingsStore.preferences
-    const config: Record<string, any> = {
-      dayBoundaries: {
-        start: '06:00',
-        end: '18:00',
-      },
-      weekOptions: {
-        eventWidth: 95,
-      },
-    }
+    const config: Record<string, any> = {}
 
     const userId = userStore.user?.id
     if (userId) {
@@ -111,6 +113,9 @@ export const useCalendarApp = () => {
   const calendarApp = createCalendar({
     selectedDate: Temporal.PlainDate.from(Temporal.Now.plainDateISO().toString()),
     calendars: buildCalendarsConfig(),
+    // Full day on purpose: events outside business hours must stay reachable.
+    // The grid is scrolled to working hours instead (see scrollToWorkingHours).
+    dayBoundaries: { start: '00:00', end: '24:00' },
     weekOptions: {
       eventWidth: 95,
     },
@@ -123,8 +128,12 @@ export const useCalendarApp = () => {
     ],
     events: [],
     callbacks: {
+      onRender() {
+        scrollToWorkingHours()
+      },
       onRangeUpdate(range) {
         loadViewEvents(range)
+        scrollToWorkingHours()
       },
       onEventClick(event) {
         const storeEvent = events.value.find((e) => e.id === String(event.id))
@@ -244,6 +253,12 @@ export const useCalendarApp = () => {
       isRefreshing.value = false
     }
   }
+
+  registerControls(calendarControls, {
+    showCurrentWeek: () => showWeekView(calendarApp, Temporal.Now.plainDateISO()),
+    slotPoint: (date) => findSlotPoint(calendarRoot(), date),
+    eventElement: (id) => findEventElement(calendarRoot(), id),
+  })
 
   return { calendarApp, goToDate, openEventView, refreshEvents, isRefreshing }
 }

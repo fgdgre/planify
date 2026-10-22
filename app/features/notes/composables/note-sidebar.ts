@@ -1,5 +1,6 @@
 import { useDb } from '@shared/api/supabase'
 import { useStorage } from '@vueuse/core'
+import { getSafeStorage } from '@shared/lib/safe-storage'
 import { useUserStore } from '@features/auth'
 import { mapCalendarEventRowToDisplay } from '@entities/calendar/helpers'
 import type { CalendarEventDisplay } from '@entities/calendar'
@@ -28,7 +29,7 @@ export const useNoteSidebar = () => {
   const userStore = useUserStore()
   const { fetchNoteById, createNote, updateNote } = useNotes()
 
-  const drafts = useStorage<Record<string, NoteSidebarDraft>>('planify:note-sidebar-drafts', {})
+  const drafts = useStorage<Record<string, NoteSidebarDraft>>('planify:note-sidebar-drafts', {}, getSafeStorage())
 
   const isOpen = ref(false)
   const loading = ref(false)
