@@ -24,7 +24,7 @@ const ctaShown = useReveal(cta)
 
   <footer class="flex flex-col items-center justify-between gap-3 border-t border-border px-5 pt-6 pb-8 text-[13px] text-placeholder tablet:flex-row tablet:px-10">
     <span class="flex items-center gap-2 text-[15px] font-semibold text-foreground">
-      <span class="inline-block size-[22px] rounded-md bg-primary" />
+      <SupaLogo class="size-[22px]" />
       Planify
     </span>
     <span class="flex gap-4">
