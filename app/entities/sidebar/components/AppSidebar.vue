@@ -106,7 +106,7 @@ const sidebarFooterWrapper = computed(() =>
           @link-click="$emit('linkClicked')"
           @toggle-section="(e) => $emit('toggleSection', e)"
         />
-        <AppSidebarCalendars />
+        <AppSidebarCalendars :collapsed="isSidebarCollapsed && (!isSidebarHovered || !showOnHover)" />
       </div>
     </div>
     <footer :class="[sidebarFooterWrapper({ open: isSidebarCollapsed && (!isSidebarHovered || !showOnHover) })]">
