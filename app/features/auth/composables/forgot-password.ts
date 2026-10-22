@@ -1,3 +1,4 @@
+import { useDb } from '@shared/api/supabase'
 import {
   validateField,
   validateForm,
@@ -8,7 +9,7 @@ import { ROUTES } from "@shared/constants/routes";
 import { useNotification } from "@features/notification";
 
 export const useForgotPassword = () => {
-  const supabase = useSupabaseClient()
+  const supabase = useDb()
   const { showSuccessToast, showErrorToast } = useNotification()
 
   const loading = ref(false)

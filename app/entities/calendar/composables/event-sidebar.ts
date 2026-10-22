@@ -1,3 +1,4 @@
+import { useDb } from '@shared/api/supabase'
 import { useStorage } from '@vueuse/core'
 import { useUserStore } from '@features/auth'
 import { useNotes, type Note } from '@features/notes'
@@ -5,7 +6,6 @@ import { mapCalendarEventRowToDisplay } from '../helpers'
 import { useCalendar } from './calendar'
 import { useInternalEvents } from './useInternalEvents'
 import type { CalendarEventDisplay } from '../types'
-import type { Database } from '@shared/api/supabase/types/database'
 
 type EventSidebarMode = 'view' | 'edit' | 'create'
 
@@ -119,7 +119,7 @@ const draftToFormData = (draft: EventSidebarDraft): EventSidebarFormData => ({
 export const useEventSidebar = () => {
   const route = useRoute()
   const router = useRouter()
-  const supabase = useSupabaseClient<Database>()
+  const supabase = useDb()
   const userStore = useUserStore()
   const { createEvent, updateEvent, deleteEvent } = useInternalEvents()
   const { fetchEvents } = useCalendar()

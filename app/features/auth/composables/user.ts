@@ -1,5 +1,7 @@
+import { useDb } from '@shared/api/supabase'
+
 export const getUser = async () => {
-  const supabase = useSupabaseClient()
+  const supabase = useDb()
 
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
 

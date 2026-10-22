@@ -1,3 +1,4 @@
+import { useDb } from '@shared/api/supabase'
 import { useCalendarStore } from '../stores/calendar'
 import { groupEventsBySource } from '../helpers/events'
 import { useGoogleCalendarStore } from '@features/integrations/google-calendar'
@@ -5,7 +6,6 @@ import { useUserStore } from '@features/auth/stores/user'
 import { useNotification } from '@features/notification'
 import type { CalendarEventDisplay, ViewDateRange } from '../types'
 import type { CalendarEvent } from '@features/integrations/google-calendar'
-import type { Database } from '@shared/api/supabase/types/database'
 
 const mapEventToDisplay = (event: CalendarEvent): CalendarEventDisplay => ({
   id: event.id,
@@ -22,7 +22,7 @@ const mapEventToDisplay = (event: CalendarEvent): CalendarEventDisplay => ({
 })
 
 export const useCalendar = () => {
-  const supabase = useSupabaseClient<Database>()
+  const supabase = useDb()
   const calendarStore = useCalendarStore()
   const googleCalendarStore = useGoogleCalendarStore()
   const userStore = useUserStore()
