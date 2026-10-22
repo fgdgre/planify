@@ -103,7 +103,7 @@ test.describe('Landing demo', () => {
     await page.goto('/')
     await scrollToStep(page, 1)
     await page.waitForTimeout(500)
-    const height = 900
+    const height = page.viewportSize()!.height
 
     const down = await sampleStepSwap(page, () => scrollToStep(page, 2))
     const incoming = down.frames.filter((f) => f.incoming).map((f) => f.incoming!)

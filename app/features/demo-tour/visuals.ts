@@ -118,6 +118,13 @@ export function createTourVisuals(reducedMotion: boolean): { state: OverlayState
 
     fadeContent(element, visible, ms) {
       if (reducedMotion) return
+      // An instant "show" is a restore: drop the inline styles instead of pinning opacity: 1 on the page.
+      if (visible && ms === 0) {
+        element.style.opacity = ''
+        element.style.transition = ''
+        if (fadedElement === element) fadedElement = null
+        return
+      }
       fadedElement = element
       element.style.transition = `opacity ${ms}ms ease`
       element.style.opacity = visible ? '1' : '0'
