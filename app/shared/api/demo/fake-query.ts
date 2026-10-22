@@ -12,6 +12,8 @@ export type FakeTable = {
   /** Column values the database would fill in for a new row. Caller values win. */
   defaults: () => Row
   rows: Row[]
+  /** Called after rows were deleted, so the table can emulate the foreign keys that point at it. */
+  onDelete?: (removed: Row[]) => void
 }
 
 export type FakeError = { message: string; code: string; details: string | null; hint: string | null }
@@ -226,6 +228,7 @@ export class FakeQueryBuilder implements PromiseLike<FakeResult> {
       case 'delete': {
         const rows = this.matching()
         this.table.rows = this.table.rows.filter((row) => !rows.includes(row))
+        this.table.onDelete?.(rows)
         return rows
       }
     }

@@ -7,15 +7,16 @@ import {
 import { useUserStore } from '@features/auth/stores/user'
 import { useSettings } from '@features/settings/composables/settings'
 import { useNotification } from '@features/notification'
+import { isDemoMode } from '@shared/api/demo'
 
 const GOOGLE_QUERY_KEYS = ['google_code', 'google_state', 'google_error', 'google_connected'] as const
 
 export const useSettingsPage = () => {
   const route = useRoute()
   const router = useRouter()
-  const { connectGoogle, completeGoogleConnection, fetchConnectedAccounts, deleteAccount, syncAllAccounts } = useGoogleCalendar()
+  const { connectGoogle: startGoogleConnection, completeGoogleConnection, fetchConnectedAccounts, deleteAccount, syncAllAccounts } = useGoogleCalendar()
   const { getUserPreferences, syncAccountColors } = useSettings()
-  const { showSuccessToast, showErrorToast } = useNotification()
+  const { showToast, showSuccessToast, showErrorToast } = useNotification()
   const googleCalendarStore = useGoogleCalendarStore()
   const userStore = useUserStore()
   const { accounts, isLoading } = storeToRefs(googleCalendarStore)
@@ -69,6 +70,16 @@ export const useSettingsPage = () => {
       showErrorToast({ title: 'Google account not connected', description: getGoogleConnectErrorMessage(codeFromFunction) })
       return false
     }
+  }
+
+  /** The demo has no real Google to send the visitor to, so say so instead of failing quietly. */
+  const connectGoogle = async () => {
+    if (isDemoMode()) {
+      showToast({ title: "Connecting accounts isn't available in the demo", color: 'primary', duration: 3000, showProgress: true })
+      return
+    }
+
+    await startGoogleConnection()
   }
 
   onMounted(async () => {

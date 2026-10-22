@@ -18,7 +18,7 @@ const newId = () => crypto.randomUUID()
 function createTables(seed: DemoSeed): Record<string, FakeTable> {
   const now = () => new Date().toISOString()
 
-  return {
+  const tables: Record<string, FakeTable> = {
     calendar_events: {
       primaryKey: 'id',
       rows: seed.calendar_events,
@@ -42,6 +42,13 @@ function createTables(seed: DemoSeed): Record<string, FakeTable> {
           updated_at_google: null,
           synced_at: now(),
         }) satisfies Omit<Tables['calendar_events']['Row'], 'start_at' | 'end_at'>,
+      // notes.calendar_event_id: a deleted event leaves its notes behind, unlinked.
+      onDelete: (removed) => {
+        const ids = removed.map((event) => event.id)
+        tables.notes!.rows.forEach((note) => {
+          if (ids.includes(note.calendar_event_id)) note.calendar_event_id = null
+        })
+      },
     },
     notes: {
       primaryKey: 'id',
@@ -81,8 +88,18 @@ function createTables(seed: DemoSeed): Record<string, FakeTable> {
           created_at: now(),
           updated_at: now(),
         }) satisfies Omit<Tables['google_accounts']['Row'], 'access_token' | 'refresh_token' | 'email' | 'expires_at' | 'google_user_id'>,
+      // calendar_events.google_account_id: a removed account takes its events with it.
+      onDelete: (removed) => {
+        const events = tables.calendar_events!
+        const ids = removed.map((account) => account.id)
+        const gone = events.rows.filter((event) => ids.includes(event.google_account_id))
+        events.rows = events.rows.filter((event) => !gone.includes(event))
+        events.onDelete?.(gone)
+      },
     },
   }
+
+  return tables
 }
 
 const unavailable = async () => ({ data: { user: null, session: null }, error: NOT_AVAILABLE })

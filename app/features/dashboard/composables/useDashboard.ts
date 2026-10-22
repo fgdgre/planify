@@ -1,3 +1,4 @@
+import { ROUTES } from '@shared/constants/routes'
 import { useDb } from '@shared/api/supabase'
 import {
   useGoogleCalendarStore,
@@ -222,11 +223,11 @@ export const useDashboard = () => {
     })
   }
 
-  const goCalendar = () => router.push('/app/calendar')
+  const goCalendar = () => router.push(ROUTES.CALENDAR)
 
   const openCreateNote = async () => {
     await router.push({
-      path: '/app/notes',
+      path: ROUTES.NOTES,
       query: {
         ...route.query,
         noteAction: 'create',

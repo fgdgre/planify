@@ -237,3 +237,42 @@ describe('fake query builder: writing', () => {
     expect(stored?.title).toBe('ref')
   })
 })
+
+describe('fake database: foreign keys', () => {
+  const event = (id: string, google_account_id: string | null) => ({ id, google_account_id, start_at: '2026-10-22T09:00:00Z', end_at: '2026-10-22T10:00:00Z' })
+
+  const makeLinkedClient = () =>
+    createFakeClient({
+      calendar_events: [event('e1', 'a1'), event('e2', 'a2'), event('e3', null)] as never,
+      google_accounts: [{ id: 'a1' }, { id: 'a2' }] as never,
+      settings: [],
+      notes: [
+        note({ id: 'n1', title: 'on e1', calendar_event_id: 'e1' }),
+        note({ id: 'n2', title: 'on e2', calendar_event_id: 'e2' }),
+        note({ id: 'n3', title: 'free' }),
+      ],
+    })
+
+  it('deleting an event unlinks its notes but keeps them', async () => {
+    const db = makeLinkedClient()
+    await db.from('calendar_events').delete().eq('id', 'e1')
+
+    const { data } = await db.from('notes').select('id, calendar_event_id').order('id')
+    expect(data).toEqual([
+      { id: 'n1', calendar_event_id: null },
+      { id: 'n2', calendar_event_id: 'e2' },
+      { id: 'n3', calendar_event_id: null },
+    ])
+  })
+
+  it('deleting an account removes its events and unlinks their notes', async () => {
+    const db = makeLinkedClient()
+    await db.from('google_accounts').delete().eq('id', 'a1')
+
+    const { data: events } = await db.from('calendar_events').select('id').order('id')
+    expect(events).toEqual([{ id: 'e2' }, { id: 'e3' }])
+
+    const { data: notes } = await db.from('notes').select('id, calendar_event_id').eq('id', 'n1').single()
+    expect(notes?.calendar_event_id).toBeNull()
+  })
+})
