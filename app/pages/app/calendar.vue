@@ -31,7 +31,7 @@ const handleSearchSelect = (event: CalendarEventDisplay) => {
     />
   </Teleport>
 
-  <div class="flex-1 overflow-auto">
+  <div class="flex-1 min-h-0 overflow-hidden">
     <ScheduleXCalendar :calendar-app="calendarApp" />
   </div>
 </template>
@@ -39,6 +39,12 @@ const handleSearchSelect = (event: CalendarEventDisplay) => {
 <style scoped>
 :deep(.sx__calendar) {
   border: 0 !important;
+}
+
+/* Give Schedule-X a bounded height so its own view container scrolls the grid
+   and the calendar header and week header stay in view. */
+:deep(.sx-vue-calendar-wrapper) {
+  height: 100%;
 }
 
 :deep(.sx__time-grid-event.is-event-copy),
