@@ -40,11 +40,15 @@ watch(
  * `--rise` is the distance from the pinned top (14vh, see LandingDemo) to the
  * bottom of the viewport, less room for the block itself.
  */
-.step-forward-enter-active,
-.step-back-enter-active {
+.step-forward-enter-active {
   --rise: calc(100vh - 14vh - 13rem);
 
-  /* The fade-in waits a beat so the outgoing block is mostly gone before the new one shows. */
+  /* Visible almost at once, so the whole climb from the bottom edge can be seen. */
+  transition: opacity 0.4s ease, transform 0.9s cubic-bezier(0.25, 0.7, 0.3, 1);
+}
+
+.step-back-enter-active {
+  /* The fade-in waits a beat so the block dropping out is mostly gone before the new one shows. */
   transition: opacity 0.45s ease 0.15s, transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 

@@ -68,7 +68,62 @@ async function openDemo(page: Page): Promise<FrameLocator> {
 
 test.use({ viewport: { width: 1440, height: 900 } })
 
+interface SwapFrame {
+  incoming?: { top: number; opacity: number }
+  outgoing?: { top: number; opacity: number }
+}
+
+/** Samples the visible (desktop) step title of the incoming/outgoing blocks every animation frame while `scroll` runs. */
+async function sampleStepSwap(page: Page, scroll: () => Promise<void>): Promise<{ frames: SwapFrame[]; settledTop: number }> {
+  await page.evaluate(() => {
+    const frames: SwapFrame[] = []
+    ;(window as unknown as { __swap: SwapFrame[] }).__swap = frames
+    const read = (selector: string) => {
+      const heading = [...document.querySelectorAll<HTMLElement>(`#demo ${selector} h3`)].find((h) => h.getClientRects().length > 0)
+      const block = heading?.closest<HTMLElement>('.absolute')
+      return heading && block ? { top: heading.getBoundingClientRect().top, opacity: Number(getComputedStyle(block).opacity) } : undefined
+    }
+    const tick = () => {
+      frames.push({ incoming: read('[class*="step-"][class*="-enter-"]'), outgoing: read('[class*="step-"][class*="-leave-"]') })
+      requestAnimationFrame(tick)
+    }
+    tick()
+  })
+  await scroll()
+  await page.waitForTimeout(1500)
+  return page.evaluate(() => {
+    const frames = (window as unknown as { __swap: SwapFrame[] }).__swap.filter((f) => f.incoming || f.outgoing)
+    const settled = [...document.querySelectorAll<HTMLElement>('#demo h3')].filter((h) => h.getClientRects().length > 0 && !h.closest('.invisible') && h.closest('.absolute'))
+    return { frames, settledTop: settled[0]!.getBoundingClientRect().top }
+  })
+}
+
 test.describe('Landing demo', () => {
+  test('the step text rises from the bottom of the screen when scrolling down and comes from above when scrolling up', async ({ page }) => {
+    await page.goto('/')
+    await scrollToStep(page, 1)
+    await page.waitForTimeout(500)
+    const height = 900
+
+    const down = await sampleStepSwap(page, () => scrollToStep(page, 2))
+    const incoming = down.frames.filter((f) => f.incoming).map((f) => f.incoming!)
+    expect(incoming[0]!.top).toBeGreaterThanOrEqual(height * 0.75)
+    expect(incoming[0]!.opacity).toBeLessThan(0.5)
+    expect(incoming.at(-1)!.top).toBeCloseTo(down.settledTop, -1)
+    // It only ever travels up, and the old block leaves upwards and fades out.
+    incoming.slice(1).forEach((frame, i) => expect(frame.top).toBeLessThanOrEqual(incoming[i]!.top + 0.5))
+    const outgoing = down.frames.filter((f) => f.outgoing).map((f) => f.outgoing!)
+    expect(outgoing.at(-1)!.top).toBeLessThan(outgoing[0]!.top)
+    expect(Math.min(...outgoing.map((o) => o.opacity))).toBeLessThan(0.1)
+
+    const up = await sampleStepSwap(page, () => scrollToStep(page, 1))
+    const back = up.frames.filter((f) => f.incoming).map((f) => f.incoming!)
+    expect(back[0]!.top).toBeLessThan(up.settledTop - 20)
+    expect(back.at(-1)!.top).toBeCloseTo(up.settledTop, -1)
+    const leaving = up.frames.filter((f) => f.outgoing).map((f) => f.outgoing!)
+    expect(leaving.at(-1)!.top).toBeGreaterThan(leaving[0]!.top)
+  })
+
   test('walks the whole tour inside the sandboxed iframe without errors', async ({ page }) => {
     test.setTimeout(120_000)
 
