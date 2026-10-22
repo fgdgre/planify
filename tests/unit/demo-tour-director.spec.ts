@@ -36,7 +36,7 @@ function setup({ events = [standup], reducedMotion = true, withTargets = true } 
   const sent: DemoMessageBody[] = []
   const typedTitles: string[] = []
   const targetElements = Object.fromEntries(
-    ['calendarGrid', 'searchBox', 'searchResults', 'sidebarSubmit', 'eventNotes', 'dashboardNav', 'statsRow'].map((name) => [name, fakeElement(name)]),
+    ['calendarGrid', 'searchBox', 'searchResults', 'sidebarSubmit', 'eventNotes', 'dashboardNav', 'statsRow', 'pageContent'].map((name) => [name, fakeElement(name)]),
   )
   const searchQueries: string[] = []
   const viewRange = { start: new Date(2026, 9, 19).toISOString(), end: new Date(2026, 9, 26).toISOString() }
@@ -63,6 +63,7 @@ function setup({ events = [standup], reducedMotion = true, withTargets = true } 
     glow: vi.fn((el: HTMLElement) => mark(`glow:${el.dataset.name}`)),
     clearGlow: vi.fn(() => mark('clear-glow')),
     pulse: vi.fn((el: HTMLElement) => mark(`pulse:${el.dataset.name}`)),
+    fadeContent: vi.fn((el: HTMLElement, visible: boolean) => mark(`fade:${el.dataset.name}:${visible ? 'in' : 'out'}`)),
     hide: vi.fn(() => mark('hide')),
   }
 
@@ -303,12 +304,12 @@ describe('choreography', () => {
   const withoutKeystrokes = (log: string[]) => log.filter((entry) => !entry.startsWith('type:') || entry === 'type:C' || entry === 'type:Client call')
   const at = (timeline: Array<{ entry: string; at: number }>, entry: string) => timeline.find((t) => t.entry === entry)!.at
 
-  it('step 1 settles on the week, then rings the grid', async () => {
+  it('step 1 only settles on the week view', async () => {
     const { step, log, sent } = setup({ reducedMotion: false })
     step(1)
     await vi.runAllTimersAsync()
 
-    expect(log).toEqual(['clear-glow', 'navigate:/demo/calendar', 'glow:calendarGrid'])
+    expect(log).toEqual(['clear-glow', 'navigate:/demo/calendar'])
     expect(sent).toEqual([{ type: 'step-done', step: 1 }])
   })
 
@@ -404,12 +405,21 @@ describe('choreography', () => {
     ])
   })
 
-  it('step 5 goes through the dashboard nav item and rings the stats', async () => {
+  it('step 5 clicks the dashboard nav item, cross-fades the page around the route change and rings the stats', async () => {
     const { step, log } = setup({ reducedMotion: false })
     step(5)
     await vi.runAllTimersAsync()
 
-    expect(log).toEqual(['clear-glow', 'cursor:120,110', 'ripple', 'navigate:/demo', 'glow:statsRow'])
+    expect(log).toEqual([
+      'clear-glow',
+      'cursor:120,110',
+      'ripple',
+      'fade:pageContent:out',
+      'navigate:/demo',
+      'fade:pageContent:in',
+      'glow:statsRow',
+      'fade:pageContent:in',
+    ])
   })
 
   it('still performs every action when there is nothing to point at', async () => {

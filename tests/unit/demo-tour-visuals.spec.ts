@@ -11,6 +11,23 @@ beforeEach(() => vi.useFakeTimers())
 afterEach(() => vi.useRealTimers())
 
 describe('tour visuals', () => {
+  it('fades content and puts it back on hide', () => {
+    const { visuals } = createTourVisuals(false)
+    const el = element()
+    visuals.fadeContent(el, false, 150)
+    expect(el.style.opacity).toBe('0')
+
+    visuals.hide()
+    expect(el.style.opacity).toBe('')
+  })
+
+  it('does not fade content with reduced motion', () => {
+    const { visuals } = createTourVisuals(true)
+    const el = element()
+    visuals.fadeContent(el, false, 150)
+    expect(el.style.opacity).toBe('')
+  })
+
   it('shows the cursor at the point it is sent to', () => {
     const { state, visuals } = createTourVisuals(false)
     expect(state.cursor.visible).toBe(false)
@@ -34,7 +51,7 @@ describe('tour visuals', () => {
     const { state, visuals } = createTourVisuals(false)
     visuals.glow(element(10, 20, 100, 40))
 
-    expect(state.glow).toEqual({ x: 4, y: 14, width: 112, height: 52, visible: true })
+    expect(state.glow).toEqual({ x: 4, y: 12, width: 114, height: 56, visible: true })
     visuals.clearGlow()
     expect(state.glow?.visible).toBe(false)
   })

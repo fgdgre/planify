@@ -36,13 +36,15 @@ export interface TourVisuals {
   clearGlow: () => void
   /** One-off attention ring around a freshly created element. */
   pulse: (element: HTMLElement) => void
+  /** Fades an element to fully visible or invisible; `hide` puts it back. No-op with reduced motion. */
+  fadeContent: (element: HTMLElement, visible: boolean, ms: number) => void
   /** Hides cursor, glow and rings at once (the visitor took over). */
   hide: () => void
 }
 
 const RIPPLE_MS = 650
 const PULSE_MS = 1100
-const GLOW_PADDING = 6
+const GLOW_PADDING = 8
 const EDGE_MARGIN = 4
 
 /** Where the cursor first appears: low on the right, out of the way of the content. */
@@ -73,6 +75,7 @@ export function createTourVisuals(reducedMotion: boolean): { state: OverlayState
   })
 
   let nextId = 0
+  let fadedElement: HTMLElement | null = null
   const timers = new Set<ReturnType<typeof setTimeout>>()
 
   const expireLater = (ms: number, remove: () => void) => {
@@ -113,7 +116,19 @@ export function createTourVisuals(reducedMotion: boolean): { state: OverlayState
       expireLater(PULSE_MS, () => { state.pulses = state.pulses.filter((p) => p.id !== pulse.id) })
     },
 
+    fadeContent(element, visible, ms) {
+      if (reducedMotion) return
+      fadedElement = element
+      element.style.transition = `opacity ${ms}ms ease`
+      element.style.opacity = visible ? '1' : '0'
+    },
+
     hide() {
+      if (fadedElement) {
+        fadedElement.style.opacity = ''
+        fadedElement.style.transition = ''
+        fadedElement = null
+      }
       timers.forEach(clearTimeout)
       timers.clear()
       state.cursor.visible = false

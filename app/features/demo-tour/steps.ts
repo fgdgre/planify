@@ -11,6 +11,8 @@ import {
   AFTER_SAVE_MS,
   BEFORE_SAVE_MS,
   CLOSE_SETTLE_MS,
+  PAGE_FADE_IN_MS,
+  PAGE_FADE_OUT_MS,
   SIDEBAR_SETTLE_MS,
   STEP_SETTLE_MS,
   typeText,
@@ -139,11 +141,10 @@ async function pulseEvent(env: TourEnv, id: string): Promise<void> {
 }
 
 const steps: Record<TourStep, (env: TourEnv) => Promise<void>> = {
-  /** The unified week grid, ringed so the eye knows where to look. */
+  /** The unified week grid: the tour only settles on it. */
   1: async (env) => {
     await showWeekView(env)
     await beat(STEP_SETTLE_MS, env)
-    await highlight(env, await findOptional(() => env.target('calendarGrid'), env))
   },
 
   /**
@@ -223,7 +224,10 @@ const steps: Record<TourStep, (env: TourEnv) => Promise<void>> = {
     await highlight(env, await findOptional(() => env.target('searchResults'), env))
   },
 
-  /** Goes to the dashboard through its nav item and rings the stats. */
+  /**
+   * Goes to the dashboard through its nav item. The page content cross-fades
+   * around the route change so the swap never looks like a lag followed by a jump.
+   */
   5: async (env) => {
     env.searchBox()?.setQuery('')
     await closeSidebars(env)
@@ -231,9 +235,25 @@ const steps: Record<TourStep, (env: TourEnv) => Promise<void>> = {
 
     await glideTo(env, await findOptional(() => env.target('dashboardNav'), env))
     await click(env)
-    await env.navigate({ path: resolveAppPath(ROUTES.HOME), query: {} })
 
-    await highlight(env, await findOptional(() => env.target('statsRow'), env, 4000))
+    const content = env.target('pageContent')
+    try {
+      if (content) {
+        env.visuals.fadeContent(content, false, PAGE_FADE_OUT_MS)
+        await beat(PAGE_FADE_OUT_MS, env)
+      }
+
+      await env.navigate({ path: resolveAppPath(ROUTES.HOME), query: {} })
+      const stats = await findOptional(() => env.target('statsRow'), env, 4000)
+
+      if (content) {
+        env.visuals.fadeContent(content, true, PAGE_FADE_IN_MS)
+        await beat(PAGE_FADE_IN_MS, env)
+      }
+      await highlight(env, stats)
+    } finally {
+      if (content) env.visuals.fadeContent(content, true, 0)
+    }
   },
 }
 

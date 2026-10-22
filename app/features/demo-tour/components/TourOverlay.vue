@@ -69,7 +69,7 @@ const travel = `${CURSOR_TRAVEL_MS}ms`
   position: absolute;
   top: 0;
   left: 0;
-  border-radius: 12px;
+  border-radius: 16px;
   opacity: 0;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary, #9688cf) 70%, transparent), 0 0 28px 6px color-mix(in srgb, var(--primary, #9688cf) 40%, transparent);
   transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.35s ease;

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { tv } from 'tailwind-variants'
 import { sidebarVariants } from '@shared/ui/sidebar'
-import { resolveAppPath } from '@shared/api/demo'
+import { resolveAppPath, useTourTarget } from '@shared/api/demo'
+import { ROUTES } from '@shared/constants/routes'
 import AppSidebarItemIcon from './AppSidebarItemIcon.vue'
 
 const props = defineProps<{
@@ -15,6 +16,10 @@ const props = defineProps<{
   iconSize?: 'lg'
   testId?: string
 }>()
+
+const buttonRef = useTemplateRef('buttonRef')
+// The tour clicks the Dashboard item with its ghost cursor.
+if (props.link === ROUTES.HOME) useTourTarget('dashboardNav', buttonRef)
 
 const sidebarGroupItem = computed(() => tv({ extend: sidebarVariants.groupItem }))
 
@@ -35,6 +40,7 @@ const handleLinkClick = () => {
 
 <template>
   <button
+    ref="buttonRef"
     @click="handleLinkClick"
     :class="[
       sidebarGroupItem({

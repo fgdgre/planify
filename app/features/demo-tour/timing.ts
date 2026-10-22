@@ -10,6 +10,8 @@ export const STEP_SETTLE_MS = 250
 export const BEFORE_SAVE_MS = 600
 export const AFTER_SAVE_MS = 700
 export const GLOW_HOLD_MS = 1200
+export const PAGE_FADE_OUT_MS = 150
+export const PAGE_FADE_IN_MS = 300
 export const TYPE_CHAR_MS = 110
 export const TYPE_JITTER_MS = 30
 

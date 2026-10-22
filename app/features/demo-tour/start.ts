@@ -1,6 +1,8 @@
+import { preloadRouteComponents } from '#app'
 import type { Router } from 'vue-router'
 import { calendarControls, calendarSearchControls, eventSidebarControls, useCalendarStore } from '@entities/calendar'
-import { getTourTarget } from '@shared/api/demo'
+import { getTourTarget, resolveAppPath } from '@shared/api/demo'
+import { ROUTES } from '@shared/constants/routes'
 import { createTourDirector } from './director'
 import { getLandingWindow, sendToLanding } from './landing-window'
 import { mountTourOverlay } from './overlay'
@@ -54,6 +56,9 @@ export function startDemoDirector(router: Router): void {
       if (event.isTrusted) director.takeControlFromTour()
     }, { capture: true, passive: true })
   }
+
+  // The dashboard is the tour's last stop: fetch its chunk now so the switch is instant.
+  void preloadRouteComponents(resolveAppPath(ROUTES.HOME))
 
   director.reportReady()
 }

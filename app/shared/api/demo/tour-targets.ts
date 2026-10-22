@@ -16,6 +16,7 @@ export type TourTarget =
   | 'eventNotes'
   | 'dashboardNav'
   | 'statsRow'
+  | 'pageContent'
 
 const elements = shallowReactive<Partial<Record<TourTarget, HTMLElement>>>({})
 
