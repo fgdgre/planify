@@ -1,41 +1,34 @@
 <script setup lang="ts">
+import { TOUR_STEPS, type TourStep } from '@shared/api/demo/director-protocol'
 import { useReveal } from '../composables/useReveal'
-import LandingDemoApp from './LandingDemoApp.vue'
-
-const steps = [
-  { number: '01 · Unified calendar', title: 'Every account on one grid', text: 'Connect up to three Google accounts. Each gets its own color, so you see whose meeting it is at a glance.', hint: 'Try it: switch an account off in the sidebar.' },
-  { number: '02 · Your own events', title: 'Plan your own time', text: 'Click any free slot to add an event, then edit, drag or delete it. Synced Google events stay read-only.', hint: 'Try it: click an empty slot in the grid.' },
-  { number: '03 · Notes', title: 'Notes that live inside the meeting', text: 'Attach notes to any event, or write one while creating it. Open the meeting next week and the context is right there.', hint: 'Try it: click any event and add a note.' },
-  { number: '04 · Search', title: 'Find anything, across every account', text: 'One search box over all your calendars. "When did I last talk to Acme?" takes two seconds.', hint: 'Try it: type "studio" and press Enter.' },
-  { number: '05 · Dashboard', title: 'Your week at a glance', text: 'Events per day, what\'s coming up today and your schedule, across every account.', hint: 'Try it: open Dashboard, then add an event and watch it update.' },
-]
+import LandingDemoFrame from './LandingDemoFrame.vue'
+import LandingDemoStepper from './LandingDemoStepper.vue'
 
 const header = ref<HTMLElement | null>(null)
 const headerShown = useReveal(header)
 
-const isDesk = useMediaQuery('(min-width: 1150px)')
-const stepBlocks = ref<HTMLElement[]>([])
-const activeStep = ref<1 | 2 | 3 | 4 | 5 | null>(null)
-const controlled = ref(false)
-const appStep = computed(() => (isDesk.value && !controlled.value ? activeStep.value : null))
+const sentinels = ref<HTMLElement[]>([])
+const activeStep = ref<TourStep>(1)
 
-let stepObserver: IntersectionObserver | undefined
+let sentinelObserver: IntersectionObserver | undefined
 
 onMounted(() => {
-  stepObserver = new IntersectionObserver(
+  // A sentinel is "active" while it crosses a thin band in the middle of the viewport.
+  sentinelObserver = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
         if (!entry.isIntersecting) return
-        const index = stepBlocks.value.indexOf(entry.target as HTMLElement)
-        if (index >= 0) activeStep.value = (index + 1) as 1 | 2 | 3 | 4 | 5
+        const index = sentinels.value.indexOf(entry.target as HTMLElement)
+        const step = TOUR_STEPS[index]
+        if (step) activeStep.value = step
       })
     },
     { rootMargin: '-45% 0px -45% 0px' },
   )
-  stepBlocks.value.forEach((block) => stepObserver?.observe(block))
+  sentinels.value.forEach((sentinel) => sentinelObserver?.observe(sentinel))
 })
 
-onBeforeUnmount(() => stepObserver?.disconnect())
+onBeforeUnmount(() => sentinelObserver?.disconnect())
 </script>
 
 <template>
@@ -49,23 +42,18 @@ onBeforeUnmount(() => stepObserver?.disconnect())
     </div>
 
     <div class="mt-11 desk:mt-10 desk:grid desk:grid-cols-[minmax(260px,.62fr)_1.9fr] desk:gap-12">
-      <div class="max-desk:hidden">
-        <div
-          v-for="(step, index) in steps"
-          :key="step.number"
-          ref="stepBlocks"
-          class="flex min-h-[78vh] flex-col justify-center transition-opacity duration-500"
-          :class="activeStep === index + 1 ? 'opacity-100' : 'opacity-25'"
-        >
-          <span class="text-xs font-semibold text-primary-deep">{{ step.number }}</span>
-          <h3 class="mt-2.5 mb-3 text-[34px] leading-[1.1] font-semibold tracking-[-0.035em]">{{ step.title }}</h3>
-          <p class="text-base leading-[1.55] text-placeholder">{{ step.text }}</p>
-          <p class="mt-3.5 text-[13px] font-semibold text-primary-deep">{{ step.hint }}</p>
+      <!-- Left column is as tall as the five scroll sentinels; the step text and the frame both pin to the same `top` with the same height, so they unpin together and their top edges stay on one line. -->
+      <div class="relative min-h-[300vh] max-desk:hidden">
+        <div class="sticky top-[14vh] h-[72vh]">
+          <LandingDemoStepper :active="activeStep" />
+        </div>
+        <div class="absolute inset-0 flex flex-col" aria-hidden="true">
+          <div v-for="step in TOUR_STEPS" :key="step" ref="sentinels" class="h-[60vh] shrink-0" />
         </div>
       </div>
       <div>
         <div class="h-[560px] desk:sticky desk:top-[14vh] desk:h-[72vh]">
-          <LandingDemoApp :step="appStep" @take-control="controlled = true" @resume="controlled = false" />
+          <LandingDemoFrame :step="activeStep" />
         </div>
       </div>
     </div>

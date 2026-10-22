@@ -1,0 +1,66 @@
+<script setup lang="ts">
+import type { TourStep } from '@shared/api/demo/director-protocol'
+import { useDemoFrame } from '../composables/useDemoFrame'
+
+const props = defineProps<{ step: TourStep }>()
+
+const DEMO_URL = '/demo/calendar'
+
+const section = ref<HTMLElement | null>(null)
+const frame = ref<HTMLIFrameElement | null>(null)
+
+const isDesk = useMediaQuery('(min-width: 1150px)')
+// `saveData` is not in the DOM typings; the poster is the whole experience for these visitors.
+const saveData = typeof navigator !== 'undefined' && (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true
+const enabled = computed(() => isDesk.value && !saveData)
+
+const { status, iframeSrc, controlled, goToStep, resume } = useDemoFrame({ section, frame, enabled, demoUrl: DEMO_URL })
+
+watch(() => props.step, goToStep)
+
+const showLink = computed(() => status.value === 'fallback' || !enabled.value)
+</script>
+
+<template>
+  <div ref="section" class="flex h-full flex-col gap-3">
+    <div class="relative min-h-0 flex-1 overflow-hidden rounded-2xl border border-border bg-white shadow-[0_30px_80px_-30px_rgba(60,40,120,.35)]">
+      <img
+        src="/landing/demo-poster.webp"
+        srcset="/landing/demo-poster.webp 1x, /landing/demo-poster@2x.webp 2x"
+        alt="Planify calendar showing the week with events from several accounts"
+        width="990"
+        height="650"
+        class="absolute inset-0 size-full object-cover object-top-left transition-opacity duration-300"
+        :class="status === 'ready' ? 'opacity-0' : 'opacity-100'"
+      >
+
+      <iframe
+        v-if="iframeSrc"
+        ref="frame"
+        :src="iframeSrc"
+        title="Interactive Planify demo"
+        loading="lazy"
+        sandbox="allow-scripts"
+        class="absolute inset-0 size-full border-0 transition-opacity duration-300"
+        :class="status === 'ready' ? 'opacity-100' : 'pointer-events-none opacity-0'"
+      />
+
+      <div v-if="controlled" class="absolute right-4 bottom-4 flex items-center gap-3 rounded-full bg-foreground px-4 py-2 text-[13px] font-semibold text-white shadow-lg">
+        <span><span class="text-primary-soft">●</span> You're in control</span>
+        <button type="button" class="cursor-pointer rounded-full bg-primary px-3 py-1 text-white transition-colors hover:bg-primary-deep" @click="resume">
+          ▶ Resume tour
+        </button>
+      </div>
+    </div>
+
+    <a
+      v-if="showLink"
+      :href="DEMO_URL"
+      target="_blank"
+      rel="noopener"
+      class="self-center text-sm font-semibold text-primary-deep underline-offset-4 hover:underline"
+    >
+      Open the live demo
+    </a>
+  </div>
+</template>
