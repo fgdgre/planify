@@ -505,8 +505,8 @@ export const useEventSidebar = () => {
 
       if (savedNote) {
         await fetchEventNotes(selectedEvent.value.id)
-        applyNoteToPanel(savedNote)
-        await replaceQuery({ eventNoteId: savedNote.id })
+        clearCurrentNoteDraft()
+        await closeNotePanel()
       }
 
       return
