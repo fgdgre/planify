@@ -28,7 +28,8 @@ const googleRows = computed(() =>
     const color = settingsStore.preferences?.eventsColors[account.id] ?? ACCOUNT_COLORS[index % ACCOUNT_COLORS.length]
     return {
       id: account.id,
-      name: account.display_name || account.email,
+      name: account.email,
+      tooltip: account.display_name || account.email,
       color: color?.lightColors.main ?? INTERNAL_CALENDAR_COLOR.lightColors.main,
     }
   })
@@ -38,6 +39,7 @@ const planifyRows = computed(() => [
   {
     id: INTERNAL_SOURCE_ID,
     name: 'Planify',
+    tooltip: 'Planify',
     color: (settingsStore.preferences?.eventsColors[INTERNAL_SOURCE_ID] ?? INTERNAL_CALENDAR_COLOR).lightColors.main,
   },
 ])
@@ -56,7 +58,7 @@ const toggleGroup = (rows: { id: string }[]) => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-1 px-2 pb-2" data-testid="supa-sidebar-calendars">
+  <div class="flex flex-col gap-1 px-2 pb-2 mt-2" data-testid="supa-sidebar-calendars">
     <p class="text-sidebar-foreground/70 font-medium text-xs leading-[16px] h-8 pt-3 pl-2 whitespace-nowrap">
       Calendars
     </p>
@@ -95,6 +97,7 @@ const toggleGroup = (rows: { id: string }[]) => {
             class="flex items-center gap-3 h-8 pl-3 pr-2 rounded-md text-sm cursor-pointer hover:bg-white/5"
             :class="isHidden(row.id) ? 'text-sidebar-foreground/40' : 'text-sidebar-foreground'"
             :aria-pressed="!isHidden(row.id)"
+            :title="row.tooltip"
             :data-testid="`calendar-source-${row.id}`"
             @click="filtersStore.toggleSource(row.id)"
           >

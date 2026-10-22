@@ -99,7 +99,7 @@ const sidebarFooterWrapper = computed(() =>
       </div>
     </div>
     <div :class="[sidebarMainContent({ noPadding: true, class: 'flex flex-col justify-between' })]">
-      <div class="flex flex-col flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+      <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
         <AppSidebarContent
           :sections
           :collapse-sections="isSidebarCollapsed && (!isSidebarHovered || !showOnHover)"
