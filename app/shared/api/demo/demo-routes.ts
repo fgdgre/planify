@@ -21,3 +21,8 @@ export function toDemoPath(path: string): string {
 export function resolveAppPath(path: string): string {
   return isDemoMode() ? toDemoPath(path) : path
 }
+
+/** True for `/demo` and everything below it. */
+export function isDemoPath(path: string): boolean {
+  return path === DEMO_BASE || path.startsWith(`${DEMO_BASE}/`)
+}

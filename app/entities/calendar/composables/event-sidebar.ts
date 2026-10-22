@@ -5,6 +5,7 @@ import { useUserStore } from '@features/auth'
 import { useNotes, type Note } from '@features/notes'
 import { mapCalendarEventRowToDisplay } from '../helpers'
 import { useCalendar } from './calendar'
+import { eventSidebarControls, registerControls } from './tour-controls'
 import { useInternalEvents } from './useInternalEvents'
 import type { CalendarEventDisplay } from '../types'
 
@@ -739,6 +740,16 @@ export const useEventSidebar = () => {
     if (!open && activeMode.value) {
       closeSidebar()
     }
+  })
+
+  registerControls(eventSidebarControls, {
+    get mode() { return activeMode.value },
+    get selectedEvent() { return selectedEvent.value },
+    get eventNotes() { return eventNotes.value },
+    get saving() { return saving.value },
+    setTitle: (title: string) => { formData.value.title = title },
+    submit: handleSubmit,
+    openNote,
   })
 
   return {

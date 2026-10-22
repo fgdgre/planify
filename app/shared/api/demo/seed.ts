@@ -161,6 +161,7 @@ export function createSeed(now: Date): DemoSeed {
     note(4, 'Product ideas', 'Weekly digest email, quick capture shortcut, tags for notes.', null, 4),
     note(5, 'Reading list', 'Shape Up, The Mom Test, a talk on calendar UX.', null, 6),
     note(6, 'Groceries', 'Coffee, oat milk, bananas, pasta.', null, 3),
+    note(7, 'Acme standup notes', 'Blocked on API access, Alex shares credentials today. Demo moves to Thursday.', 'standup-mon', 0),
   ]
 
   const settings: DemoSeed['settings'] = [

@@ -8,11 +8,15 @@ const emit = defineEmits<{
 }>()
 
 const calendarStore = useCalendarStore()
-const { events } = storeToRefs(calendarStore)
+const { events, searchQuery: query } = storeToRefs(calendarStore)
 
-const query = ref('')
 const isOpen = ref(false)
 const wrapperRef = useTemplateRef('wrapperRef')
+
+// A query set from outside (the demo tour) has no focus event to open the list.
+watch(query, (value) => {
+  if (value.trim()) isOpen.value = true
+})
 
 onClickOutside(wrapperRef, () => {
   isOpen.value = false

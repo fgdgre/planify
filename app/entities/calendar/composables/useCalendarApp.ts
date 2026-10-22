@@ -18,6 +18,7 @@ import { useCalendar } from './calendar'
 import { useInternalEvents } from './useInternalEvents'
 import { mapToScheduleXEvent } from '../helpers'
 import { scrollToWorkingHoursWhenRendered } from '../helpers/scroll'
+import { calendarControls, registerControls } from './tour-controls'
 import { useGoogleCalendarStore, useGoogleCalendar } from '@features/integrations/google-calendar'
 import { useUserStore } from '@features/auth/stores/user'
 import { useSettingsStore } from '@features/settings'
@@ -249,6 +250,13 @@ export const useCalendarApp = () => {
       isRefreshing.value = false
     }
   }
+
+  registerControls(calendarControls, {
+    showCurrentWeek: () => {
+      const state = (calendarApp as any).$app?.calendarState
+      state?.setView('week', Temporal.Now.plainDateISO())
+    },
+  })
 
   return { calendarApp, goToDate, openEventView, refreshEvents, isRefreshing }
 }

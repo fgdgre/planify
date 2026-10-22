@@ -111,7 +111,7 @@ describe('seed', () => {
 
   it('has about six notes, some linked to seeded events and some free', () => {
     const eventIds = new Set(seed.calendar_events.map((e) => e.id))
-    expect(seed.notes).toHaveLength(6)
+    expect(seed.notes).toHaveLength(7)
     expect(seed.notes.filter((n) => n.calendar_event_id).every((n) => eventIds.has(n.calendar_event_id!))).toBe(true)
     expect(seed.notes.some((n) => n.calendar_event_id)).toBe(true)
     expect(seed.notes.some((n) => !n.calendar_event_id)).toBe(true)
