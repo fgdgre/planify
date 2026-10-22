@@ -19,37 +19,58 @@ watch(
 </script>
 
 <template>
-  <div class="relative overflow-hidden">
+  <!-- No `overflow: hidden` here on purpose: the incoming block rises from the bottom of the screen, far outside this box. -->
+  <div class="relative">
     <!-- Invisible stack of every step: its height is the tallest step, so the animated blocks never resize the container. -->
     <div class="invisible grid" aria-hidden="true">
       <LandingDemoStep v-for="copy in demoSteps" :key="copy.step" :copy="copy" class="[grid-area:1/1]" />
     </div>
 
     <Transition :name="`step-${direction}`">
-      <LandingDemoStep :key="activeCopy.step" :copy="activeCopy" class="absolute inset-0" />
+      <LandingDemoStep :key="activeCopy.step" :copy="activeCopy" class="absolute inset-x-0 top-0" />
     </Transition>
   </div>
 </template>
 
 <style scoped>
-/* A vertical push: each block's box is the whole container, so moving by 100% stacks them like carousel slides and they never overlap. */
+/*
+ * Scrolling down: the new block rises from just above the bottom edge of the
+ * screen to its pinned spot while the old one lifts a little and fades fast, so
+ * the two never read as overlapping text. Scrolling up mirrors it from above.
+ * `--rise` is the distance from the pinned top (14vh, see LandingDemo) to the
+ * bottom of the viewport, less room for the block itself.
+ */
 .step-forward-enter-active,
-.step-back-enter-active,
+.step-back-enter-active {
+  --rise: calc(100vh - 14vh - 13rem);
+
+  /* The fade-in waits a beat so the outgoing block is mostly gone before the new one shows. */
+  transition: opacity 0.45s ease 0.15s, transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
 .step-forward-leave-active,
 .step-back-leave-active {
-  transition: opacity 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: opacity 0.25s ease, transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.step-forward-enter-from,
-.step-back-leave-to {
+.step-forward-enter-from {
   opacity: 0;
-  transform: translateY(100%);
+  transform: translateY(var(--rise));
 }
 
-.step-forward-leave-to,
+.step-forward-leave-to {
+  opacity: 0;
+  transform: translateY(-80px);
+}
+
 .step-back-enter-from {
   opacity: 0;
-  transform: translateY(-100%);
+  transform: translateY(-80px);
+}
+
+.step-back-leave-to {
+  opacity: 0;
+  transform: translateY(80px);
 }
 
 @media (prefers-reduced-motion: reduce) {
