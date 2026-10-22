@@ -4,6 +4,8 @@ import { tv } from 'tailwind-variants'
 import AppSidebarItemIcon from "./AppSidebarItemIcon.vue";
 import { sidebarVariants } from '@shared/ui/sidebar'
 import { resolveAppPath } from '@shared/api/demo'
+import { ROUTES } from '@shared/constants/routes'
+import { isSidebarLinkActive } from '../helpers/is-link-active'
 
 const props = defineProps<{
   name: string
@@ -19,7 +21,8 @@ const props = defineProps<{
 const sidebarGroupItem = computed(() => tv({ extend: sidebarVariants.groupItem }))
 
 const target = computed(() => resolveAppPath(props.link))
-const isActive = computed(() => useRoute().path.includes(target.value))
+const route = useRoute()
+const isActive = computed(() => isSidebarLinkActive(route.path, target.value, resolveAppPath(ROUTES.HOME)))
 </script>
 
 

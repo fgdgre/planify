@@ -2,6 +2,8 @@
 import { useDashboard } from '@features/dashboard'
 import { EventsLineChart } from '@entities/charts'
 import { NotesItem } from '@features/notes'
+import { resolveAppPath } from '@shared/api/demo'
+import { ROUTES } from '@shared/constants/routes'
 
 definePageMeta({
   title: 'Home',
@@ -106,7 +108,7 @@ await load()
     >
       <div class="flex items-center justify-between gap-4">
         <h2 class="text-3xl leading-9 font-medium text-black">Today's Schedule</h2>
-        <NuxtLink class="text-sm text-primary underline underline-offset-2" to="/app/calendar">
+        <NuxtLink class="text-sm text-primary underline underline-offset-2" :to="resolveAppPath(ROUTES.CALENDAR)">
           View all
         </NuxtLink>
       </div>
@@ -167,7 +169,7 @@ await load()
       <div class="flex flex-col gap-4 pb-16">
         <div class="flex items-center justify-between gap-4">
           <h2 class="text-3xl leading-9 font-medium text-black">Notes for today's events</h2>
-          <NuxtLink class="text-sm text-primary underline underline-offset-2" to="/app/notes">
+          <NuxtLink class="text-sm text-primary underline underline-offset-2" :to="resolveAppPath(ROUTES.NOTES)">
             View all
           </NuxtLink>
         </div>
