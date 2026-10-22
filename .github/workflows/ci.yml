@@ -118,6 +118,15 @@ jobs:
         run: |
           grep -q "sha256-" .output/public/_headers || (echo "::error::CSP inline script hash was not injected into _headers" && exit 1)
 
+      # The demo (fake backend, tour director, calendar/editor code) must stay in lazy
+      # chunks: the entry chunk is what every visitor downloads before first paint.
+      - name: Entry chunk size budget
+        run: |
+          entry=$(grep -o '/_nuxt/[^"]*\.js' .output/public/index.html | head -n 1)
+          size=$(wc -c < ".output/public${entry}")
+          echo "Entry chunk ${entry}: ${size} bytes (budget 665600)"
+          test "$size" -le 665600 || (echo "::error::Entry JS chunk is ${size} bytes, over the 650 KB budget. Did demo or heavy code leak into the entry bundle?" && exit 1)
+
       # playwright.config.ts starts scripts/serve-with-headers.mjs, which applies the
       # real _headers (CSP, sandbox framing, CORS), so this is what production serves.
       - name: Run e2e tests against the production build

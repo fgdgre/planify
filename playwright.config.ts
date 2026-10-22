@@ -5,7 +5,7 @@ import { defineConfig, devices } from '@playwright/test'
 // this; the default stays the dev server for quick local runs.
 const STATIC = process.env.E2E_STATIC === '1'
 const PORT = Number(process.env.PORT ?? (STATIC ? 4173 : 3000))
-const BASE_URL = process.env.BASE_URL ?? `http://localhost:${PORT}`
+const BASE_URL = process.env.BASE_URL ?? `http://127.0.0.1:${PORT}`
 
 export default defineConfig({
   testDir: './tests/e2e',

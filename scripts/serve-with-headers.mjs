@@ -86,7 +86,15 @@ export async function startServer({ dir = '.output/public', port = 0 } = {}) {
 
   const server = createServer((req, res) => {
     const { pathname } = new URL(req.url ?? '/', 'http://localhost')
-    const file = resolveFile(root, pathname) ?? (extname(pathname) ? null : shell)
+
+    let file
+    try {
+      file = resolveFile(root, pathname) ?? (extname(pathname) ? null : shell)
+    } catch {
+      // Malformed percent-encoding (decodeURIComponent throws): a bad request, not a crash.
+      res.writeHead(400).end('Bad request')
+      return
+    }
 
     if (!file || !existsSync(file)) {
       res.writeHead(404, headersFor(rules, pathname)).end('Not found')
