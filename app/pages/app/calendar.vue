@@ -62,4 +62,14 @@ const handleSearchSelect = (event: CalendarEventDisplay) => {
 :deep(.sx__date-grid-event:not(.sx__date-grid-event--copy):has(+ .sx__date-grid-event--copy)) {
   opacity: 0.2;
 }
+
+:deep(.sx__event.is-search-dim) {
+  opacity: 0.3;
+  filter: grayscale(1);
+}
+
+:deep(.sx__event.is-search-match) {
+  box-shadow: 0 0 0 2px var(--color-primary, #2563eb);
+  z-index: 10;
+}
 </style>

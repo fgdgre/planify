@@ -505,8 +505,8 @@ export const useEventSidebar = () => {
 
       if (savedNote) {
         await fetchEventNotes(selectedEvent.value.id)
-        applyNoteToPanel(savedNote)
-        await replaceQuery({ eventNoteId: savedNote.id })
+        clearCurrentNoteDraft()
+        await closeNotePanel()
       }
 
       return
@@ -750,6 +750,11 @@ export const useEventSidebar = () => {
     setTitle: (title: string) => { formData.value.title = title },
     submit: handleSubmit,
     openNote,
+    deleteEvent: async (id: string, options?: { silent?: boolean }) => {
+      const success = await deleteEvent(id, options)
+      if (success) await fetchEvents()
+      return success
+    },
   })
 
   return {

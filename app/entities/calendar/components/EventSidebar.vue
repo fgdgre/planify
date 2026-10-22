@@ -31,6 +31,11 @@ const {
   unlinkNoteFromEvent,
 } = useEventSidebar()
 
+const handleCancel = () => {
+  if (!isEditable.value && isNotePanelOpen.value) return discardNoteDraft()
+  return closeSidebar()
+}
+
 const noteActionItems = computed(() => {
   const items = [
     { value: 'discard', label: 'Discard', icon: 'heroicons:arrow-uturn-left' },
@@ -66,7 +71,7 @@ const handleNoteAction = (action: unknown) => {
     :submit-label="submitLabel"
     context-width="520px"
     @submit="handleSubmit"
-    @cancel="closeSidebar"
+    @cancel="handleCancel"
   >
     <template #main>
       <div class="flex items-center justify-between gap-2">
@@ -186,11 +191,13 @@ const handleNoteAction = (action: unknown) => {
         :selected-event="selectedEvent"
         :event-notes="eventNotes"
         clickable-notes
+        :show-add-note="!isNotePanelOpen"
         show-actions
         :deleting
         @edit="openEdit"
         @delete="handleDelete"
         @note-click="openNote"
+        @add-note="openNotePanel"
       />
     </template>
   </SupaSplitSidebar>

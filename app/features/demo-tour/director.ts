@@ -1,5 +1,5 @@
 import { describeError, parseLandingMessage, type DemoMessageBody, type TourStep } from '@shared/api/demo'
-import { runTourStep, type TourEnv } from './steps'
+import { runTourStep, type TourEnv, type TourRecords } from './steps'
 import { TourAbortedError } from './timing'
 
 export interface TourDirectorOptions {
@@ -21,6 +21,7 @@ export interface TourDirectorOptions {
 export function createTourDirector({ createEnv, send, onTakeControl }: TourDirectorOptions) {
   let hasControl = true
   let running: AbortController | null = null
+  const records: TourRecords = {}
 
   const post = send
 
@@ -35,7 +36,7 @@ export function createTourDirector({ createEnv, send, onTakeControl }: TourDirec
     running = controller
 
     try {
-      await runTourStep(step, createEnv(controller.signal))
+      await runTourStep(step, createEnv(controller.signal), records)
       if (!controller.signal.aborted) post({ type: 'step-done', step })
     } catch (error) {
       if (error instanceof TourAbortedError || controller.signal.aborted) return

@@ -69,7 +69,7 @@ export const useInternalEvents = () => {
     return data
   }
 
-  const deleteEvent = async (id: string) => {
+  const deleteEvent = async (id: string, options: { silent?: boolean } = {}) => {
     const userId = getUserId()
 
     const { error } = await supabase
@@ -84,7 +84,7 @@ export const useInternalEvents = () => {
       return false
     }
 
-    showSuccessToast({ title: 'Event deleted' })
+    if (!options.silent) showSuccessToast({ title: 'Event deleted' })
     return true
   }
 

@@ -49,6 +49,7 @@ const waitForMessage = (page: Page, type: string, step?: number) =>
 
 /** Scrolls so the middle of the viewport sits in the scroll sentinel of `step`, which is what activates it. */
 async function scrollToStep(page: Page, step: number) {
+  await page.locator('[data-testid="demo-step-sentinel"]').nth(step - 1).waitFor({ state: 'attached' })
   await page.evaluate((step) => {
     const sentinel = document.querySelectorAll('[data-testid="demo-step-sentinel"]')[step - 1]
     if (!sentinel) throw new Error(`no scroll sentinel for step ${step}`)
@@ -192,6 +193,30 @@ test.describe('Landing demo', () => {
     // The tour is still alive: scrolling on to the next sentinel moves the demo along.
     await scrollToStep(page, 2)
     await waitForMessage(page, 'step-done', 2)
+  })
+
+  test('replaying step 2 clears what it did and plays it again from scratch', async ({ page }) => {
+    test.setTimeout(120_000)
+
+    const demo = await openDemo(page)
+    const stepDoneCount = (step: number) =>
+      page.evaluate((step) => window.__demoMessages.filter((m) => m.type === 'step-done' && m.step === step).length, step)
+    const clientCalls = demo.locator('.sx__event', { hasText: 'Client call' })
+
+    await scrollToStep(page, 2)
+    await waitForMessage(page, 'step-done', 2)
+    await expect(clientCalls).toHaveCount(2)
+
+    await scrollToStep(page, 3)
+    await waitForMessage(page, 'step-done', 3)
+
+    await scrollToStep(page, 2)
+    await expect(demo.locator('input[placeholder="Event title"]')).toHaveValue('Client call', { timeout: STEP_TIMEOUT })
+    await expect.poll(() => stepDoneCount(2), { timeout: STEP_TIMEOUT }).toBe(2)
+    await expect(clientCalls).toHaveCount(2)
+
+    const messages = await demoMessages(page)
+    expect(messages.filter((m) => m.type === 'error' || m.type === 'step-failed')).toEqual([])
   })
 
   test('clicking the demo hands over control and the tour can resume', async ({ page }) => {

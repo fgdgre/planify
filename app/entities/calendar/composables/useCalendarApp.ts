@@ -15,6 +15,7 @@ import 'temporal-polyfill/global'
 
 import { useCalendarStore, ACCOUNT_COLORS, INTERNAL_CALENDAR_COLOR } from '../stores/calendar'
 import { useCalendar } from './calendar'
+import { useCalendarFilters } from './calendar-filters'
 import { useInternalEvents } from './useInternalEvents'
 import { mapToScheduleXEvent } from '../helpers'
 import { scrollToWorkingHoursWhenRendered } from '../helpers/scroll'
@@ -24,6 +25,8 @@ import { calendarControls, registerControls } from './tour-controls'
 import { useGoogleCalendarStore, useGoogleCalendar } from '@features/integrations/google-calendar'
 import { useUserStore } from '@features/auth/stores/user'
 import { useSettingsStore } from '@features/settings'
+import type { CalendarEventDisplay } from '../types'
+import { useCalendarFiltersStore } from '../stores/calendar-filters'
 
 const toMs = (v: unknown): number => {
   if (typeof v === 'string') return new Date(v.replace(/\[.*\]$/, '')).getTime()
@@ -44,12 +47,14 @@ export const useCalendarApp = () => {
   const calendarStore = useCalendarStore()
   const userStore = useUserStore()
   const settingsStore = useSettingsStore()
+  const filtersStore = useCalendarFiltersStore()
   const route = useRoute()
   const router = useRouter()
 
   const { events } = storeToRefs(calendarStore)
   const { loadViewEvents } = useCalendar()
   const { updateEvent } = useInternalEvents()
+  const { isSearching, visibleEvents, matchesSearch } = useCalendarFilters()
   const { syncAllAccounts } = useGoogleCalendar()
 
   const isRefreshing = ref(false)
@@ -196,8 +201,13 @@ export const useCalendarApp = () => {
     },
   }, [createDragAndDropPlugin(), createResizePlugin(), createCurrentTimePlugin()])
 
-  watch(events, (storeEvents) => {
-    calendarApp.events.set(storeEvents.map(mapToScheduleXEvent))
+  const searchClassesOf = (event: CalendarEventDisplay) => {
+    if (!isSearching.value) return []
+    return [matchesSearch(event) ? 'is-search-match' : 'is-search-dim']
+  }
+
+  watch([visibleEvents, isSearching, () => filtersStore.searchQuery, () => googleCalendarStore.accounts], () => {
+    calendarApp.events.set(visibleEvents.value.map((e) => mapToScheduleXEvent(e, searchClassesOf(e))))
   }, { immediate: true })
 
   watch(

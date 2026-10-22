@@ -38,6 +38,7 @@ export interface EventSidebarControls {
   setTitle: (title: string) => void
   submit: () => Promise<void>
   openNote: (note: Note) => Promise<void>
+  deleteEvent: (id: string, options?: { silent?: boolean }) => Promise<boolean>
 }
 
 export interface CalendarSearchControls {

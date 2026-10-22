@@ -5,6 +5,7 @@ import logo from '@assets/images/logo.svg'
 import { sidebarVariants } from '@shared/ui/sidebar'
 import { useLogout, useUserStore } from "@features/auth";
 import AppSidebarContent from "@entities/sidebar/components/AppSidebarContent.vue";
+import AppSidebarCalendars from "@entities/sidebar/components/AppSidebarCalendars.vue";
 
 const sidebarStore = useAppSidebar()
 const { isSidebarCollapsed, sections } = storeToRefs(sidebarStore)
@@ -98,12 +99,15 @@ const sidebarFooterWrapper = computed(() =>
       </div>
     </div>
     <div :class="[sidebarMainContent({ noPadding: true, class: 'flex flex-col justify-between' })]">
-      <AppSidebarContent
-        :sections
-        :collapse-sections="isSidebarCollapsed && (!isSidebarHovered || !showOnHover)"
-        @link-click="$emit('linkClicked')"
-        @toggle-section="(e) => $emit('toggleSection', e)"
-      />
+      <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+        <AppSidebarContent
+          :sections
+          :collapse-sections="isSidebarCollapsed && (!isSidebarHovered || !showOnHover)"
+          @link-click="$emit('linkClicked')"
+          @toggle-section="(e) => $emit('toggleSection', e)"
+        />
+        <AppSidebarCalendars :collapsed="isSidebarCollapsed && (!isSidebarHovered || !showOnHover)" />
+      </div>
     </div>
     <footer :class="[sidebarFooterWrapper({ open: isSidebarCollapsed && (!isSidebarHovered || !showOnHover) })]">
       <SupaIcon :ui="{ icon: 'size-[33px] shrink-0' }" name="mingcute:user-4-fill" />

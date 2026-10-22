@@ -12,6 +12,8 @@ import type { Note } from '@features/notes'
 import { useUserStore } from '@features/auth'
 import { useSettings, useSettingsStore } from '@features/settings'
 import { ACCOUNT_COLORS, INTERNAL_CALENDAR_COLOR } from '@entities/calendar/stores/calendar'
+import { useCalendarFiltersStore } from '@entities/calendar/stores/calendar-filters'
+import { isEventVisible } from '@entities/calendar/helpers/filters'
 
 const stripZone = (iso: string) => iso.replace(/\[.*\]$/, '')
 
@@ -52,6 +54,8 @@ export const useDashboard = () => {
   const { preferences } = storeToRefs(settingsStore)
   const { getUserPreferences } = useSettings()
 
+  const { hiddenSources } = storeToRefs(useCalendarFiltersStore())
+
   const supabase = useDb()
 
   const route = useRoute()
@@ -69,7 +73,7 @@ export const useDashboard = () => {
   const weekEvents = computed(() => {
     const { start, end } = weekRange.value
     return allEvents.value.filter((e) => {
-      if (!e?.start_at) return false
+      if (!e?.start_at || !isEventVisible(e, hiddenSources.value)) return false
       const t = new Date(stripZone(e.start_at)).getTime()
       return t >= start && t < end
     })

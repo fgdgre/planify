@@ -1,5 +1,7 @@
 <script lang="ts" setup>
+import { computed, useTemplateRef } from 'vue'
 import DOMPurify from 'dompurify'
+import NotesTabButton from '@features/notes/components/NotesTabButton.vue'
 import type { CalendarEventDisplay } from '@entities/calendar'
 import type { Note } from '@features/notes'
 import { useTourTarget } from '@shared/api/demo'
@@ -11,6 +13,7 @@ const props = withDefaults(
     showActions?: boolean
     showTitle?: boolean
     clickableNotes?: boolean
+    showAddNote?: boolean
     deleting?: boolean
   }>(),
   {
@@ -25,6 +28,7 @@ const emit = defineEmits<{
   edit: []
   delete: []
   noteClick: [note: Note]
+  addNote: []
 }>()
 
 const isInternal = computed(() => props.selectedEvent?.source === 'internal')
@@ -132,6 +136,20 @@ const formattedTime = computed(() => {
           <SupaRichText :content="note.content" :line-clamp="3" size="xs" class="text-placeholder" />
         </button>
       </div>
+
+      <NotesTabButton
+        v-if="showAddNote"
+        label="Add note"
+        :tab-filled="false"
+        :active-tab="false"
+        class="w-full flex-none"
+        @click="emit('addNote')"
+      >
+        <div class="flex items-center justify-between gap-2">
+          <p>Add note</p>
+          <SupaIcon name="heroicons:plus" />
+        </div>
+      </NotesTabButton>
 
       <div v-if="showActions && isInternal" class="flex gap-2 w-full border-t pt-3 mt-3">
         <SupaButton color="primary" @click="emit('edit')">
