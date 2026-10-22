@@ -25,6 +25,16 @@ const counts = computed(() => {
   return result
 })
 
+// Event blocks paint the semi-transparent `container` color on a white grid.
+// The sidebar is dark, so blend it on white first to get the same light tint as the events.
+const onWhite = (color: string) => {
+  const match = color.match(/rgba?\(([^)]+)\)/)
+  if (!match) return color
+  const [r, g, b, a = 1] = match[1]!.split(',').map((part) => Number(part.trim()))
+  const blend = (channel: number) => Math.round(channel * a + 255 * (1 - a))
+  return `rgb(${blend(r!)}, ${blend(g!)}, ${blend(b!)})`
+}
+
 const googleRows = computed(() =>
   accounts.value.map((account, index) => {
     const color = settingsStore.preferences?.eventsColors[account.id] ?? ACCOUNT_COLORS[index % ACCOUNT_COLORS.length]
@@ -32,7 +42,7 @@ const googleRows = computed(() =>
       id: account.id,
       name: account.email,
       tooltip: account.display_name || account.email,
-      color: color?.lightColors.container ?? INTERNAL_CALENDAR_COLOR.lightColors.container,
+      color: onWhite(color?.lightColors.container ?? INTERNAL_CALENDAR_COLOR.lightColors.container),
     }
   })
 )
@@ -42,7 +52,7 @@ const planifyRows = computed(() => [
     id: INTERNAL_SOURCE_ID,
     name: 'Planify',
     tooltip: 'Planify',
-    color: (settingsStore.preferences?.eventsColors[INTERNAL_SOURCE_ID] ?? INTERNAL_CALENDAR_COLOR).lightColors.container,
+    color: onWhite((settingsStore.preferences?.eventsColors[INTERNAL_SOURCE_ID] ?? INTERNAL_CALENDAR_COLOR).lightColors.container),
   },
 ])
 
