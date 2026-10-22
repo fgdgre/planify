@@ -2,6 +2,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from './types/database'
 import { fetchWithRetry } from './fetch-with-retry'
+import { getFakeClient, isDemoMode, __resetFakeClientForTests } from '../demo'
 
 type DbClient = SupabaseClient<Database>
 
@@ -42,8 +43,15 @@ function createDbClient(): DbClient {
  * build a client, read the session or send an auth request. Call it where the
  * data is needed, not at module top level. It is also the single seam through
  * which every feature reaches the database.
+ *
+ * In demo mode (the app booted under /demo) it returns an in-memory fake
+ * instead: the real client is never created, so no session, cookie or request
+ * can leave the page, and `onDbClientCreated` callbacks (auth listeners for
+ * real sessions) are never run.
  */
 export function useDb(): DbClient {
+  if (isDemoMode()) return getFakeClient()
+
   if (!client) {
     client = createDbClient()
     const callbacks = pendingCallbacks
@@ -70,4 +78,5 @@ export function onDbClientCreated(callback: (client: DbClient) => void): void {
 export function __resetDbClientForTests(): void {
   client = null
   pendingCallbacks = []
+  __resetFakeClientForTests()
 }
