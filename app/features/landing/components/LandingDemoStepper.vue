@@ -37,11 +37,11 @@ watch(
  * Scrolling down: the new block rises from just above the bottom edge of the
  * screen to its pinned spot while the old one lifts a little and fades fast, so
  * the two never read as overlapping text. Scrolling up mirrors it from above.
- * `--rise` is the distance from the pinned top (14vh, see LandingDemo) to the
- * bottom of the viewport, less room for the block itself.
+ * `--rise` is the distance from the pinned top (about 13rem down the screen: nav,
+ * heading) to the bottom of the viewport, less room for the block itself.
  */
 .step-forward-enter-active {
-  --rise: calc(100vh - 14vh - 13rem);
+  --rise: calc(100dvh - 22rem);
 
   /* Visible almost at once, so the whole climb from the bottom edge can be seen. */
   transition: opacity 0.4s ease, transform 0.9s cubic-bezier(0.25, 0.7, 0.3, 1);

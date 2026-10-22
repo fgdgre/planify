@@ -11,11 +11,16 @@ const APP_HEIGHT = 800
 
 const section = ref<HTMLElement | null>(null)
 const frame = ref<HTMLIFrameElement | null>(null)
-const box = ref<HTMLElement | null>(null)
-const { width: boxWidth } = useElementSize(box)
-const scale = computed(() => (boxWidth.value ? boxWidth.value / APP_WIDTH : 1))
-
 const isDesk = useMediaQuery('(min-width: 1150px)')
+
+/** The room the section leaves for the demo; on desktop the app is scaled to fit all of it, width and height. */
+const area = ref<HTMLElement | null>(null)
+const { width: areaWidth, height: areaHeight } = useElementSize(area)
+const scale = computed(() => {
+  if (!isDesk.value) return areaWidth.value ? areaWidth.value / APP_WIDTH : 1
+  return Math.min(areaWidth.value / APP_WIDTH, areaHeight.value / APP_HEIGHT)
+})
+const boxStyle = computed(() => (isDesk.value ? { width: `${APP_WIDTH * scale.value}px`, height: `${APP_HEIGHT * scale.value}px` } : undefined))
 // `saveData` is not in the DOM typings; the poster is the whole experience for these visitors.
 const saveData = typeof navigator !== 'undefined' && (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true
 const enabled = computed(() => isDesk.value && !saveData)
@@ -28,8 +33,9 @@ const showLink = computed(() => status.value === 'fallback' || !enabled.value)
 </script>
 
 <template>
-  <div ref="section" class="flex flex-col gap-3">
-    <div ref="box" class="relative h-[460px] w-full overflow-hidden rounded-2xl desk:aspect-[1280/800] desk:h-auto desk:max-w-[calc(72vh*1.6)] border border-border bg-white shadow-[0_30px_80px_-30px_rgba(60,40,120,.35)]">
+  <div ref="section" class="flex flex-col gap-3 desk:h-full">
+   <div ref="area" class="desk:min-h-0 desk:flex-1">
+    <div class="relative mx-auto h-[460px] w-full overflow-hidden rounded-2xl desk:h-auto desk:w-auto border border-border bg-white shadow-[0_30px_80px_-30px_rgba(60,40,120,.35)]" :style="boxStyle">
       <img
         src="/landing/demo-poster.webp"
         srcset="/landing/demo-poster.webp 1x, /landing/demo-poster@2x.webp 2x"
@@ -73,13 +79,14 @@ const showLink = computed(() => status.value === 'fallback' || !enabled.value)
         </button>
       </div>
     </div>
+   </div>
 
     <a
       v-if="showLink"
       :href="DEMO_URL"
       target="_blank"
       rel="noopener"
-      class="self-center text-sm font-semibold text-primary-deep underline-offset-4 hover:underline"
+      class="shrink-0 self-center text-sm font-semibold text-primary-deep underline-offset-4 hover:underline"
     >
       Open the live demo
     </a>
