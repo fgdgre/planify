@@ -7,7 +7,8 @@ vi.stubGlobal('useRuntimeConfig', () => ({
   public: { supabaseUrl: 'https://abcdefgh.supabase.co', supabaseAnonKey: 'anon-key' },
 }))
 
-const { isDemoMode, DEMO_BASE, __resetDemoModeForTests, DEMO_USER } = await import('@shared/api/demo')
+const { isDemoMode, DEMO_BASE, __resetDemoModeForTests, __resetDemoClientRegistryForTests } = await import('@shared/api/demo')
+const { installDemoBackend } = await import('@shared/api/demo/install')
 const { useDb, onDbClientCreated, __resetDbClientForTests } = await import('@shared/api/supabase/client')
 const { getSafeStorage } = await import('@shared/lib/safe-storage')
 
@@ -50,9 +51,20 @@ describe('isDemoMode', () => {
 })
 
 describe('useDb in demo mode', () => {
+  let DEMO_USER: ReturnType<typeof installDemoBackend>
+
   beforeEach(() => {
     __resetDbClientForTests()
     createBrowserClient.mockClear()
+    DEMO_USER = installDemoBackend()
+  })
+
+  it('fails loudly when the demo backend was not installed before use', () => {
+    __resetDemoClientRegistryForTests()
+    visit('/demo')
+
+    expect(() => useDb()).toThrow(/before the demo backend was installed/)
+    expect(createBrowserClient).not.toHaveBeenCalled()
   })
 
   it('returns the fake singleton and never builds the real client', async () => {

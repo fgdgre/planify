@@ -2,7 +2,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from './types/database'
 import { fetchWithRetry } from './fetch-with-retry'
-import { getFakeClient, isDemoMode, __resetFakeClientForTests } from '../demo'
+import { getDemoClient, isDemoMode } from '../demo'
 
 type DbClient = SupabaseClient<Database>
 
@@ -50,7 +50,7 @@ function createDbClient(): DbClient {
  * real sessions) are never run.
  */
 export function useDb(): DbClient {
-  if (isDemoMode()) return getFakeClient()
+  if (isDemoMode()) return getDemoClient()
 
   if (!client) {
     client = createDbClient()
@@ -78,5 +78,4 @@ export function onDbClientCreated(callback: (client: DbClient) => void): void {
 export function __resetDbClientForTests(): void {
   client = null
   pendingCallbacks = []
-  __resetFakeClientForTests()
 }

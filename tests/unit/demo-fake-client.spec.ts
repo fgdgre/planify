@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { FunctionsHttpError } from '@supabase/supabase-js'
-import { createFakeClient, createSeed, DEMO_USER, DEMO_USER_ID } from '@shared/api/demo'
+import { createFakeClient } from '@shared/api/demo/fake-client'
+import { createSeed, DEMO_USER, DEMO_USER_ID } from '@shared/api/demo/seed'
 import { GOOGLE_ACCOUNT_SELECT } from '@shared/constants/google-accounts'
 
 const NOT_AVAILABLE = 'Not available in the demo'

@@ -21,6 +21,8 @@ interface Envelope<S extends string> {
 export type LandingMessage =
   | (Envelope<typeof LANDING_SOURCE> & { type: 'step'; step: TourStep })
   | (Envelope<typeof LANDING_SOURCE> & { type: 'resume' })
+  /** The visitor chose to use the demo themselves (the frame ignores the pointer until then, so the demo cannot see it). */
+  | (Envelope<typeof LANDING_SOURCE> & { type: 'take-control' })
 
 export type DemoMessage =
   | (Envelope<typeof DEMO_SOURCE> & { type: 'ready' })
@@ -49,7 +51,9 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 export function parseLandingMessage(data: unknown): LandingMessage | null {
   if (!isRecord(data) || data.source !== LANDING_SOURCE || data.version !== PROTOCOL_VERSION) return null
 
-  if (data.type === 'resume') return { source: LANDING_SOURCE, version: PROTOCOL_VERSION, type: 'resume' }
+  if (data.type === 'resume' || data.type === 'take-control') {
+    return { source: LANDING_SOURCE, version: PROTOCOL_VERSION, type: data.type }
+  }
   if (data.type === 'step' && isTourStep(data.step)) {
     return { source: LANDING_SOURCE, version: PROTOCOL_VERSION, type: 'step', step: data.step }
   }

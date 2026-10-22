@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { createFakeClient } from '@shared/api/demo'
-import type { DemoSeed } from '@shared/api/demo'
-import { DEMO_USER_ID } from '@shared/api/demo'
+import { createFakeClient } from '@shared/api/demo/fake-client'
+import type { DemoSeed } from '@shared/api/demo/seed'
+import { DEMO_USER_ID } from '@shared/api/demo/seed'
 
 type NoteRow = DemoSeed['notes'][number]
 
