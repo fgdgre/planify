@@ -5,9 +5,15 @@ import { useDemoFrame } from '../composables/useDemoFrame'
 const props = defineProps<{ step: TourStep }>()
 
 const DEMO_URL = '/demo/calendar'
+/** The app always renders at this desktop size and is scaled down to the frame, so its layout never gets squeezed. */
+const APP_WIDTH = 1280
+const APP_HEIGHT = 800
 
 const section = ref<HTMLElement | null>(null)
 const frame = ref<HTMLIFrameElement | null>(null)
+const box = ref<HTMLElement | null>(null)
+const { width: boxWidth } = useElementSize(box)
+const scale = computed(() => (boxWidth.value ? boxWidth.value / APP_WIDTH : 1))
 
 const isDesk = useMediaQuery('(min-width: 1150px)')
 // `saveData` is not in the DOM typings; the poster is the whole experience for these visitors.
@@ -22,14 +28,14 @@ const showLink = computed(() => status.value === 'fallback' || !enabled.value)
 </script>
 
 <template>
-  <div ref="section" class="flex h-full flex-col gap-3">
-    <div class="relative min-h-0 flex-1 overflow-hidden rounded-2xl border border-border bg-white shadow-[0_30px_80px_-30px_rgba(60,40,120,.35)]">
+  <div ref="section" class="flex flex-col gap-3">
+    <div ref="box" class="relative h-[460px] w-full overflow-hidden rounded-2xl desk:aspect-[1280/800] desk:h-auto desk:max-w-[calc(72vh*1.6)] border border-border bg-white shadow-[0_30px_80px_-30px_rgba(60,40,120,.35)]">
       <img
         src="/landing/demo-poster.webp"
         srcset="/landing/demo-poster.webp 1x, /landing/demo-poster@2x.webp 2x"
         alt="Planify calendar showing the week with events from several accounts"
-        width="990"
-        height="650"
+        width="1280"
+        height="800"
         class="absolute inset-0 size-full object-cover object-top-left transition-opacity duration-300"
         :class="status === 'ready' ? 'opacity-0' : 'opacity-100'"
       >
@@ -41,7 +47,8 @@ const showLink = computed(() => status.value === 'fallback' || !enabled.value)
         title="Interactive Planify demo"
         loading="lazy"
         sandbox="allow-scripts"
-        class="absolute inset-0 size-full border-0 transition-opacity duration-300"
+        class="absolute top-0 left-0 origin-top-left border-0 transition-opacity duration-300"
+        :style="{ width: `${APP_WIDTH}px`, height: `${APP_HEIGHT}px`, transform: `scale(${scale})` }"
         :class="status === 'ready' ? 'opacity-100' : 'pointer-events-none opacity-0'"
       />
 

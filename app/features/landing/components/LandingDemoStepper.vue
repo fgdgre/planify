@@ -32,27 +32,24 @@ watch(
 </template>
 
 <style scoped>
-/* Outgoing block leaves quickly (fade first) while the incoming one lands, so the two never read as overlapping text. */
+/* A vertical push: each block's box is the whole container, so moving by 100% stacks them like carousel slides and they never overlap. */
 .step-forward-enter-active,
-.step-back-enter-active {
-  transition: opacity 0.3s ease-out 0.1s, transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
+.step-back-enter-active,
 .step-forward-leave-active,
 .step-back-leave-active {
-  transition: opacity 0.14s ease-out, transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: opacity 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .step-forward-enter-from,
 .step-back-leave-to {
   opacity: 0;
-  transform: translateY(48px);
+  transform: translateY(100%);
 }
 
 .step-forward-leave-to,
 .step-back-enter-from {
   opacity: 0;
-  transform: translateY(-48px);
+  transform: translateY(-100%);
 }
 
 @media (prefers-reduced-motion: reduce) {
