@@ -84,9 +84,6 @@ registerControls(calendarSearchControls, {
       @keydown.esc="onEscape"
     >
       <template v-if="query" #trailing>
-        <span class="text-xs text-muted-foreground whitespace-nowrap mr-1" data-testid="search-count">
-          {{ matchingEvents.length }} {{ matchingEvents.length === 1 ? 'result' : 'results' }}
-        </span>
         <SupaButton
           icon="heroicons:x-mark"
           variant="transparent"
@@ -95,6 +92,14 @@ registerControls(calendarSearchControls, {
         />
       </template>
     </SupaInput>
+
+    <span
+      v-if="query.trim()"
+      class="absolute right-10 top-1/2 -translate-y-1/2 text-xs text-muted-foreground whitespace-nowrap pointer-events-none"
+      data-testid="search-count"
+    >
+      {{ matchingEvents.length }} {{ matchingEvents.length === 1 ? 'result' : 'results' }}
+    </span>
 
     <div
       v-if="isOpen && query.trim()"
