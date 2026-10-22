@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { onClickOutside } from '@vueuse/core'
-import { useCalendarStore } from '../stores/calendar'
+import { useCalendarFiltersStore } from '../stores/calendar-filters'
+import { useCalendarFilters } from '../composables/calendar-filters'
 import { useTourTarget } from '@shared/api/demo'
 import { calendarSearchControls, registerControls } from '../composables/tour-controls'
 import type { CalendarEventDisplay } from '../types'
@@ -9,10 +10,10 @@ const emit = defineEmits<{
   select: [event: CalendarEventDisplay]
 }>()
 
-const calendarStore = useCalendarStore()
-const { events } = storeToRefs(calendarStore)
+const filtersStore = useCalendarFiltersStore()
+const { searchQuery: query } = storeToRefs(filtersStore)
+const { matchingEvents } = useCalendarFilters()
 
-const query = ref('')
 const isOpen = ref(false)
 const wrapperRef = useTemplateRef('wrapperRef')
 const resultsRef = useTemplateRef('resultsRef')
@@ -26,16 +27,7 @@ onClickOutside(wrapperRef, () => {
 const stripTz = (iso: string) => iso.replace(/\[.*\]$/, '')
 
 const matches = computed(() => {
-  const q = query.value.trim().toLowerCase()
-  if (!q) return []
-
-  return events.value
-    .filter((e) => {
-      const title = e.title?.toLowerCase() ?? ''
-      const description = e.description?.toLowerCase() ?? ''
-      const location = e.location?.toLowerCase() ?? ''
-      return title.includes(q) || description.includes(q) || location.includes(q)
-    })
+  return [...matchingEvents.value]
     .sort((a, b) => new Date(stripTz(b.start_at)).getTime() - new Date(stripTz(a.start_at)).getTime())
     .slice(0, 8)
 })
@@ -52,19 +44,29 @@ const onFocus = () => {
   isOpen.value = true
 }
 
+const clearQuery = () => {
+  filtersStore.clearSearch()
+}
+
 const onSelect = (event: CalendarEventDisplay) => {
   emit('select', event)
   isOpen.value = false
-  query.value = ''
+  clearQuery()
 }
 
-const clearQuery = () => {
-  query.value = ''
+const onEnter = () => {
+  const first = matches.value[0]
+  if (first) onSelect(first)
+}
+
+const onEscape = () => {
+  isOpen.value = false
+  clearQuery()
 }
 
 registerControls(calendarSearchControls, {
   setQuery: (value) => {
-    query.value = value
+    filtersStore.setSearchQuery(value)
     isOpen.value = value.trim().length > 0
   },
 })
@@ -76,9 +78,15 @@ registerControls(calendarSearchControls, {
       v-model="query"
       placeholder="Search events"
       leading-icon="heroicons:magnifying-glass"
+      :ui="{ input: query ? 'pr-28' : '' }"
       @focus="onFocus"
+      @keydown.enter="onEnter"
+      @keydown.esc="onEscape"
     >
       <template v-if="query" #trailing>
+        <span class="text-xs text-muted-foreground whitespace-nowrap mr-1" data-testid="search-count">
+          {{ matchingEvents.length }} {{ matchingEvents.length === 1 ? 'result' : 'results' }}
+        </span>
         <SupaButton
           icon="heroicons:x-mark"
           variant="transparent"
