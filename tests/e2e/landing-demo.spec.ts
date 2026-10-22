@@ -49,6 +49,7 @@ const waitForMessage = (page: Page, type: string, step?: number) =>
 
 /** Scrolls so the middle of the viewport sits in the scroll sentinel of `step`, which is what activates it. */
 async function scrollToStep(page: Page, step: number) {
+  await page.locator('[data-testid="demo-step-sentinel"]').nth(step - 1).waitFor({ state: 'attached' })
   await page.evaluate((step) => {
     const sentinel = document.querySelectorAll('[data-testid="demo-step-sentinel"]')[step - 1]
     if (!sentinel) throw new Error(`no scroll sentinel for step ${step}`)
