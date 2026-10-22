@@ -13,7 +13,7 @@ export const parseTemporalStart = (dateString: string, allDay: boolean) => {
   return instant.toZonedDateTimeISO(Temporal.Now.timeZoneId())
 }
 
-export const mapToScheduleXEvent = (event: CalendarEventDisplay): CalendarEventExternal => {
+export const mapToScheduleXEvent = (event: CalendarEventDisplay, extraClasses: string[] = []): CalendarEventExternal => {
   const isReadOnly = event.source !== 'internal'
 
   return {
@@ -27,6 +27,7 @@ export const mapToScheduleXEvent = (event: CalendarEventDisplay): CalendarEventE
     _options: {
       disableDND: isReadOnly,
       disableResize: isReadOnly,
+      additionalClasses: extraClasses,
     },
   }
 }
