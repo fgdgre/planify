@@ -1,6 +1,11 @@
 import { resolveAppPath, type TourStep } from '@shared/api/demo'
 import { ROUTES } from '@shared/constants/routes'
-import type { CalendarControls, CalendarEventDisplay, EventSidebarControls } from '@entities/calendar'
+import type {
+  CalendarControls,
+  CalendarEventDisplay,
+  CalendarSearchControls,
+  EventSidebarControls,
+} from '@entities/calendar'
 import { typeText, waitFor } from './timing'
 
 /** Everything a step may touch. All of it is typed app API, never the DOM. */
@@ -10,7 +15,9 @@ export interface TourEnv {
   calendar: () => CalendarControls | null
   eventSidebar: () => EventSidebarControls | null
   events: () => CalendarEventDisplay[]
-  setSearchQuery: (value: string) => void
+  /** The range the calendar currently shows (ISO instants), once known. */
+  viewRange: () => { start: string; end: string } | null
+  searchBox: () => CalendarSearchControls | null
   now: () => Date
   reducedMotion: boolean
   signal: AbortSignal
@@ -28,15 +35,34 @@ const atHour = (day: Date, hour: number) =>
 
 /** Calendar page with the week view on screen, sidebar closed and search empty. */
 async function showWeekView(env: TourEnv): Promise<void> {
-  env.setSearchQuery('')
+  env.searchBox()?.setQuery('')
   await env.navigate({ path: resolveAppPath(ROUTES.CALENDAR), query: {} })
 
   const calendar = await waitFor(env.calendar, { what: 'the calendar', signal: env.signal })
   calendar.showCurrentWeek()
 }
 
+/**
+ * Events of the week being shown. Waits until the calendar's range covers today
+ * and holds events inside it, so events left over from another range (or none
+ * yet) are never mistaken for the current week.
+ */
 async function waitForEvents(env: TourEnv): Promise<CalendarEventDisplay[]> {
-  return waitFor(() => (env.events().length ? env.events() : null), { what: 'calendar events', signal: env.signal })
+  return waitFor(
+    () => {
+      const range = env.viewRange()
+      if (!range) return null
+
+      const from = new Date(range.start).getTime()
+      const to = new Date(range.end).getTime()
+      const now = env.now().getTime()
+      if (now < from || now > to) return null
+
+      const inRange = env.events().filter((event) => startMs(event) >= from && startMs(event) <= to)
+      return inRange.length ? inRange : null
+    },
+    { what: 'calendar events', signal: env.signal },
+  )
 }
 
 async function createClientCall(env: TourEnv, start: Date, end: Date): Promise<void> {
@@ -112,11 +138,12 @@ const steps: Record<TourStep, (env: TourEnv) => Promise<void>> = {
     await showWeekView(env)
     await waitForEvents(env)
 
-    await typeText(SEARCH_TEXT, env.setSearchQuery, env)
+    const searchBox = await waitFor(env.searchBox, { what: 'the calendar search', signal: env.signal })
+    await typeText(SEARCH_TEXT, searchBox.setQuery, env)
   },
 
   5: async (env) => {
-    env.setSearchQuery('')
+    env.searchBox()?.setQuery('')
     await env.navigate({ path: resolveAppPath(ROUTES.HOME), query: {} })
   },
 }

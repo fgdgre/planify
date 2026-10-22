@@ -1,5 +1,5 @@
 import type { Router } from 'vue-router'
-import { calendarControls, eventSidebarControls, useCalendarStore } from '@entities/calendar'
+import { calendarControls, calendarSearchControls, eventSidebarControls, useCalendarStore } from '@entities/calendar'
 import { createTourDirector } from './director'
 import { getLandingWindow, sendToLanding } from './landing-window'
 
@@ -26,7 +26,8 @@ export function startDemoDirector(router: Router): void {
       calendar: () => calendarControls.value,
       eventSidebar: () => eventSidebarControls.value,
       events: () => calendarStore.events,
-      setSearchQuery: calendarStore.setSearchQuery,
+      viewRange: () => calendarStore.viewRange,
+      searchBox: () => calendarSearchControls.value,
       now: () => new Date(),
       reducedMotion,
       signal,

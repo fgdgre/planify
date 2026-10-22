@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { onClickOutside } from '@vueuse/core'
 import { useCalendarStore } from '../stores/calendar'
+import { calendarSearchControls, registerControls } from '../composables/tour-controls'
 import type { CalendarEventDisplay } from '../types'
 
 const emit = defineEmits<{
@@ -8,15 +9,11 @@ const emit = defineEmits<{
 }>()
 
 const calendarStore = useCalendarStore()
-const { events, searchQuery: query } = storeToRefs(calendarStore)
+const { events } = storeToRefs(calendarStore)
 
+const query = ref('')
 const isOpen = ref(false)
 const wrapperRef = useTemplateRef('wrapperRef')
-
-// A query set from outside (the demo tour) has no focus event to open the list.
-watch(query, (value) => {
-  if (value.trim()) isOpen.value = true
-})
 
 onClickOutside(wrapperRef, () => {
   isOpen.value = false
@@ -60,6 +57,13 @@ const onSelect = (event: CalendarEventDisplay) => {
 const clearQuery = () => {
   query.value = ''
 }
+
+registerControls(calendarSearchControls, {
+  setQuery: (value) => {
+    query.value = value
+    isOpen.value = value.trim().length > 0
+  },
+})
 </script>
 
 <template>

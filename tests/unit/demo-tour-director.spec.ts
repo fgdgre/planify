@@ -20,6 +20,7 @@ function setup({ events = [standup], reducedMotion = true } = {}) {
   const sent: DemoMessageBody[] = []
   const typedTitles: string[] = []
   const searchQueries: string[] = []
+  const viewRange = { start: new Date(2026, 9, 19).toISOString(), end: new Date(2026, 9, 26).toISOString() }
   const navigations: Array<{ path: string; query?: Record<string, string> }> = []
   const note = { id: 'n1', title: 'Acme standup notes' }
 
@@ -54,7 +55,8 @@ function setup({ events = [standup], reducedMotion = true } = {}) {
       calendar: () => calendar,
       eventSidebar: () => sidebar as unknown as EventSidebarControls,
       events: () => events,
-      setSearchQuery: (value) => searchQueries.push(value),
+      viewRange: () => viewRange,
+      searchBox: () => ({ setQuery: (value) => searchQueries.push(value) }),
       now: () => NOW,
       reducedMotion,
       signal,
@@ -192,12 +194,12 @@ describe('visitor control', () => {
     director.takeControlFromTour()
     step(1)
     await vi.runAllTimersAsync()
-    expect(types()).toEqual(['user-took-control'])
+    expect(types()).toEqual(['user-took-control', 'step-ignored'])
 
     handle(landing({ type: 'resume' }))
     step(1)
     await vi.runAllTimersAsync()
-    expect(types()).toEqual(['user-took-control', 'step-done'])
+    expect(types()).toEqual(['user-took-control', 'step-ignored', 'step-done'])
   })
 
   it('reports control again after a resume', () => {
@@ -237,5 +239,15 @@ describe('untrusted input', () => {
     director.reportReady()
 
     expect(sent).toEqual([{ type: 'ready' }])
+  })
+})
+
+describe('range awareness', () => {
+  it('does not treat events outside the shown week as ready', async () => {
+    const { step, sent } = setup({ events: [event('old', 'Acme standup', iso(9, 5))] })
+    step(3)
+    await vi.runAllTimersAsync()
+
+    expect(sent).toEqual([{ type: 'step-failed', step: 3, reason: 'Timed out waiting for calendar events' }])
   })
 })

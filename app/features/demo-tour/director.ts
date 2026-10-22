@@ -55,6 +55,7 @@ export function createTourDirector({ createEnv, send }: TourDirectorOptions) {
       }
 
       if (hasControl) void runStep(message.step)
+      else post({ type: 'step-ignored', step: message.step })
     },
 
     /** The visitor interacted: stop driving the app until the landing sends `resume`. */

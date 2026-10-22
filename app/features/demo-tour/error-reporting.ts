@@ -11,7 +11,7 @@ const BENIGN_ERROR = /ResizeObserver loop/
  * errors, rejected promises, Nuxt and Vue errors) so it can fall back instead
  * of showing a broken app. Capped, so an error loop cannot flood the host.
  */
-export function reportDemoErrors(nuxtApp: Pick<NuxtApp, "hook">): void {
+export function reportDemoErrors(nuxtApp: Pick<NuxtApp, 'hook'>): void {
   const landing = getLandingWindow()
   if (!landing) return
 

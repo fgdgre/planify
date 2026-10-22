@@ -26,6 +26,7 @@ export type DemoMessage =
   | (Envelope<typeof DEMO_SOURCE> & { type: 'ready' })
   | (Envelope<typeof DEMO_SOURCE> & { type: 'user-took-control' })
   | (Envelope<typeof DEMO_SOURCE> & { type: 'step-done'; step: TourStep })
+  | (Envelope<typeof DEMO_SOURCE> & { type: 'step-ignored'; step: TourStep })
   | (Envelope<typeof DEMO_SOURCE> & { type: 'step-failed'; step: TourStep; reason: string })
   | (Envelope<typeof DEMO_SOURCE> & { type: 'error'; reason: string })
 
@@ -67,7 +68,8 @@ export function parseDemoMessage(data: unknown): DemoMessage | null {
     case 'user-took-control':
       return { ...base, type: data.type }
     case 'step-done':
-      return isTourStep(data.step) ? { ...base, type: 'step-done', step: data.step } : null
+    case 'step-ignored':
+      return isTourStep(data.step) ? { ...base, type: data.type, step: data.step } : null
     case 'step-failed':
       return isTourStep(data.step) && typeof data.reason === 'string'
         ? { ...base, type: 'step-failed', step: data.step, reason: data.reason }

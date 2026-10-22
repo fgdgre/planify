@@ -10,7 +10,6 @@ export const useCalendarStore = defineStore('calendar', () => {
   const viewRange = ref<ViewDateRange | null>(null)
   const selectedEvent = ref<CalendarEventDisplay | null>(null)
   const isEventModalOpen = ref(false)
-  const searchQuery = ref('')
 
   // event form modal state
   const isEventFormModalOpen = ref(false)
@@ -26,10 +25,6 @@ export const useCalendarStore = defineStore('calendar', () => {
   }
   const setSelectedEvent = (event: CalendarEventDisplay | null) => {
     selectedEvent.value = event
-  }
-  /** Text of the calendar search box. Lives in the store so the demo tour can fill it like a visitor would. */
-  const setSearchQuery = (value: string) => {
-    searchQuery.value = value
   }
   const setEventModalOpen = (state: boolean) => {
     isEventModalOpen.value = state
@@ -57,7 +52,6 @@ export const useCalendarStore = defineStore('calendar', () => {
     viewRange,
     selectedEvent,
     isEventModalOpen,
-    searchQuery,
     isEventFormModalOpen,
     eventFormMode,
     eventFormPrefill,
@@ -65,7 +59,6 @@ export const useCalendarStore = defineStore('calendar', () => {
     setViewRange,
     setSelectedEvent,
     setEventModalOpen,
-    setSearchQuery,
     openCreateModal,
     openEditModal,
     closeFormModal,

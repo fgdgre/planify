@@ -38,6 +38,7 @@ describe('parseDemoMessage', () => {
     demo({ type: 'ready' }),
     demo({ type: 'user-took-control' }),
     demo({ type: 'step-done', step: 3 }),
+    demo({ type: 'step-ignored', step: 3 }),
     demo({ type: 'step-failed', step: 2, reason: 'boom' }),
     demo({ type: 'error', reason: 'boom' }),
   ])('accepts %j', (message) => {
@@ -47,6 +48,7 @@ describe('parseDemoMessage', () => {
   it.each([
     ['landing source', landing({ type: 'ready' })],
     ['step-done without step', demo({ type: 'step-done' })],
+    ['step-ignored with a bad step', demo({ type: 'step-ignored', step: 7 })],
     ['step-failed without reason', demo({ type: 'step-failed', step: 1 })],
     ['error with non-string reason', demo({ type: 'error', reason: 1 })],
     ['unknown type', demo({ type: 'hello' })],
