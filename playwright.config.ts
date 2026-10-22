@@ -11,7 +11,7 @@ export default defineConfig({
   testDir: './tests/e2e',
   timeout: 30_000,
   fullyParallel: true,
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 1 : 0,
   reporter: 'list',
   use: {
     baseURL: BASE_URL,
