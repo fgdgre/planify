@@ -63,7 +63,6 @@ const handleSearchSelect = (event: CalendarEventDisplay) => {
   opacity: 0.2;
 }
 
-/* Search: matches get a ring, everything else fades out. */
 :deep(.sx__event.is-search-dim) {
   opacity: 0.3;
   filter: grayscale(1);

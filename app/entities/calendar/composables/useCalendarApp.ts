@@ -201,7 +201,6 @@ export const useCalendarApp = () => {
     },
   }, [createDragAndDropPlugin(), createResizePlugin(), createCurrentTimePlugin()])
 
-  // While searching, matches get a ring and everything else is dimmed (see the calendar page styles).
   const searchClassesOf = (event: CalendarEventDisplay) => {
     if (!isSearching.value) return []
     return [matchesSearch(event) ? 'is-search-match' : 'is-search-dim']

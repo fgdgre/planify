@@ -17,7 +17,6 @@ const readHiddenSources = (userId: string): string[] => {
 export const useCalendarFiltersStore = defineStore('calendar-filters', () => {
   const userStore = useUserStore()
 
-  // A source is a Google account id, or 'internal' for Planify's own events.
   const hiddenSources = ref<string[]>([])
   const searchQuery = ref('')
 
@@ -28,7 +27,6 @@ export const useCalendarFiltersStore = defineStore('calendar-filters', () => {
     try {
       getSafeStorage()?.setItem(storageKey(userId), JSON.stringify(hiddenSources.value))
     } catch {
-      // Storage can be unavailable (private mode, quota); the filter then lasts for this session only.
     }
   }
 
@@ -56,7 +54,6 @@ export const useCalendarFiltersStore = defineStore('calendar-filters', () => {
     searchQuery.value = ''
   }
 
-  /** Called on sign-out. The saved choice stays in storage for the next sign-in. */
   const reset = () => {
     hiddenSources.value = []
     searchQuery.value = ''

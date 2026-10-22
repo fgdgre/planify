@@ -44,7 +44,6 @@ function setup({ events = [standup], reducedMotion = true, withTargets = true } 
   const note = { id: 'n1', title: 'Acme standup notes' }
   let createdCount = 0
   let currentPath = '/demo/calendar'
-  // Own copy, so tests can add visitor events and the fake sidebar can create and delete.
   events = [...events]
 
   const sidebar = {

@@ -31,7 +31,6 @@ const {
   unlinkNoteFromEvent,
 } = useEventSidebar()
 
-// In view mode with the note panel open, Cancel only drops the note; the event stays open.
 const handleCancel = () => {
   if (!isEditable.value && isNotePanelOpen.value) return discardNoteDraft()
   return closeSidebar()

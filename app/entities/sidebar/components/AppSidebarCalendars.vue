@@ -15,7 +15,6 @@ const { hiddenSources } = storeToRefs(filtersStore)
 
 const googleOpen = ref(true)
 
-// Counts include hidden sources, so a hidden row still shows how many events it has.
 const counts = computed(() => {
   const result: Record<string, number> = {}
   for (const event of allEvents.value) {
@@ -25,8 +24,6 @@ const counts = computed(() => {
   return result
 })
 
-// Event blocks paint the semi-transparent `container` color on a white grid.
-// The sidebar is dark, so blend it on white first to get the same light tint as the events.
 const onWhite = (color: string) => {
   const match = color.match(/rgba?\(([^)]+)\)/)
   if (!match) return color

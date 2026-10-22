@@ -1,7 +1,5 @@
-/** Source id used for Planify's own (non-Google) events. */
 export const INTERNAL_SOURCE_ID = 'internal'
 
-// Events come in two shapes: calendar_events rows and the display events built from them.
 type SourceFields =
   | { is_internal: boolean; google_account_id: string | null }
   | { source: 'internal' | 'google'; sourceAccountId?: string }

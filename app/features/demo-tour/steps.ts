@@ -42,7 +42,6 @@ export interface TourEnv {
   random?: () => number
 }
 
-/** What one step created or changed the last time it played, so replaying it can undo exactly that. */
 export interface StepRecord {
   createdEventIds: string[]
   searchTyped: boolean
@@ -140,7 +139,6 @@ async function createClientCall(env: TourEnv, start: Date, end: Date, record: St
   }
 
   await sidebar.submit()
-  // Recorded the moment the event exists, before any wait that an abort could cut short.
   if (sidebar.selectedEvent?.title === CLIENT_CALL_TITLE) remember(sidebar.selectedEvent.id)
 
   const saved = await waitFor(
@@ -166,10 +164,6 @@ const steps: Record<TourStep, (env: TourEnv, record: StepRecord) => Promise<void
     await beat(STEP_SETTLE_MS, env)
   },
 
-  /**
-   * Clicks a free slot today at 14:00 and creates "Client call" like a visitor
-   * would. A replay first deletes the event this step made before (see cleanup).
-   */
   2: async (env, record) => {
     await showWeekView(env)
     await waitForEvents(env)
@@ -274,12 +268,6 @@ const steps: Record<TourStep, (env: TourEnv, record: StepRecord) => Promise<void
   },
 }
 
-/**
- * Undoes what a step did the last time it played: deletes the events the tour
- * created (only those ids, never the visitor's), clears the search it typed,
- * closes the sidebar it opened and leaves the page it navigated to.
- * Throws when something cannot be undone, so the step is reported as failed.
- */
 async function cleanupStep(record: StepRecord, env: TourEnv): Promise<void> {
   env.visuals.hide()
 
@@ -310,8 +298,7 @@ async function cleanupStep(record: StepRecord, env: TourEnv): Promise<void> {
 
 /**
  * Performs one tour step. Rejects when the step cannot run; the director turns
- * that into `step-failed`. Whatever the step did on an earlier play, and whatever
- * the previous step left on screen, is cleared first.
+ * that into `step-failed`. Whatever the previous step left on screen is cleared first.
  */
 export const runTourStep = async (step: TourStep, env: TourEnv, records: TourRecords = {}): Promise<void> => {
   env.visuals.clearGlow()

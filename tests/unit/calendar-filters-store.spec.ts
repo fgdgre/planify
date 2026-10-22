@@ -2,7 +2,6 @@ import { reactive, nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 
-// The real user store relies on Nuxt auto-imports, so a plain reactive stand-in is used.
 const userState = reactive<{ user: { id: string } | null }>({ user: null })
 vi.mock('@features/auth/stores/user', () => ({ useUserStore: () => userState }))
 

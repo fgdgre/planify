@@ -204,17 +204,14 @@ test.describe('Landing demo', () => {
 
     await scrollToStep(page, 2)
     await waitForMessage(page, 'step-done', 2)
-    // The seed has a Tuesday "Client call"; the tour's makes two.
     await expect(clientCalls).toHaveCount(2)
 
     await scrollToStep(page, 3)
     await waitForMessage(page, 'step-done', 3)
 
     await scrollToStep(page, 2)
-    // The create sidebar opens again and the title is typed again, not skipped.
     await expect(demo.locator('input[placeholder="Event title"]')).toHaveValue('Client call', { timeout: STEP_TIMEOUT })
     await expect.poll(() => stepDoneCount(2), { timeout: STEP_TIMEOUT }).toBe(2)
-    // The first run's event was deleted before the new one was made.
     await expect(clientCalls).toHaveCount(2)
 
     const messages = await demoMessages(page)

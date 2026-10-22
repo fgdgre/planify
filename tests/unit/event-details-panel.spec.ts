@@ -27,7 +27,6 @@ describe('EventDetailsPanel Add note', () => {
 
     expect(wrapper.text()).toContain('Existing note')
     expect(addNoteButton(wrapper)).toBeDefined()
-    // Google events stay read-only: no Edit/Delete.
     expect(wrapper.text()).not.toContain('Delete')
   })
 

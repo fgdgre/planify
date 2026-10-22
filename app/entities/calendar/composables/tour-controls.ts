@@ -38,7 +38,6 @@ export interface EventSidebarControls {
   setTitle: (title: string) => void
   submit: () => Promise<void>
   openNote: (note: Note) => Promise<void>
-  /** Deletes an own event and reloads the grid; true when it is gone (a missing id counts as gone). */
   deleteEvent: (id: string, options?: { silent?: boolean }) => Promise<boolean>
 }
 

@@ -4,7 +4,6 @@ import { isEventVisible, eventMatchesSearch } from '../helpers/filters'
 import { useGoogleCalendarStore } from '@features/integrations/google-calendar'
 import type { CalendarEventDisplay } from '../types'
 
-/** The loaded events after the sidebar toggles, plus which of them match the search. */
 export const useCalendarFilters = () => {
   const calendarStore = useCalendarStore()
   const googleCalendarStore = useGoogleCalendarStore()

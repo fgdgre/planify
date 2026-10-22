@@ -21,7 +21,6 @@ export interface TourDirectorOptions {
 export function createTourDirector({ createEnv, send, onTakeControl }: TourDirectorOptions) {
   let hasControl = true
   let running: AbortController | null = null
-  // What each step did the last time it played; a replay undoes it first.
   const records: TourRecords = {}
 
   const post = send
