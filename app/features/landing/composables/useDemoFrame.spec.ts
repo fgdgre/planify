@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, ref } from 'vue'
 import { mount } from '@vue/test-utils'
-import { READY_TIMEOUT_MS, useDemoFrame } from './useDemoFrame'
+import { READY_TIMEOUT_MS, STEP_DEBOUNCE_MS, useDemoFrame } from './useDemoFrame'
 
 const demoMessage = (extra: object) => ({ source: 'planify-demo', version: 1, ...extra })
 
@@ -108,7 +108,78 @@ describe('useDemoFrame', () => {
 
     await fromFrame({ type: 'ready' })
     api().goToStep(4)
+    await vi.advanceTimersByTimeAsync(STEP_DEBOUNCE_MS)
     expect(posted.at(-1)).toMatchObject({ type: 'step', step: 4 })
+  })
+
+  describe('step debounce', () => {
+    async function ready() {
+      const ctx = setup()
+      await ctx.nearAndIdle()
+      await nextTick()
+      await ctx.fromFrame({ type: 'ready' })
+      ctx.spyOnFrame()
+      return ctx
+    }
+
+    it('sends a step only after it stayed active for the debounce time', async () => {
+      const { api, posted } = await ready()
+
+      api().goToStep(2)
+      await vi.advanceTimersByTimeAsync(STEP_DEBOUNCE_MS - 1)
+      expect(posted).toEqual([])
+
+      await vi.advanceTimersByTimeAsync(1)
+      expect(posted).toEqual([{ source: 'planify-landing', version: 1, type: 'step', step: 2 }])
+    })
+
+    it('skips the steps a fast scroll flies past', async () => {
+      const { api, posted } = await ready()
+
+      api().goToStep(2)
+      await vi.advanceTimersByTimeAsync(100)
+      api().goToStep(3)
+      await vi.advanceTimersByTimeAsync(100)
+      api().goToStep(4)
+      await vi.advanceTimersByTimeAsync(STEP_DEBOUNCE_MS)
+
+      expect(posted).toEqual([{ source: 'planify-landing', version: 1, type: 'step', step: 4 }])
+    })
+
+    it('does not send the step that is already playing again', async () => {
+      const { api, posted } = await ready()
+
+      api().goToStep(2)
+      await vi.advanceTimersByTimeAsync(STEP_DEBOUNCE_MS)
+      api().goToStep(3)
+      await vi.advanceTimersByTimeAsync(100)
+      api().goToStep(2)
+      await vi.advanceTimersByTimeAsync(STEP_DEBOUNCE_MS * 2)
+
+      expect(posted).toHaveLength(1)
+    })
+
+    it('sends the current step again after a resume, immediately', async () => {
+      const { api, fromFrame, posted } = await ready()
+      api().goToStep(2)
+      await vi.advanceTimersByTimeAsync(STEP_DEBOUNCE_MS)
+
+      await fromFrame({ type: 'user-took-control' })
+      api().resume()
+
+      expect(posted.map((m) => (m as { type: string }).type)).toEqual(['step', 'resume', 'step'])
+      expect(posted.at(-1)).toMatchObject({ step: 2 })
+    })
+
+    it('drops a pending step when the visitor takes control', async () => {
+      const { api, posted } = await ready()
+
+      api().goToStep(3)
+      api().takeControl()
+      await vi.advanceTimersByTimeAsync(STEP_DEBOUNCE_MS * 2)
+
+      expect(posted).toEqual([{ source: 'planify-landing', version: 1, type: 'take-control' }])
+    })
   })
 
   it('ignores messages from other windows and malformed payloads', async () => {
@@ -182,6 +253,7 @@ describe('useDemoFrame', () => {
     expect(api().controlled.value).toBe(true)
 
     api().goToStep(4)
+    await vi.advanceTimersByTimeAsync(STEP_DEBOUNCE_MS)
     expect(posted).toEqual([])
 
     api().resume()

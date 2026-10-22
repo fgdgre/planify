@@ -43,12 +43,12 @@ onBeforeUnmount(() => sentinelObserver?.disconnect())
 
     <div class="mt-11 desk:mt-10 desk:grid desk:grid-cols-[minmax(260px,.62fr)_1.9fr] desk:gap-12">
       <!-- Left column is as tall as the five scroll sentinels; the step text and the frame both pin to the same `top` with the same height, so they unpin together and their top edges stay on one line. -->
-      <div class="relative min-h-[300vh] max-desk:hidden">
+      <div class="relative min-h-[500vh] max-desk:hidden">
         <div class="sticky top-[14vh] h-[72vh]">
           <LandingDemoStepper :active="activeStep" />
         </div>
         <div class="pointer-events-none absolute inset-0 flex flex-col" aria-hidden="true">
-          <div v-for="step in TOUR_STEPS" :key="step" ref="sentinels" data-testid="demo-step-sentinel" class="h-[60vh] shrink-0" />
+          <div v-for="step in TOUR_STEPS" :key="step" ref="sentinels" data-testid="demo-step-sentinel" class="h-screen shrink-0" />
         </div>
       </div>
       <div>

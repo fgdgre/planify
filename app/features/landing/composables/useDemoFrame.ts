@@ -4,6 +4,12 @@ import { parseDemoMessage, toLandingMessage, type TourStep } from '@shared/api/d
 /** How long the demo gets to report `ready` before the landing gives up and keeps the poster. */
 export const READY_TIMEOUT_MS = 8000
 
+/**
+ * A step is sent to the demo only after it has been the active step this long,
+ * so a quick scroll skips the steps it flies past instead of running them all.
+ */
+export const STEP_DEBOUNCE_MS = 350
+
 /** The iframe is only requested when it is within this many viewports of the section. */
 const LOAD_MARGIN = '100% 0px'
 
@@ -41,6 +47,9 @@ export function useDemoFrame({ section, frame, enabled, demoUrl }: DemoFrameOpti
   const iframeSrc = ref<string | null>(null)
   const controlled = ref(false)
   let currentStep: TourStep = 1
+  /** The step the demo was last asked to play; asking again would restart a step that is already on screen. */
+  let sentStep: TourStep | null = null
+  let stepTimer: ReturnType<typeof setTimeout> | undefined
   let observer: IntersectionObserver | undefined
   let cancelIdle: (() => void) | undefined
   let readyTimer: ReturnType<typeof setTimeout> | undefined
@@ -48,10 +57,16 @@ export function useDemoFrame({ section, frame, enabled, demoUrl }: DemoFrameOpti
   const post = (body: Parameters<typeof toLandingMessage>[0]) =>
     frame.value?.contentWindow?.postMessage(toLandingMessage(body), '*')
 
+  const sendStep = (step: TourStep) => {
+    sentStep = step
+    post({ type: 'step', step })
+  }
+
   function stopWaiting() {
     observer?.disconnect()
     cancelIdle?.()
     clearTimeout(readyTimer)
+    clearTimeout(stepTimer)
   }
 
   function fallBack() {
@@ -83,10 +98,11 @@ export function useDemoFrame({ section, frame, enabled, demoUrl }: DemoFrameOpti
         if (status.value !== 'loading') return
         clearTimeout(readyTimer)
         status.value = 'ready'
-        post({ type: 'step', step: currentStep })
+        sendStep(currentStep)
         break
       case 'user-took-control':
         if (status.value === 'ready') controlled.value = true
+        clearTimeout(stepTimer)
         break
       case 'error':
       case 'step-failed':
@@ -95,24 +111,35 @@ export function useDemoFrame({ section, frame, enabled, demoUrl }: DemoFrameOpti
     }
   }
 
-  /** Follows the scroll tour. While the visitor is in control the step is only remembered. */
+  /**
+   * Follows the scroll tour: the step is sent once it has stayed active for
+   * `STEP_DEBOUNCE_MS`, and never again while it is the one already playing.
+   * While the visitor is in control the step is only remembered.
+   */
   function goToStep(step: TourStep) {
     currentStep = step
-    if (status.value === 'ready' && !controlled.value) post({ type: 'step', step })
+    clearTimeout(stepTimer)
+    if (status.value !== 'ready' || controlled.value || step === sentStep) return
+
+    stepTimer = setTimeout(() => {
+      if (status.value === 'ready' && !controlled.value && currentStep === step) sendStep(step)
+    }, STEP_DEBOUNCE_MS)
   }
 
   /** The visitor chose to use the demo themselves: pause the tour on both sides of the frame. */
   function takeControl() {
     if (status.value !== 'ready' || controlled.value) return
     controlled.value = true
+    clearTimeout(stepTimer)
     post({ type: 'take-control' })
   }
 
   function resume() {
     if (status.value !== 'ready') return
     controlled.value = false
+    clearTimeout(stepTimer)
     post({ type: 'resume' })
-    post({ type: 'step', step: currentStep })
+    sendStep(currentStep)
   }
 
   onMounted(() => {
