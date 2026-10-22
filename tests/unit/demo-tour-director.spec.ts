@@ -42,6 +42,10 @@ function setup({ events = [standup], reducedMotion = true, withTargets = true } 
   const viewRange = { start: new Date(2026, 9, 19).toISOString(), end: new Date(2026, 9, 26).toISOString() }
   const navigations: Array<{ path: string; query?: Record<string, string> }> = []
   const note = { id: 'n1', title: 'Acme standup notes' }
+  let createdCount = 0
+  let currentPath = '/demo/calendar'
+  // Own copy, so tests can add visitor events and the fake sidebar can create and delete.
+  events = [...events]
 
   const sidebar = {
     mode: null as EventSidebarControls['mode'],
@@ -49,8 +53,20 @@ function setup({ events = [standup], reducedMotion = true, withTargets = true } 
     eventNotes: [] as unknown[],
     saving: false,
     setTitle: vi.fn((title: string) => { typedTitles.push(title); mark(`type:${title}`) }),
-    submit: vi.fn(async () => { mark('save'); sidebar.mode = 'view'; sidebar.selectedEvent = event('new', 'Client call', iso(14)) }),
+    submit: vi.fn(async () => {
+      mark('save')
+      const created = event(`new${++createdCount}`, 'Client call', iso(14))
+      events.push(created)
+      sidebar.mode = 'view'
+      sidebar.selectedEvent = created
+    }),
     openNote: vi.fn(async () => { mark('open-note') }),
+    deleteEvent: vi.fn(async (id: string) => {
+      mark(`delete:${id}`)
+      const index = events.findIndex((e) => e.id === id)
+      if (index >= 0) events.splice(index, 1)
+      return true
+    }),
   }
   const calendar = {
     showCurrentWeek: vi.fn(),
@@ -70,6 +86,7 @@ function setup({ events = [standup], reducedMotion = true, withTargets = true } 
   // The router drives the (fake) sidebar the way the real route watcher does.
   const navigate = vi.fn(async (location: { path: string; query?: Record<string, string> }) => {
     navigations.push(location)
+    currentPath = location.path
     mark(`navigate:${location.query?.action ?? (location.query?.eventId ? 'event' : location.path)}`)
     const query = location.query ?? {}
     if (query.action === 'create') sidebar.mode = 'create'
@@ -85,7 +102,7 @@ function setup({ events = [standup], reducedMotion = true, withTargets = true } 
     onTakeControl: () => visuals.hide(),
     createEnv: (signal): TourEnv => ({
       navigate,
-      currentPath: () => '/demo/calendar',
+      currentPath: () => currentPath,
       calendar: () => calendar,
       eventSidebar: () => sidebar as unknown as EventSidebarControls,
       events: () => events,
@@ -102,7 +119,7 @@ function setup({ events = [standup], reducedMotion = true, withTargets = true } 
   const step = (n: number) => director.handleLandingMessage(landing({ type: 'step', step: n }))
   const types = () => sent.map((m) => m.type)
 
-  return { director, step, sent, types, typedTitles, searchQueries, navigations, sidebar, calendar, note, visuals, log, timeline }
+  return { director, step, events, sent, types, typedTitles, searchQueries, navigations, sidebar, calendar, note, visuals, log, timeline }
 }
 
 beforeEach(() => {
@@ -140,14 +157,12 @@ describe('tour steps', () => {
     expect(sent).toEqual([{ type: 'step-done', step: 2 }])
   })
 
-  it('step 2 only points at the event when today\'s Client call already exists', async () => {
-    const { step, navigations, sidebar, visuals, sent } = setup({ events: [standup, clientCall] })
+  it('step 2 never takes a shortcut: it creates the event even when one already exists', async () => {
+    const { step, sidebar, sent } = setup({ events: [standup, clientCall] })
     step(2)
     await vi.runAllTimersAsync()
 
-    expect(sidebar.submit).not.toHaveBeenCalled()
-    expect(navigations.some((n) => n.query?.action === 'create')).toBe(false)
-    expect(visuals.pulse).toHaveBeenCalledTimes(1)
+    expect(sidebar.submit).toHaveBeenCalledTimes(1)
     expect(sent).toEqual([{ type: 'step-done', step: 2 }])
   })
 
@@ -330,7 +345,7 @@ describe('choreography', () => {
       'ripple',
       'save',
       'navigate:/demo/calendar',
-      'pulse:event:new',
+      'pulse:event:new1',
     ])
   })
 
@@ -451,5 +466,91 @@ describe('choreography', () => {
 
     expect(visuals.hide).toHaveBeenCalledTimes(1)
     expect(log.slice(length)).toEqual([])
+  })
+})
+
+describe('replaying a step', () => {
+  const clientCalls = (events: CalendarEventDisplay[]) => events.filter((e) => e.title === 'Client call')
+
+  it('step 2 deletes the event it created before and creates a fresh one', async () => {
+    const { step, events, sidebar, sent, log } = setup()
+    step(2)
+    await vi.runAllTimersAsync()
+    expect(clientCalls(events).map((e) => e.id)).toEqual(['new1'])
+
+    step(3)
+    await vi.runAllTimersAsync()
+    step(2)
+    await vi.runAllTimersAsync()
+
+    expect(log).toContain('delete:new1')
+    expect(clientCalls(events).map((e) => e.id)).toEqual(['new2'])
+    expect(sidebar.submit).toHaveBeenCalledTimes(2)
+    expect(sent.filter((m) => m.type === 'step-failed')).toEqual([])
+  })
+
+  it('step 2 deletes a tour event only once and a visitor event is never touched', async () => {
+    const visitorEvent = event('mine', 'Client call', iso(14))
+    const { step, events, sidebar } = setup({ events: [standup, visitorEvent] })
+    step(2)
+    await vi.runAllTimersAsync()
+    step(2)
+    await vi.runAllTimersAsync()
+
+    expect(sidebar.deleteEvent).toHaveBeenCalledTimes(1)
+    expect(sidebar.deleteEvent).toHaveBeenCalledWith('new1')
+    expect(events.map((e) => e.id)).toContain('mine')
+    expect(clientCalls(events)).toHaveLength(2)
+  })
+
+  it('does not fail when the visitor already deleted the tour event', async () => {
+    const { step, events, sent } = setup()
+    step(2)
+    await vi.runAllTimersAsync()
+    events.splice(events.findIndex((e) => e.id === 'new1'), 1)
+
+    step(2)
+    await vi.runAllTimersAsync()
+
+    expect(sent.at(-1)).toEqual({ type: 'step-done', step: 2 })
+    expect(clientCalls(events).map((e) => e.id)).toEqual(['new2'])
+  })
+
+  it('reports step-failed when the cleanup cannot delete the event', async () => {
+    const { step, sidebar, sent } = setup()
+    step(2)
+    await vi.runAllTimersAsync()
+    sidebar.deleteEvent.mockResolvedValueOnce(false)
+
+    step(2)
+    await vi.runAllTimersAsync()
+
+    expect(sent.at(-1)).toEqual({ type: 'step-failed', step: 2, reason: 'Could not delete the event the tour created' })
+  })
+
+  it('step 4 clears the query and types it again', async () => {
+    const { step, searchQueries } = setup()
+    step(4)
+    await vi.runAllTimersAsync()
+    searchQueries.length = 0
+
+    step(4)
+    await vi.runAllTimersAsync()
+
+    expect(searchQueries[0]).toBe('')
+    expect(searchQueries.at(-1)).toBe('acme')
+  })
+
+  it('step 5 returns to the calendar before it plays again', async () => {
+    const { step, navigations } = setup()
+    step(5)
+    await vi.runAllTimersAsync()
+    navigations.length = 0
+
+    step(5)
+    await vi.runAllTimersAsync()
+
+    expect(navigations[0]).toEqual({ path: '/demo/calendar', query: {} })
+    expect(navigations.at(-1)).toEqual({ path: '/demo', query: {} })
   })
 })

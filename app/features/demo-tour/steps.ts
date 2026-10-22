@@ -41,6 +41,18 @@ export interface TourEnv {
   random?: () => number
 }
 
+/** What one step created or changed the last time it played, so replaying it can undo exactly that. */
+export interface StepRecord {
+  createdEventIds: string[]
+  searchTyped: boolean
+  openedSidebar: boolean
+  navigatedTo?: string
+}
+
+export type TourRecords = Partial<Record<TourStep, StepRecord>>
+
+const newRecord = (): StepRecord => ({ createdEventIds: [], searchTyped: false, openedSidebar: false })
+
 const CLIENT_CALL_TITLE = 'Client call'
 const STANDUP_TITLE = 'Acme standup'
 const SEARCH_TEXT = 'acme'
@@ -140,7 +152,7 @@ async function pulseEvent(env: TourEnv, id: string): Promise<void> {
   await pulse(env, await findOptional(() => calendar.eventElement(id), env))
 }
 
-const steps: Record<TourStep, (env: TourEnv) => Promise<void>> = {
+const steps: Record<TourStep, (env: TourEnv, record: StepRecord) => Promise<void>> = {
   /** The unified week grid: the tour only settles on it. */
   1: async (env) => {
     await showWeekView(env)
@@ -149,27 +161,23 @@ const steps: Record<TourStep, (env: TourEnv) => Promise<void>> = {
 
   /**
    * Clicks a free slot today at 14:00 and creates "Client call" like a visitor
-   * would. Idempotent: when it already exists the tour only points at it.
+   * would. A replay first deletes the event this step made before (see cleanup).
    */
-  2: async (env) => {
+  2: async (env, record) => {
     await showWeekView(env)
-    const events = await waitForEvents(env)
+    await waitForEvents(env)
     await beat(STEP_SETTLE_MS, env)
 
     const start = atHour(env.now(), 14)
     const end = atHour(env.now(), 15)
-    const existing = events.find((event) => event.title === CLIENT_CALL_TITLE && startMs(event) === start.getTime())
     const calendar = await calendarOf(env)
 
     await glideTo(env, calendar.slotPoint(start))
     await click(env)
 
-    if (existing) {
-      await pulseEvent(env, existing.id)
-      return
-    }
-
+    record.openedSidebar = true
     const createdId = await createClientCall(env, start, end)
+    record.createdEventIds.push(createdId)
     await beat(AFTER_SAVE_MS, env)
     // The sidebar covers the grid's right side: close it so the new event is seen landing.
     await closeSidebars(env)
@@ -177,7 +185,7 @@ const steps: Record<TourStep, (env: TourEnv) => Promise<void>> = {
   },
 
   /** Opens the Acme standup, rings its notes and opens the first one. */
-  3: async (env) => {
+  3: async (env, record) => {
     await showWeekView(env)
     const events = await waitForEvents(env)
     await beat(STEP_SETTLE_MS, env)
@@ -190,6 +198,7 @@ const steps: Record<TourStep, (env: TourEnv) => Promise<void>> = {
     const calendar = await calendarOf(env)
     await glideTo(env, await findOptional(() => calendar.eventElement(standup.id), env))
     await click(env)
+    record.openedSidebar = true
     await env.navigate({ path: resolveAppPath(ROUTES.CALENDAR), query: { eventId: standup.id } })
 
     const sidebar = await waitFor(
@@ -211,7 +220,7 @@ const steps: Record<TourStep, (env: TourEnv) => Promise<void>> = {
   },
 
   /** Types "acme" into the search box and rings the matches. */
-  4: async (env) => {
+  4: async (env, record) => {
     await showWeekView(env)
     await waitForEvents(env)
     await beat(STEP_SETTLE_MS, env)
@@ -219,6 +228,7 @@ const steps: Record<TourStep, (env: TourEnv) => Promise<void>> = {
     const searchBox = await waitFor(env.searchBox, { what: 'the calendar search', signal: env.signal })
     await glideTo(env, await findOptional(() => env.target('searchBox'), env))
     await click(env)
+    record.searchTyped = true
     await typeText(SEARCH_TEXT, searchBox.setQuery, env)
 
     await highlight(env, await findOptional(() => env.target('searchResults'), env))
@@ -228,7 +238,7 @@ const steps: Record<TourStep, (env: TourEnv) => Promise<void>> = {
    * Goes to the dashboard through its nav item. The page content cross-fades
    * around the route change so the swap never looks like a lag followed by a jump.
    */
-  5: async (env) => {
+  5: async (env, record) => {
     env.searchBox()?.setQuery('')
     await closeSidebars(env)
     await beat(STEP_SETTLE_MS, env)
@@ -243,6 +253,7 @@ const steps: Record<TourStep, (env: TourEnv) => Promise<void>> = {
         await beat(PAGE_FADE_OUT_MS, env)
       }
 
+      record.navigatedTo = resolveAppPath(ROUTES.HOME)
       await env.navigate({ path: resolveAppPath(ROUTES.HOME), query: {} })
       const stats = await findOptional(() => env.target('statsRow'), env, 4000)
 
@@ -258,10 +269,51 @@ const steps: Record<TourStep, (env: TourEnv) => Promise<void>> = {
 }
 
 /**
- * Performs one tour step. Rejects when the step cannot run; the director turns
- * that into `step-failed`. Whatever the previous step left on screen is cleared first.
+ * Undoes what a step did the last time it played: deletes the events the tour
+ * created (only those ids, never the visitor's), clears the search it typed,
+ * closes the sidebar it opened and leaves the page it navigated to.
+ * Throws when something cannot be undone, so the step is reported as failed.
  */
-export const runTourStep = (step: TourStep, env: TourEnv): Promise<void> => {
+async function cleanupStep(record: StepRecord, env: TourEnv): Promise<void> {
+  env.visuals.hide()
+
+  if (record.searchTyped) {
+    env.searchBox()?.setQuery('')
+    record.searchTyped = false
+  }
+
+  if (record.createdEventIds.length) {
+    const sidebar = await waitFor(env.eventSidebar, { what: 'the event sidebar', signal: env.signal })
+    while (record.createdEventIds.length) {
+      const id = record.createdEventIds[0]!
+      if (!(await sidebar.deleteEvent(id))) throw new Error('Could not delete the event the tour created')
+      record.createdEventIds.shift()
+    }
+  }
+
+  if (record.openedSidebar) {
+    await closeSidebars(env)
+    record.openedSidebar = false
+  }
+
+  if (record.navigatedTo && env.currentPath() === record.navigatedTo) {
+    await env.navigate({ path: resolveAppPath(ROUTES.CALENDAR), query: {} })
+  }
+  record.navigatedTo = undefined
+}
+
+/**
+ * Performs one tour step. Rejects when the step cannot run; the director turns
+ * that into `step-failed`. Whatever the step did on an earlier play, and whatever
+ * the previous step left on screen, is cleared first.
+ */
+export const runTourStep = async (step: TourStep, env: TourEnv, records: TourRecords = {}): Promise<void> => {
   env.visuals.clearGlow()
-  return steps[step](env)
+
+  const previous = records[step]
+  if (previous) await cleanupStep(previous, env)
+
+  const record = newRecord()
+  records[step] = record
+  await steps[step](env, record)
 }
