@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { canAutoFocus } from '@shared/lib/auto-focus'
 import * as textareaVariants from './textarea'
 
 const props = defineProps<{
@@ -27,7 +28,7 @@ const emit = defineEmits<{
 const textareaFieldRef = useTemplateRef('textareaFieldRef')
 
 onMounted(() => {
-  if (textareaFieldRef.value && props.autoFocus) {
+  if (textareaFieldRef.value && props.autoFocus && canAutoFocus()) {
     textareaFieldRef.value.focus()
   }
 })
