@@ -5,10 +5,20 @@ import logo from '@assets/images/logo.svg'
 import { sidebarVariants } from '@shared/ui/sidebar'
 import { useLogout } from "@features/auth";
 import { useUserStore } from "@entities/user";
+import { useNotificationsStore } from "@entities/notification";
+import { ROUTES } from "@shared/constants/routes";
 import AppSidebarCalendars from "./AppSidebarCalendars.vue";
 
 const sidebarStore = useAppSidebar()
 const { isSidebarCollapsed, sections } = storeToRefs(sidebarStore)
+
+const { unreadCount } = storeToRefs(useNotificationsStore())
+
+const sectionsWithBadges = computed(() =>
+  sections.value.map((section) =>
+    section.link === ROUTES.NOTIFICATIONS ? { ...section, badge: unreadCount.value } : section
+  )
+)
 
 const userStore = useUserStore()
 const { user } = storeToRefs(userStore)
@@ -101,7 +111,7 @@ const sidebarFooterWrapper = computed(() =>
     <div :class="[sidebarMainContent({ noPadding: true, class: 'flex flex-col justify-between' })]">
       <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
         <AppSidebarContent
-          :sections
+          :sections="sectionsWithBadges"
           :collapse-sections="isSidebarCollapsed && (!isSidebarHovered || !showOnHover)"
           @link-click="$emit('linkClicked')"
           @toggle-section="(e) => $emit('toggleSection', e)"
