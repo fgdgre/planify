@@ -49,6 +49,7 @@ const listGroupTitle = computed(() =>
             :open="section.open"
             :icon="section.icon"
             :link="section.link"
+            :badge="section.badge"
             :collapse-sections
             iconSize="lg"
             :test-id="`supa-sidebar-${section.name.toLowerCase()}-button`"

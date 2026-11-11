@@ -13,6 +13,10 @@ export const useToastStore = defineStore('toast', () => {
       icon: toast.icon,
       duration: toast.duration,
       showProgress: toast.showProgress,
+      closable: toast.closable,
+      date: toast.date,
+      author: toast.author,
+      email: toast.email,
     }
     toasts.value.push(_toast)
   }

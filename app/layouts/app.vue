@@ -3,6 +3,8 @@ import { useAppSidebar } from "@entities/sidebar";
 import { AppSidebar } from "@widgets/app-sidebar";
 import { EventSidebar } from '@widgets/calendar'
 import { NoteSidebar } from '@features/notes'
+import { useUnreadNotifications } from '@entities/notification'
+import { useUserStore } from '@entities/user'
 import { useTourTarget } from '@shared/api/demo'
 
 const route = useRoute()
@@ -14,6 +16,17 @@ useTourTarget('pageContent', mainRef)
 
 const sidebarStore = useAppSidebar()
 const { isSidebarCollapsed } = storeToRefs(sidebarStore)
+
+const { user } = storeToRefs(useUserStore())
+const unreadNotifications = useUnreadNotifications()
+
+watch(
+  () => user.value?.id,
+  (userId) => (userId ? unreadNotifications.start(userId) : unreadNotifications.stop()),
+  { immediate: true },
+)
+
+onBeforeUnmount(() => unreadNotifications.stop())
 </script>
 
 <template>

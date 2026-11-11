@@ -3,6 +3,7 @@ import type { Toast } from '@shared/lib/toast'
 
 defineProps<{
   toasts: Toast[]
+  staticPosition?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -15,11 +16,11 @@ const closeToast = (id: string) => {
 </script>
 
 <template>
-  <Teleport to="body">
+  <Teleport to="body" :disabled="staticPosition">
     <TransitionGroup
       tag="ul"
       name="toasts"
-      class="fixed top-[14px] right-[14px] w-[calc(100%-32px)] max-w-[420px] z-50"
+      :class="staticPosition ? 'relative w-full' : 'fixed top-[14px] right-[14px] w-[calc(100%-32px)] max-w-[420px] z-50'"
     >
       <li v-for="toast in toasts" :key="toast.id" class="w-full [&:not(:first-child)]:mt-[10px]">
         <SupaToast
@@ -29,6 +30,10 @@ const closeToast = (id: string) => {
           :color="toast.color"
           :duration="toast.duration"
           :show-progress="toast.showProgress"
+          :closable="toast.closable"
+          :date="toast.date"
+          :author="toast.author"
+          :email="toast.email"
           @close="closeToast(toast.id)"
         />
       </li>

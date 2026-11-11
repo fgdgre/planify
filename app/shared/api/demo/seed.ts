@@ -4,7 +4,7 @@ import type { Database } from '../supabase/types/database'
 type Tables = Database['public']['Tables']
 
 export type DemoSeed = {
-  [Table in 'calendar_events' | 'google_accounts' | 'notes' | 'settings']: Array<Tables[Table]['Row']>
+  [Table in 'calendar_events' | 'google_accounts' | 'notes' | 'notifications' | 'settings']: Array<Tables[Table]['Row']>
 }
 
 export const DEMO_USER_ID = '00000000-0000-4000-8000-00000000d3a0'
@@ -128,6 +128,7 @@ export function createSeed(now: Date): DemoSeed {
     status: 'confirmed',
     creator_email: null,
     organizer_email: null,
+    organizer_name: null,
     html_link: null,
     etag: null,
     updated_at_google: null,
@@ -180,5 +181,41 @@ export function createSeed(now: Date): DemoSeed {
     },
   ]
 
-  return { google_accounts, calendar_events, notes, settings }
+  const notification = (
+    index: number,
+    eventKey: string,
+    author: [name: string, email: string],
+    minutesAgo: number,
+    read: boolean,
+  ): DemoSeed['notifications'][number] => {
+    const spec = EVENT_SPECS.find((candidate) => candidate.key === eventKey)!
+    const createdAt = new Date(now.getTime() - minutesAgo * 60_000).toISOString()
+    return {
+      id: seedId('a', 100 + index),
+      user_id: DEMO_USER_ID,
+      type: 'event_created',
+      source: 'google',
+      title: spec.title,
+      description: spec.location ?? null,
+      author_name: author[0],
+      author_email: author[1],
+      calendar_event_id: eventId(eventKey),
+      event_start_at: at(spec.day, spec.start),
+      read_at: read ? createdAt : null,
+      created_at: createdAt,
+    }
+  }
+
+  const jordan: [string, string] = ['Jordan Lee', 'jordan@studio.io']
+  const priya: [string, string] = ['Priya Shah', 'priya@acme.com']
+
+  const notifications: DemoSeed['notifications'] = [
+    notification(1, 'studio-demo', jordan, 25, false),
+    notification(2, 'planning', priya, 130, false),
+    notification(3, 'client-call', priya, 60 * 26, true),
+    notification(4, 'dentist', ['Smile Clinic', 'bookings@smileclinic.com'], 60 * 50, true),
+    notification(5, 'design-sync', jordan, 60 * 74, true),
+  ]
+
+  return { google_accounts, calendar_events, notes, notifications, settings }
 }

@@ -2,15 +2,25 @@
 import { useTimestamp } from '@vueuse/core'
 import * as toastVariants from './toast'
 
-const props = defineProps<{
-  title: string
-  description?: string
-  icon?: string
-  color?: 'primary' | 'error' | 'primary-light' | 'success'
-  closable?: boolean
-  duration?: number
-  showProgress?: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    title: string
+    description?: string
+    icon?: string
+    color?: 'primary' | 'error' | 'primary-light' | 'success' | 'info'
+    closable?: boolean
+    duration?: number
+    showProgress?: boolean
+    date?: string
+    author?: string
+    email?: string
+  }>(),
+  {
+    closable: true,
+  }
+)
+
+const hasMeta = computed(() => Boolean(props.date || props.author || props.email))
 
 const emit = defineEmits<{
   close: []
@@ -41,6 +51,7 @@ const width = computed(() => {
     </h5>
 
     <SupaButton
+      v-if="closable"
       icon="heroicons:x-mark"
       variant="transparent"
       :ui="{ button: 'p-[2px] w-fit h-fit', icon: `size-5 ${toastVariants.toastHeader({ color })}` }"
@@ -50,10 +61,16 @@ const width = computed(() => {
     <p v-if="description" :class="[toastVariants.toastParagraph({ withIcon: Boolean(icon), color })]">
       {{ description }}
     </p>
+
+    <div v-if="hasMeta" :class="[toastVariants.toastMeta({ withIcon: Boolean(icon), color })]">
+      <span v-if="author" class="font-medium">{{ author }}</span>
+      <span v-if="email">{{ email }}</span>
+      <span v-if="date" class="ml-auto">{{ date }}</span>
+    </div>
     <SupaProgress
       v-if="duration && showProgress"
       :width
-      :color="color === 'error' ? 'default' : color"
+      :color="color === 'error' || color === 'info' ? 'default' : color"
       :ui="{ wrapper: 'absolute bottom-0' }"
     />
   </div>

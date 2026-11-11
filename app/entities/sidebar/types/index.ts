@@ -14,5 +14,6 @@ export type SidebarSection = {
   link?: string
   icon?: string
   open?: boolean
+  badge?: number
   links?: SidebarSectionLink[] // Array of nested links
 }

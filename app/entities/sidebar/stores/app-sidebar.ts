@@ -24,6 +24,12 @@ export const useAppSidebar = defineStore('sidebar', () => {
       link: ROUTES.NOTES,
     },
     {
+      name: 'Notifications',
+      pageName: 'notifications',
+      icon: 'lucide:bell',
+      link: ROUTES.NOTIFICATIONS,
+    },
+    {
       name: 'Settings',
       pageName: 'settings',
       icon: 'lucide:settings',

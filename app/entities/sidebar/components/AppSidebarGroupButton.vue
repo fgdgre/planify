@@ -15,7 +15,10 @@ const props = defineProps<{
   activeItem?: boolean
   iconSize?: 'lg'
   testId?: string
+  badge?: number
 }>()
+
+const badgeLabel = computed(() => (props.badge && props.badge > 99 ? '99+' : String(props.badge ?? '')))
 
 const buttonRef = useTemplateRef('buttonRef')
 // The tour clicks the Dashboard item with its ghost cursor.
@@ -46,16 +49,29 @@ const handleLinkClick = () => {
       sidebarGroupItem({
         subListItem,
         activeItem: isActive,
-        class: ['mt-0 pl-[6.5px] h-[33px]', collapseSections && 'p-0 w-[33px] overflow-hidden pl-[6.5px]'],
+        class: ['relative mt-0 pl-[6.5px] h-[33px]', collapseSections && 'p-0 w-[33px] overflow-hidden pl-[6.5px]'],
       }),
     ]"
     :data-testid="testId"
   >
     <AppSidebarItemIcon :icon :default-icon="!icon" group />
+    <span
+      v-if="badge && collapseSections"
+      class="absolute top-1 right-1 size-2 rounded-full bg-white"
+      :data-testid="testId && `${testId}-badge-dot`"
+    />
     <Transition>
       <div v-if="!collapseSections" class="flex items-center w-full">
         <span class="py-1">
           {{ name }}
+        </span>
+
+        <span
+          v-if="badge"
+          class="ml-auto min-w-5 rounded-full bg-white px-1.5 text-center text-xs font-medium leading-5 text-[#18181b]"
+          :data-testid="testId && `${testId}-badge`"
+        >
+          {{ badgeLabel }}
         </span>
 
         <Icon
