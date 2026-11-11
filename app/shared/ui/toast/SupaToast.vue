@@ -70,7 +70,7 @@ const width = computed(() => {
     <SupaProgress
       v-if="duration && showProgress"
       :width
-      :color="color === 'error' ? 'default' : color"
+      :color="color === 'error' || color === 'info' ? 'default' : color"
       :ui="{ wrapper: 'absolute bottom-0' }"
     />
   </div>
