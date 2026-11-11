@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { canAutoFocus } from '@shared/lib/auto-focus'
 import * as inputVariants from './input'
 
 defineOptions({
@@ -55,7 +56,7 @@ const { modelModifiers } = useAttrs() as {
 }
 
 onMounted(() => {
-  if (inputFieldRef.value && props.autoFocus) {
+  if (inputFieldRef.value && props.autoFocus && canAutoFocus()) {
     inputFieldRef.value.focus()
   }
 })
