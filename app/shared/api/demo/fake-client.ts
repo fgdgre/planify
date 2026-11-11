@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../supabase/types/database'
 import { FakeQueryBuilder, type FakeTable } from './fake-query'
 import { createSeed, DEMO_USER, DEMO_USER_ID, type DemoSeed } from './seed'
+import { API } from '@shared/constants/api'
 
 type DbClient = SupabaseClient<Database>
 type Tables = Database['public']['Tables']
@@ -163,7 +164,7 @@ function createFakeFunctions() {
     invoke: async (nameWithQuery: string) => {
       const name = nameWithQuery.split('?')[0]
 
-      if (name === 'google-list-calendars' || name === 'google-sync-events') {
+      if (name === API.FUNCTIONS.GOOGLE_LIST_CALENDARS || name === API.FUNCTIONS.GOOGLE_SYNC_EVENTS) {
         return { data: { ok: true }, error: null }
       }
 
