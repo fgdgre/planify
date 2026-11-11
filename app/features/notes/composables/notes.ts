@@ -8,6 +8,7 @@ import { useToast } from "@shared/lib/toast";
 // validation
 import { noteSchema, notesResponseSchema, noteInsertSchema, noteUpdateSchema } from "@features/notes/schemas/note";
 import { useUserStore } from "@entities/user";
+import { API } from '@shared/constants/api'
 
 const sanitizeSearchTerm = (raw: string) =>
   raw.replace(/[,()*%]/g, ' ').replace(/\s+/g, ' ').trim()
@@ -38,7 +39,7 @@ export const useNotes = () => {
     const to = from + NOTES_PAGE_SIZE - 1
 
     let query = supabase
-      .from('notes')
+      .from(API.TABLES.NOTES)
       .select('*', { count: 'exact' })
       .eq('user_id', userId.value)
 
@@ -103,7 +104,7 @@ export const useNotes = () => {
     }
 
     const { data, error } = await supabase
-      .from('notes')
+      .from(API.TABLES.NOTES)
       .select('*')
       .eq('id', id)
       .eq('user_id', userId.value)
@@ -135,7 +136,7 @@ export const useNotes = () => {
     notesStore.setLoading(true)
 
     const { data, error } = await supabase
-      .from('notes')
+      .from(API.TABLES.NOTES)
       .insert(parsed.data)
       .select()
       .single()
@@ -175,7 +176,7 @@ export const useNotes = () => {
     notesStore.setLoading(true)
 
     const { data, error } = await supabase
-      .from('notes')
+      .from(API.TABLES.NOTES)
       .update(parsed.data)
       .eq('id', id)
       .eq('user_id', userId.value)
@@ -208,7 +209,7 @@ export const useNotes = () => {
     notesStore.setLoading(true)
 
     const { error } = await supabase
-      .from('notes')
+      .from(API.TABLES.NOTES)
       .delete()
       .eq('id', id)
       .eq('user_id', userId.value)
