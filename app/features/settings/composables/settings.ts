@@ -6,6 +6,7 @@ import { userPreferencesSchema } from "@features/settings/schemas/preferences";
 import { defaultPreferences } from "@features/settings/constants/preferences";
 import { useToast } from "@shared/lib/toast";
 import type { GoogleAccount } from "@shared/types/google";
+import { API } from '@shared/constants/api'
 
 export const useSettings = () => {
   const settingsStore = useSettingsStore()
@@ -15,7 +16,7 @@ export const useSettings = () => {
     settingsStore.setLoading(true)
 
     const { data, error } = await supabase
-      .from('settings')
+      .from(API.TABLES.SETTINGS)
       .select('preferences')
       .eq('user_id', userId)
       .maybeSingle()
@@ -48,7 +49,7 @@ export const useSettings = () => {
     settingsStore.setLoading(true)
 
     const { error } = await supabase
-      .from('settings')
+      .from(API.TABLES.SETTINGS)
       .upsert({
         user_id: userId,
         preferences: parsed,

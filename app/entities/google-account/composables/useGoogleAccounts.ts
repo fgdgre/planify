@@ -2,6 +2,7 @@ import { useDb } from '@shared/api/supabase'
 import { useToast } from '@shared/lib/toast'
 import { GOOGLE_ACCOUNT_SELECT } from '@shared/constants/google-accounts'
 import { useGoogleCalendarStore } from '../stores/google-calendar'
+import { API } from '@shared/constants/api'
 
 export const useGoogleAccounts = () => {
   const supabase = useDb()
@@ -15,7 +16,7 @@ export const useGoogleAccounts = () => {
       googleCalendarStore.setLoading(true)
 
       const { data, error } = await supabase
-        .from('google_accounts')
+        .from(API.TABLES.GOOGLE_ACCOUNTS)
         .select(GOOGLE_ACCOUNT_SELECT)
         .order('created_at', { ascending: false })
 

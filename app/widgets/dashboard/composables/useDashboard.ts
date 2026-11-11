@@ -9,6 +9,7 @@ import { useNotes, useNotesStore } from '@features/notes'
 import type { Note } from '@shared/types/note'
 import { useUserStore } from '@entities/user'
 import { useSettings, useSettingsStore } from '@features/settings'
+import { API } from '@shared/constants/api'
 
 const stripZone = (iso: string) => iso.replace(/\[.*\]$/, '')
 
@@ -144,7 +145,7 @@ export const useDashboard = () => {
     }
 
     const { data, error } = await supabase
-      .from('notes')
+      .from(API.TABLES.NOTES)
       .select('*')
       .eq('user_id', user.value.id)
       .in('calendar_event_id', eventIds)

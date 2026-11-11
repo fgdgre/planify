@@ -7,6 +7,7 @@ import type { CalendarEventDisplay } from '@entities/calendar'
 import { notesForm } from './notes-form'
 import { useNotes } from './notes'
 import type { Note } from '@shared/types/note'
+import { API } from '@shared/constants/api'
 
 export type NoteSidebarMode = 'view' | 'edit' | 'create'
 
@@ -174,7 +175,7 @@ export const useNoteSidebar = () => {
 
     try {
       const { data } = await supabase
-        .from('calendar_events')
+        .from(API.TABLES.CALENDAR_EVENTS)
         .select('*')
         .eq('id', eventId)
         .single()

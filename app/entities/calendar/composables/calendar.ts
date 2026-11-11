@@ -6,6 +6,7 @@ import { useUserStore } from '@entities/user'
 import { useToast } from '@shared/lib/toast'
 import type { CalendarEventDisplay, ViewDateRange } from '../types'
 import type { CalendarEvent } from '@shared/types/calendar-event'
+import { API } from '@shared/constants/api'
 
 const mapEventToDisplay = (event: CalendarEvent): CalendarEventDisplay => ({
   id: event.id,
@@ -39,7 +40,7 @@ export const useCalendar = () => {
     if (!userId) return
 
     const { data, error } = await supabase
-      .from('calendar_events')
+      .from(API.TABLES.CALENDAR_EVENTS)
       .select('*')
       .eq('user_id', userId)
       .gte('start_at', range.start)

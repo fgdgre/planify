@@ -2,6 +2,7 @@ import { useDb } from '@shared/api/supabase'
 import { useToast } from '@shared/lib/toast'
 import { useUserStore } from '@entities/user'
 import type { CalendarEvent } from '@shared/types/calendar-event'
+import { API } from '@shared/constants/api'
 
 export const useInternalEvents = () => {
   const supabase = useDb()
@@ -25,7 +26,7 @@ export const useInternalEvents = () => {
     const userId = getUserId()
 
     const { data, error } = await supabase
-      .from('calendar_events')
+      .from(API.TABLES.CALENDAR_EVENTS)
       .insert({
         user_id: userId,
         title: payload.title,
@@ -52,7 +53,7 @@ export const useInternalEvents = () => {
     const userId = getUserId()
 
     const { data, error } = await supabase
-      .from('calendar_events')
+      .from(API.TABLES.CALENDAR_EVENTS)
       .update(payload)
       .eq('id', id)
       .eq('user_id', userId)
@@ -73,7 +74,7 @@ export const useInternalEvents = () => {
     const userId = getUserId()
 
     const { error } = await supabase
-      .from('calendar_events')
+      .from(API.TABLES.CALENDAR_EVENTS)
       .delete()
       .eq('id', id)
       .eq('user_id', userId)
