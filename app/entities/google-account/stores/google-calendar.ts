@@ -1,5 +1,6 @@
 // types
-import type { CalendarEvent, UserCalendarEvents } from "../types/google-calendar";
+import type { CalendarEvent } from "@shared/types/calendar-event";
+import type { UserCalendarEvents } from "../types";
 import type { GoogleAccount } from '@shared/types/google'
 
 export const useGoogleCalendarStore = defineStore('google-calendar', () => {

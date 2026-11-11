@@ -33,7 +33,7 @@ Planify допомагає зменшити хаос у плануванні з�
 - Інтеграція з Google Calendar API через OAuth scopes.
 - Pinia stores для стану застосунку, календаря, нотаток, користувача, налаштувань та інтеграцій.
 - ScheduleX calendar із підтримкою drag-and-drop, resize, current-time indicator і кількох режимів перегляду.
-- Feature-oriented структура через `app/features`, `app/entities` і `app/shared`.
+- Feature-Sliced Design: `app/widgets`, `app/features`, `app/entities` і `app/shared`; напрямок імпортів перевіряє `tests/unit/architecture.spec.ts`.
 - Shared UI layer для кнопок, інпутів, модальних вікон, dropdown, toast, date picker та layout-компонентів.
 - Zod schemas і локальні validation helpers для форм і API-відповідей.
 - DOMPurify для безпечного рендерингу описів подій із зовнішніх календарів.
@@ -93,9 +93,10 @@ Planify розглядає нотатки як контекст для план�
 
 ```text
 app/
-  entities/      Domain-level модулі: calendar, sidebar
-  features/      User-facing features: auth, notes, settings, integrations
-  shared/        Reusable UI, constants, variants, API types, shared types
+  widgets/       Блоки, що поєднують кілька features: calendar, app-sidebar, dashboard, settings
+  features/      User-facing features: auth, notes, settings, integrations, demo-tour, landing
+  entities/      Domain-level модулі: calendar, user, google-account, sidebar, charts
+  shared/        Reusable UI, toast, validation, constants, variants, API types, shared types
   pages/         Nuxt routes для landing, auth, legal pages та app
 supabase/
   functions/     Edge Functions для Google OAuth і calendar syncing

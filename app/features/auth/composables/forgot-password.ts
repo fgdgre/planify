@@ -3,14 +3,14 @@ import {
   validateField,
   validateForm,
   type ValidationSchema
-} from "@features/validation";
+} from "@shared/lib/validation";
 import { AUTH_VALIDATION_MESSAGES } from "@shared/constants/auth-error-messages";
 import { ROUTES } from "@shared/constants/routes";
-import { useNotification } from "@features/notification";
+import { useToast } from "@shared/lib/toast";
 
 export const useForgotPassword = () => {
   const supabase = useDb()
-  const { showSuccessToast, showErrorToast } = useNotification()
+  const { showSuccessToast, showErrorToast } = useToast()
 
   const loading = ref(false)
   const formData = ref({

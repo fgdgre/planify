@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useDashboard } from '@features/dashboard'
+import { useDashboard } from '@widgets/dashboard'
 import { EventsLineChart } from '@entities/charts'
 import { NotesItem } from '@features/notes'
 import { resolveAppPath, useTourTarget } from '@shared/api/demo'

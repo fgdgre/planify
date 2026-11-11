@@ -4,8 +4,8 @@ import {
   validateForm,
   validateMatchWith,
   type ValidationSchema,
-} from "@features/validation";
-import { useNotification } from "@features/notification";
+} from "@shared/lib/validation";
+import { useToast } from "@shared/lib/toast";
 import { AUTH_VALIDATION_MESSAGES } from "@shared/constants/auth-error-messages";
 import { ROUTES } from "@shared/constants/routes";
 
@@ -13,7 +13,7 @@ type FieldKey = 'password' | 'confirmPassword'
 
 export const useResetPassword = () => {
   const supabase = useDb()
-  const { showSuccessToast, showErrorToast } = useNotification()
+  const { showSuccessToast, showErrorToast } = useToast()
 
   const loading = ref(false)
   const formData = ref({

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { useAppSidebar, AppSidebar } from "@entities/sidebar";
+import { useAppSidebar } from "@entities/sidebar";
+import { AppSidebar } from "@widgets/app-sidebar";
 
 const route = useRoute()
 

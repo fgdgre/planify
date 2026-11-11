@@ -1,19 +1,14 @@
 import { ROUTES } from '@shared/constants/routes'
 import { useDb } from '@shared/api/supabase'
-import {
-  useGoogleCalendarStore,
-  useGoogleCalendar,
-  type CalendarEvent,
-} from '@features/integrations/google-calendar'
-import { useCalendar } from '@entities/calendar/composables/calendar'
+import { useGoogleCalendar } from '@features/integrations/google-calendar'
+import { useGoogleCalendarStore } from '@entities/google-account'
+import { type CalendarEvent } from '@shared/types/calendar-event'
+import { ACCOUNT_COLORS, INTERNAL_CALENDAR_COLOR, isEventVisible, useCalendar, useCalendarFiltersStore } from '@entities/calendar'
 import { useWeeklyEventsChart } from '@entities/charts'
 import { useNotes, useNotesStore } from '@features/notes'
-import type { Note } from '@features/notes'
-import { useUserStore } from '@features/auth'
+import type { Note } from '@shared/types/note'
+import { useUserStore } from '@entities/user'
 import { useSettings, useSettingsStore } from '@features/settings'
-import { ACCOUNT_COLORS, INTERNAL_CALENDAR_COLOR } from '@entities/calendar/stores/calendar'
-import { useCalendarFiltersStore } from '@entities/calendar/stores/calendar-filters'
-import { isEventVisible } from '@entities/calendar/helpers/filters'
 
 const stripZone = (iso: string) => iso.replace(/\[.*\]$/, '')
 

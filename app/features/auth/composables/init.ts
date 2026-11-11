@@ -1,11 +1,10 @@
-import { useUserStore } from "../stores/user";
-import { getUser } from "./user";
-import { useNotification } from "@features/notification";
+import { useUserStore, getUser } from "@entities/user";
+import { useToast } from "@shared/lib/toast";
 import { ROUTES } from "@shared/constants/routes";
 
 export const useInitApp = () => {
   const userStore = useUserStore()
-  const { showErrorToast } = useNotification()
+  const { showErrorToast } = useToast()
   const isInitializing = computed(() => userStore.loading && userStore.initPromise != null)
   const initializeApp = async () => {
     userStore.setLoading(true)

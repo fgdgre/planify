@@ -3,7 +3,6 @@ import { computed } from 'vue'
 import { notesForm, type NoteFormPayload, type NoteFormTab } from '../composables/notes-form'
 import TabDetails from "@features/notes/components/TabDetails.vue";
 import TabLinkedEvent from "@features/notes/components/TabLinkedEvent.vue";
-import NotesTabButton from "@features/notes/components/NotesTabButton.vue";
 
 const emit = defineEmits<{
   submit: [payload: NoteFormPayload]
@@ -64,7 +63,7 @@ defineExpose({ handleSubmit, isValid })
 <template>
   <div class="flex flex-col gap-4 flex-1 overflow-hidden">
     <div class="flex gap-1 rounded-md pt-4 px-4">
-      <NotesTabButton
+      <SupaTabButton
         v-for="tab in tabs"
         :key="tab.key"
         :label="tab.label"

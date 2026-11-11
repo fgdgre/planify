@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
-import { useUserStore } from '@features/auth/stores/user'
+import { useUserStore } from '@entities/user'
 import { getSafeStorage } from '@shared/lib/safe-storage'
 
 const storageKey = (userId: string) => `planify:calendar-filters:${userId}`

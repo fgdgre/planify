@@ -1,11 +1,11 @@
 import { useDb } from '@shared/api/supabase'
-import { useNotification } from "@features/notification"
-import { useUserStore } from "../stores/user";
+import { useToast } from "@shared/lib/toast"
+import { useUserStore } from "@entities/user";
 
 export const useLogout = () => {
   const supabase = useDb()
   const userStore = useUserStore()
-  const { showErrorToast } = useNotification()
+  const { showErrorToast } = useToast()
 
   const loading = ref(false)
 

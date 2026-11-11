@@ -1,12 +1,12 @@
 import { useDb } from '@shared/api/supabase'
 import { useStorage } from '@vueuse/core'
 import { getSafeStorage } from '@shared/lib/safe-storage'
-import { useUserStore } from '@features/auth'
-import { mapCalendarEventRowToDisplay } from '@entities/calendar/helpers'
+import { useUserStore } from '@entities/user'
+import { mapCalendarEventRowToDisplay } from '@entities/calendar'
 import type { CalendarEventDisplay } from '@entities/calendar'
 import { notesForm } from './notes-form'
 import { useNotes } from './notes'
-import type { Note } from '../types'
+import type { Note } from '@shared/types/note'
 
 export type NoteSidebarMode = 'view' | 'edit' | 'create'
 
