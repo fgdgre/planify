@@ -23,7 +23,7 @@ const fixtureNotes = (): NoteRow[] => [
 ]
 
 const makeClient = () =>
-  createFakeClient({ calendar_events: [], google_accounts: [], settings: [], notes: fixtureNotes() })
+  createFakeClient({ calendar_events: [], google_accounts: [], settings: [], notifications: [], notes: fixtureNotes() })
 
 describe('fake query builder: reading', () => {
   let db: ReturnType<typeof makeClient>
@@ -246,6 +246,7 @@ describe('fake database: foreign keys', () => {
       calendar_events: [event('e1', 'a1'), event('e2', 'a2'), event('e3', null)] as never,
       google_accounts: [{ id: 'a1' }, { id: 'a2' }] as never,
       settings: [],
+      notifications: [],
       notes: [
         note({ id: 'n1', title: 'on e1', calendar_event_id: 'e1' }),
         note({ id: 'n2', title: 'on e2', calendar_event_id: 'e2' }),
@@ -263,6 +264,20 @@ describe('fake database: foreign keys', () => {
       { id: 'n2', calendar_event_id: 'e2' },
       { id: 'n3', calendar_event_id: null },
     ])
+  })
+
+  it('deleting an event removes its notifications', async () => {
+    const db = createFakeClient({
+      calendar_events: [event('e1', 'a1'), event('e2', 'a1')] as never,
+      google_accounts: [{ id: 'a1' }] as never,
+      settings: [],
+      notes: [],
+      notifications: [{ id: 'x1', calendar_event_id: 'e1' }, { id: 'x2', calendar_event_id: 'e2' }] as never,
+    })
+    await db.from('calendar_events').delete().eq('id', 'e1')
+
+    const { data } = await db.from('notifications').select('id')
+    expect(data).toEqual([{ id: 'x2' }])
   })
 
   it('deleting an account removes its events and unlinks their notes', async () => {

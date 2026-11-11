@@ -29,6 +29,7 @@ export type Database = {
           is_internal: boolean
           location: string | null
           organizer_email: string | null
+          organizer_name: string | null
           start_at: string
           status: string
           synced_at: string
@@ -50,6 +51,7 @@ export type Database = {
           is_internal?: boolean
           location?: string | null
           organizer_email?: string | null
+          organizer_name?: string | null
           start_at: string
           status?: string
           synced_at?: string
@@ -71,6 +73,7 @@ export type Database = {
           is_internal?: boolean
           location?: string | null
           organizer_email?: string | null
+          organizer_name?: string | null
           start_at?: string
           status?: string
           synced_at?: string
@@ -159,6 +162,7 @@ export type Database = {
           google_account_id: string
           id: string
           is_primary: boolean
+          last_synced_at: string | null
           selected: boolean
           summary: string | null
           time_zone: string | null
@@ -172,6 +176,7 @@ export type Database = {
           google_account_id: string
           id?: string
           is_primary?: boolean
+          last_synced_at?: string | null
           selected?: boolean
           summary?: string | null
           time_zone?: string | null
@@ -185,6 +190,7 @@ export type Database = {
           google_account_id?: string
           id?: string
           is_primary?: boolean
+          last_synced_at?: string | null
           selected?: boolean
           summary?: string | null
           time_zone?: string | null
@@ -256,6 +262,66 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          author_email: string | null
+          author_name: string | null
+          calendar_event_id: string | null
+          created_at: string
+          description: string | null
+          event_start_at: string | null
+          id: string
+          read_at: string | null
+          source: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          author_email?: string | null
+          author_name?: string | null
+          calendar_event_id?: string | null
+          created_at?: string
+          description?: string | null
+          event_start_at?: string | null
+          id?: string
+          read_at?: string | null
+          source: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          author_email?: string | null
+          author_name?: string | null
+          calendar_event_id?: string | null
+          created_at?: string
+          description?: string | null
+          event_start_at?: string | null
+          id?: string
+          read_at?: string | null
+          source?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_calendar_event_id_fkey"
+            columns: ["calendar_event_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -314,6 +380,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      should_notify: {
+        Args: {
+          notification_source: string
+          notification_type: string
+          target_user_id: string
+        }
+        Returns: boolean
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }

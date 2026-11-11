@@ -37,6 +37,7 @@ function createTables(seed: DemoSeed): Record<string, FakeTable> {
           status: 'confirmed',
           creator_email: null,
           organizer_email: null,
+          organizer_name: null,
           html_link: null,
           etag: null,
           updated_at_google: null,
@@ -48,6 +49,9 @@ function createTables(seed: DemoSeed): Record<string, FakeTable> {
         tables.notes!.rows.forEach((note) => {
           if (ids.includes(note.calendar_event_id)) note.calendar_event_id = null
         })
+        tables.notifications!.rows = tables.notifications!.rows.filter(
+          (notification) => !ids.includes(notification.calendar_event_id),
+        )
       },
     },
     notes: {
@@ -63,6 +67,22 @@ function createTables(seed: DemoSeed): Record<string, FakeTable> {
           created_at: now(),
           updated_at: now(),
         }) satisfies Omit<Tables['notes']['Row'], 'title'>,
+    },
+    notifications: {
+      primaryKey: 'id',
+      rows: seed.notifications,
+      defaults: () =>
+        ({
+          id: newId(),
+          user_id: DEMO_USER_ID,
+          description: null,
+          author_name: null,
+          author_email: null,
+          calendar_event_id: null,
+          event_start_at: null,
+          read_at: null,
+          created_at: now(),
+        }) satisfies Omit<Tables['notifications']['Row'], 'type' | 'source' | 'title'>,
     },
     settings: {
       primaryKey: 'user_id',
@@ -152,6 +172,18 @@ function createFakeFunctions() {
   }
 }
 
+function createFakeChannel() {
+  const channel = {
+    on: () => channel,
+    subscribe: (callback?: (status: 'SUBSCRIBED') => void) => {
+      callback?.('SUBSCRIBED')
+      return channel
+    },
+    unsubscribe: async () => 'ok' as const,
+  }
+  return channel
+}
+
 /**
  * An in-memory Supabase client for the public demo. It implements only what
  * the app calls (see the fake query builder) and keeps all data in the page, so
@@ -168,6 +200,8 @@ export function createFakeClient(seed: DemoSeed = createSeed(new Date())): DbCli
     },
     auth: createFakeAuth(),
     functions: createFakeFunctions(),
+    channel: createFakeChannel,
+    removeChannel: async () => 'ok' as const,
   }
 
   // The fake covers a strict subset of the client API; this is the one place that claims otherwise.

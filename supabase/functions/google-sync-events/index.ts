@@ -23,6 +23,7 @@ function normalizeGoogleEvent(event: any) {
     all_day: allDay,
     status: event.status ?? 'confirmed',
     organizer_email: event.organizer?.email ?? null,
+    organizer_name: event.organizer?.displayName ?? event.creator?.displayName ?? null,
     creator_email: event.creator?.email ?? null,
     html_link: event.htmlLink ?? null,
     etag: event.etag ?? null,
@@ -135,6 +136,18 @@ Deno.serve(async (req) => {
 
       if (upsertError) {
         throw new HttpError(500, 'db_error', upsertError.message)
+      }
+    }
+
+    if (calendars?.length) {
+      const { error: stampError } = await admin
+        .from('google_calendars')
+        .update({ last_synced_at: new Date().toISOString() })
+        .eq('google_account_id', googleAccountId)
+        .in('calendar_id', calendars.map((calendar) => calendar.calendar_id))
+
+      if (stampError) {
+        throw new HttpError(500, 'db_error', stampError.message)
       }
     }
 
