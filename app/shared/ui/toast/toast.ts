@@ -12,6 +12,7 @@ export const wrapper = tv({
       error: 'bg-error',
       'primary-light': '',
       success: '',
+      info: 'bg-white',
     },
   },
 })
@@ -24,6 +25,7 @@ export const toastHeader = tv({
       error: 'text-[#18181b]',
       'primary-light': 'text-foreground',
       success: 'text-foreground',
+      info: 'text-[#18181b]',
     },
   },
 })
@@ -40,6 +42,24 @@ export const toastParagraph = tv({
       error: 'text-[#18181b]',
       'primary-light': 'text-foreground',
       success: 'text-foreground',
+      info: 'text-[#18181b]',
+    },
+  },
+})
+
+export const toastMeta = tv({
+  base: 'flex flex-wrap items-center gap-x-2 text-xs col-end-[-1]',
+  variants: {
+    withIcon: {
+      true: 'col-start-2',
+      false: 'col-start-1',
+    },
+    color: {
+      primary: 'text-foreground-muted',
+      error: 'text-[#18181b]',
+      'primary-light': 'text-foreground-muted',
+      success: 'text-foreground-muted',
+      info: 'text-[#71717a]',
     },
   },
 })
@@ -52,6 +72,7 @@ export const iconColor = tv({
       error: 'text-[#18181b]',
       'primary-light': 'text-primary-light',
       success: 'text-green-400',
+      info: 'text-[#18181b]',
     },
   },
 })
