@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { useNotes, useNotesStore } from '@features/notes'
-import type { NotesLinkedFilter } from '@features/notes/stores/notes'
-import NotesList from "@features/notes/components/NotesList.vue";
+import { NotesList, useNotes, useNotesStore } from '@features/notes'
+import type { NotesLinkedFilter } from '@features/notes'
 
 definePageMeta({
   layout: 'app',

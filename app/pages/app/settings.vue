@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useSettingsPage } from '@features/settings'
-import EventColorSettings from '@features/settings/components/EventColorSettings.vue'
+import { EventColorSettings } from '@features/settings'
+import { useSettingsPage } from '@widgets/settings'
 
 definePageMeta({
   title: 'Settings',

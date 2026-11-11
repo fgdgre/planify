@@ -3,11 +3,12 @@ import { FunctionsHttpError, FunctionsFetchError } from '@supabase/supabase-js'
 
 const invoke = vi.fn()
 vi.mock('@shared/api/supabase', () => ({ useDb: () => ({ functions: { invoke }, auth: {} }) }))
-vi.mock('@features/notification', () => ({
-  useNotification: () => ({ showErrorToast: vi.fn(), showSuccessToast: vi.fn() }),
+vi.mock('@shared/lib/toast', () => ({
+  useToast: () => ({ showErrorToast: vi.fn(), showSuccessToast: vi.fn() }),
 }))
-vi.mock('@features/integrations/google-calendar/stores/google-calendar', () => ({
+vi.mock('@entities/google-account', () => ({
   useGoogleCalendarStore: () => ({}),
+  useGoogleAccounts: () => ({ fetchConnectedAccounts: vi.fn() }),
 }))
 
 const { useGoogleCalendar, EdgeFunctionError } = await import(

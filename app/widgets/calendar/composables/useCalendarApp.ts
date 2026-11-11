@@ -13,20 +13,27 @@ import { createCurrentTimePlugin } from '@schedule-x/current-time'
 import '@schedule-x/theme-default/dist/index.css'
 import 'temporal-polyfill/global'
 
-import { useCalendarStore, ACCOUNT_COLORS, INTERNAL_CALENDAR_COLOR } from '../stores/calendar'
-import { useCalendar } from './calendar'
-import { useCalendarFilters } from './calendar-filters'
-import { useInternalEvents } from './useInternalEvents'
-import { mapToScheduleXEvent } from '../helpers'
-import { scrollToWorkingHoursWhenRendered } from '../helpers/scroll'
-import { findEventElement, findSlotPoint } from '../helpers/tour-geometry'
-import { showWeekView } from '../helpers/view'
-import { calendarControls, registerControls } from './tour-controls'
-import { useGoogleCalendarStore, useGoogleCalendar } from '@features/integrations/google-calendar'
-import { useUserStore } from '@features/auth/stores/user'
+import {
+  calendarControls,
+  findEventElement,
+  findSlotPoint,
+  mapToScheduleXEvent,
+  registerControls,
+  scrollToWorkingHoursWhenRendered,
+  showWeekView,
+  useCalendar,
+  useCalendarFilters,
+  useCalendarFiltersStore,
+  useCalendarStore,
+  useInternalEvents,
+  ACCOUNT_COLORS,
+  INTERNAL_CALENDAR_COLOR,
+} from '@entities/calendar'
+import type { CalendarEventDisplay } from '@entities/calendar'
+import { useGoogleCalendar } from '@features/integrations/google-calendar'
+import { useGoogleCalendarStore } from '@entities/google-account'
+import { useUserStore } from '@entities/user'
 import { useSettingsStore } from '@features/settings'
-import type { CalendarEventDisplay } from '../types'
-import { useCalendarFiltersStore } from '../stores/calendar-filters'
 
 const toMs = (v: unknown): number => {
   if (typeof v === 'string') return new Date(v.replace(/\[.*\]$/, '')).getTime()

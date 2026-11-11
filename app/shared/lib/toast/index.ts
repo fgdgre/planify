@@ -1,4 +1,4 @@
-export { useNotification } from './composables/useNotification'
+export { useToast } from './composables/useToast'
 export type { Toast } from './types'
 
 export * from './constants/duration'

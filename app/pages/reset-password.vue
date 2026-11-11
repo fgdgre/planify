@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { useResetPassword, useUserStore } from "@features/auth";
+import { useResetPassword } from "@features/auth";
+import { useUserStore } from "@entities/user";
 import { ROUTES } from "~/shared/constants/routes";
 
 definePageMeta({

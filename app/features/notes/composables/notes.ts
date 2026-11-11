@@ -4,10 +4,10 @@ import type { TablesInsert, TablesUpdate } from '@shared/api/supabase/types/data
 // stores
 import { NOTES_PAGE_SIZE, useNotesStore } from '../stores/notes'
 // hooks
-import { useNotification } from "@features/notification";
+import { useToast } from "@shared/lib/toast";
 // validation
 import { noteSchema, notesResponseSchema, noteInsertSchema, noteUpdateSchema } from "@features/notes/schemas/note";
-import { useUserStore } from "@features/auth";
+import { useUserStore } from "@entities/user";
 
 const sanitizeSearchTerm = (raw: string) =>
   raw.replace(/[,()*%]/g, ' ').replace(/\s+/g, ' ').trim()
@@ -23,7 +23,7 @@ export const useNotes = () => {
 
   const fetchNotes = async ({ reset = false }: { reset?: boolean } = {}) => {
     if (!userId.value) {
-      useNotification().showErrorToast({ title: 'Error', description: 'User not logged in' })
+      useToast().showErrorToast({ title: 'Error', description: 'User not logged in' })
       return
     }
     if (notesStore.loading) return
@@ -67,14 +67,14 @@ export const useNotes = () => {
     notesStore.setLoading(false)
 
     if (error) {
-      useNotification().showErrorToast({ title: 'Error', description: error.message })
+      useToast().showErrorToast({ title: 'Error', description: error.message })
       return
     }
 
     const parsed = notesResponseSchema.safeParse(data ?? [])
 
     if (!parsed.success) {
-      useNotification().showErrorToast({ title: 'Error', description: 'Invalid notes response' })
+      useToast().showErrorToast({ title: 'Error', description: 'Invalid notes response' })
       return
     }
 
@@ -98,7 +98,7 @@ export const useNotes = () => {
 
   const fetchNoteById = async (id: string) => {
     if(!userId.value) {
-      useNotification().showErrorToast({ title: 'Error', description: 'User not logged in' })
+      useToast().showErrorToast({ title: 'Error', description: 'User not logged in' })
       return null
     }
 
@@ -110,14 +110,14 @@ export const useNotes = () => {
       .single()
 
     if (error) {
-      useNotification().showErrorToast({ title: 'Error', description: error.message })
+      useToast().showErrorToast({ title: 'Error', description: error.message })
       return null
     }
 
     const parsed = noteSchema.safeParse(data)
 
     if (!parsed.success) {
-      useNotification().showErrorToast({ title: 'Error', description: 'Invalid note response' })
+      useToast().showErrorToast({ title: 'Error', description: 'Invalid note response' })
       return null
     }
 
@@ -128,7 +128,7 @@ export const useNotes = () => {
     const parsed = noteInsertSchema.safeParse(payload)
 
     if (!parsed.success) {
-      useNotification().showErrorToast({ title: 'Error', description: 'Invalid note data' })
+      useToast().showErrorToast({ title: 'Error', description: 'Invalid note data' })
       return
     }
 
@@ -143,7 +143,7 @@ export const useNotes = () => {
     notesStore.setLoading(false)
 
     if (error) {
-      useNotification().showErrorToast({ title: 'Error', description: error.message })
+      useToast().showErrorToast({ title: 'Error', description: error.message })
       return
     }
 
@@ -154,21 +154,21 @@ export const useNotes = () => {
       await refreshNotes()
     }
 
-    useNotification().showSuccessToast({ title: 'Success', description: 'Note added successfully' })
+    useToast().showSuccessToast({ title: 'Success', description: 'Note added successfully' })
 
     return data
   }
 
   const updateNote = async (id: string, payload: TablesUpdate<'notes'>) => {
     if(!userId.value) {
-      useNotification().showErrorToast({ title: 'Error', description: 'User not logged in' })
+      useToast().showErrorToast({ title: 'Error', description: 'User not logged in' })
       return null
     }
 
     const parsed = noteUpdateSchema.safeParse(payload)
 
     if (!parsed.success) {
-      useNotification().showErrorToast({ title: 'Error', description: 'Invalid note data' })
+      useToast().showErrorToast({ title: 'Error', description: 'Invalid note data' })
       return null
     }
 
@@ -185,7 +185,7 @@ export const useNotes = () => {
     notesStore.setLoading(false)
 
     if (error) {
-      useNotification().showErrorToast({ title: 'Error', description: error.message })
+      useToast().showErrorToast({ title: 'Error', description: error.message })
       return null
     }
 
@@ -194,14 +194,14 @@ export const useNotes = () => {
       notesStore.updateNoteInList(parsedNote.data)
     }
 
-    useNotification().showSuccessToast({ title: 'Success', description: 'Note updated successfully' })
+    useToast().showSuccessToast({ title: 'Success', description: 'Note updated successfully' })
 
     return data
   }
 
   const deleteNote = async (id: string) => {
     if(!userId.value) {
-      useNotification().showErrorToast({ title: 'Error', description: 'User not logged in' })
+      useToast().showErrorToast({ title: 'Error', description: 'User not logged in' })
       return false
     }
 
@@ -216,12 +216,12 @@ export const useNotes = () => {
     notesStore.setLoading(false)
 
     if (error) {
-      useNotification().showErrorToast({ title: 'Error', description: error.message })
+      useToast().showErrorToast({ title: 'Error', description: error.message })
       return false
     }
 
     notesStore.removeNote(id)
-    useNotification().showSuccessToast({ title: 'Success', description: 'Note deleted successfully' })
+    useToast().showSuccessToast({ title: 'Success', description: 'Note deleted successfully' })
     return true
   }
 

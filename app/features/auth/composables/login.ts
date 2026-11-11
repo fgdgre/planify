@@ -3,8 +3,8 @@ import {
   validateField,
   validateForm,
   type ValidationSchema
-} from "@features/validation";
-import { useUserStore } from "../stores/user";
+} from "@shared/lib/validation";
+import { useUserStore } from "@entities/user";
 import { AUTH_VALIDATION_MESSAGES } from "@shared/constants/auth-error-messages";
 import { ROUTES } from "@shared/constants/routes";
 

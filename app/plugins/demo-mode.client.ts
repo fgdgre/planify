@@ -1,5 +1,5 @@
 import { isDemoMode } from '@shared/api/demo'
-import { useUserStore } from '@features/auth'
+import { useUserStore } from '@entities/user'
 
 /**
  * In demo mode there is no sign-in: install the in-memory backend and seed the

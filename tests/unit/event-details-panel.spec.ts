@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import EventDetailsPanel from '@entities/calendar/components/EventDetailsPanel.vue'
+import SupaTabButton from '@shared/ui/tab-button/SupaTabButton.vue'
 import type { CalendarEventDisplay } from '@entities/calendar'
 
 const event = (source: 'internal' | 'google'): CalendarEventDisplay => ({
@@ -11,7 +12,7 @@ const note = { id: 'n1', title: 'Existing note', content: '<p>x</p>' }
 const mountPanel = (props: Record<string, unknown>) =>
   mount(EventDetailsPanel, {
     props,
-    global: { stubs: { Icon: true, SupaRichText: true } },
+    global: { stubs: { Icon: true, SupaRichText: true }, components: { SupaTabButton } },
   })
 
 const addNoteButton = (wrapper: ReturnType<typeof mountPanel>) =>

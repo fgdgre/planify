@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Note } from '@features/notes'
+import type { Note } from '@shared/types/note'
 import { useNotesItem } from '../composables/notes-item'
 
 const props = defineProps<{

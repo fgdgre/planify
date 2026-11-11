@@ -1,6 +1,6 @@
-import { useCalendar } from '@entities/calendar/composables/calendar'
-import { useGoogleCalendar } from '@features/integrations/google-calendar'
-import type { CalendarEventDisplay } from '@entities/calendar/types'
+import { useCalendar } from '@entities/calendar'
+import { useGoogleAccounts } from '@entities/google-account'
+import type { CalendarEventDisplay } from '@entities/calendar'
 
 export type NoteFormTab = 'details' | 'linked-event'
 
@@ -12,7 +12,7 @@ export interface NoteFormPayload {
 
 export const notesForm = () => {
   const { fetchEventsForRange } = useCalendar()
-  const { fetchConnectedAccounts } = useGoogleCalendar()
+  const { fetchConnectedAccounts } = useGoogleAccounts()
 
   const activeTab = ref<NoteFormTab>('details')
   const title = ref('')

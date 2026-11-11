@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import EventDetailsPanel from './EventDetailsPanel.vue'
-import NotesTabButton from '@features/notes/components/NotesTabButton.vue'
-import TabDetails from '@features/notes/components/TabDetails.vue'
+import { EventDetailsPanel } from '@entities/calendar'
+import { TabDetails } from '@features/notes'
 import { useEventSidebar } from '../composables/event-sidebar'
 
 const {
@@ -171,7 +170,7 @@ const handleNoteAction = (action: unknown) => {
           </button>
         </div>
 
-        <NotesTabButton
+        <SupaTabButton
           v-if="!isNotePanelOpen"
           label="Add note"
           :tab-filled="false"
@@ -183,7 +182,7 @@ const handleNoteAction = (action: unknown) => {
             <p>Add note</p>
             <SupaIcon name="heroicons:plus" />
           </div>
-        </NotesTabButton>
+        </SupaTabButton>
       </form>
 
       <EventDetailsPanel

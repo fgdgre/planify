@@ -1,9 +1,7 @@
 <script lang="ts" setup>
-import { useGoogleCalendarStore } from '@features/integrations/google-calendar'
+import { useGoogleCalendarStore } from '@entities/google-account'
 import { useSettingsStore } from '@features/settings'
-import { useCalendarFiltersStore } from '@entities/calendar/stores/calendar-filters'
-import { ACCOUNT_COLORS, INTERNAL_CALENDAR_COLOR } from '@entities/calendar/stores/calendar'
-import { INTERNAL_SOURCE_ID, sourceIdOf } from '@entities/calendar/helpers/filters'
+import { ACCOUNT_COLORS, INTERNAL_CALENDAR_COLOR, INTERNAL_SOURCE_ID, sourceIdOf, useCalendarFiltersStore } from '@entities/calendar'
 
 defineProps<{ collapsed?: boolean }>()
 
