@@ -3,6 +3,7 @@ import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
+import { canAutoFocus } from '@shared/lib/auto-focus'
 import * as textareaVariants from './textarea'
 
 const props = withDefaults(
@@ -77,7 +78,7 @@ watch(isInteractive, (val) => {
 })
 
 onMounted(() => {
-  if (props.autoFocus && isInteractive.value) {
+  if (props.autoFocus && isInteractive.value && canAutoFocus()) {
     nextTick(() => editor.value?.commands.focus('end'))
   }
 })

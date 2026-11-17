@@ -1,5 +1,6 @@
 import type { TourTarget } from '@shared/api/demo'
 import type { Point, TourVisuals } from './visuals'
+import { centerInScrollParent } from './scroll'
 import {
   CLICK_BEAT_MS,
   CURSOR_TRAVEL_MS,
@@ -57,7 +58,7 @@ export async function highlight(env: ChoreographyEnv, element: HTMLElement | nul
   if (!element) return
 
   if (!isOnScreen(element)) {
-    element.scrollIntoView({ behavior: env.reducedMotion ? 'instant' : 'smooth', block: 'center' })
+    centerInScrollParent(element, env.reducedMotion ? 'instant' : 'smooth')
     await beat(700, env)
   }
 
