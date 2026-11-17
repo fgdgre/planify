@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
+      '@widgets': resolve(__dirname, 'app/widgets'),
       '@features': resolve(__dirname, 'app/features'),
       '@entities': resolve(__dirname, 'app/entities'),
       '@shared': resolve(__dirname, 'app/shared'),

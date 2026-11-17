@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NotesItem, useNotesStore } from "@features/notes";
-import type { Note } from '@features/notes'
+import type { Note } from '@shared/types/note'
 import { useNotes } from '../composables/notes'
 
 const notesStore = useNotesStore()

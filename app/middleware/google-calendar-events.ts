@@ -1,6 +1,7 @@
-import { useGoogleCalendarStore, useGoogleCalendar } from "@features/integrations/google-calendar";
+import { useGoogleCalendar } from "@features/integrations/google-calendar";
+import { useGoogleCalendarStore } from "@entities/google-account";
 import { useSettings, useSettingsStore } from "@features/settings";
-import { useUserStore } from "@features/auth/stores/user";
+import { useUserStore } from "@entities/user";
 
 /**
  * Makes accounts, preferences and Google events available on the pages that

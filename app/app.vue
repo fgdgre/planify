@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useNotification } from '@features/notification'
+import { useToast } from '@shared/lib/toast'
 import { useInitApp } from "@features/auth";
 
-const { toasts, removeToast } = useNotification()
+const { toasts, removeToast } = useToast()
 
 const { isInitializing } = useInitApp()
 </script>

@@ -4,7 +4,7 @@ import {
   validateForm,
   validateRequired,
   validateMatchWith,
-} from '@features/validation'
+} from '@shared/lib/validation'
 
 describe('validateRequired', () => {
   it('accepts non-empty strings', () => {

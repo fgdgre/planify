@@ -1,9 +1,8 @@
 <script lang="ts" setup>
 import { computed, useTemplateRef } from 'vue'
 import DOMPurify from 'dompurify'
-import NotesTabButton from '@features/notes/components/NotesTabButton.vue'
 import type { CalendarEventDisplay } from '@entities/calendar'
-import type { Note } from '@features/notes'
+import type { Note } from '@shared/types/note'
 import { useTourTarget } from '@shared/api/demo'
 
 const props = withDefaults(
@@ -137,7 +136,7 @@ const formattedTime = computed(() => {
         </button>
       </div>
 
-      <NotesTabButton
+      <SupaTabButton
         v-if="showAddNote"
         label="Add note"
         :tab-filled="false"
@@ -149,7 +148,7 @@ const formattedTime = computed(() => {
           <p>Add note</p>
           <SupaIcon name="heroicons:plus" />
         </div>
-      </NotesTabButton>
+      </SupaTabButton>
 
       <div v-if="showActions && isInternal" class="flex gap-2 w-full border-t pt-3 mt-3">
         <SupaButton color="primary" @click="emit('edit')">

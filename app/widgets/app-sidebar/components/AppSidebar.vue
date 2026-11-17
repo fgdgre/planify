@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import { tv } from 'tailwind-variants'
-import { useAppSidebar } from "@entities/sidebar";
+import { AppSidebarContent, useAppSidebar } from "@entities/sidebar";
 import logo from '@assets/images/logo.svg'
 import { sidebarVariants } from '@shared/ui/sidebar'
-import { useLogout, useUserStore } from "@features/auth";
-import AppSidebarContent from "@entities/sidebar/components/AppSidebarContent.vue";
-import AppSidebarCalendars from "@entities/sidebar/components/AppSidebarCalendars.vue";
+import { useLogout } from "@features/auth";
+import { useUserStore } from "@entities/user";
+import AppSidebarCalendars from "./AppSidebarCalendars.vue";
 
 const sidebarStore = useAppSidebar()
 const { isSidebarCollapsed, sections } = storeToRefs(sidebarStore)

@@ -1,9 +1,8 @@
 import { FunctionsHttpError } from '@supabase/supabase-js'
 import { useDb } from '@shared/api/supabase'
-import { useNotification } from "@features/notification";
-import { useGoogleCalendarStore } from "@features/integrations/google-calendar/stores/google-calendar";
+import { useToast } from "@shared/lib/toast";
+import { useGoogleAccounts, useGoogleCalendarStore } from "@entities/google-account";
 import { pickStaleAccountIds } from "@features/integrations/google-calendar/helpers/sync";
-import { GOOGLE_ACCOUNT_SELECT } from "@shared/constants/google-accounts";
 
 /** Error thrown when an Edge Function answers with a non-2xx status. */
 export class EdgeFunctionError extends Error {
@@ -42,8 +41,9 @@ let inflightSync: Promise<boolean> | null = null
 export const useGoogleCalendar = () => {
   const supabase = useDb()
 
-  const { showErrorToast } = useNotification()
+  const { showErrorToast } = useToast()
   const googleCalendarStore = useGoogleCalendarStore()
+  const { fetchConnectedAccounts } = useGoogleAccounts()
 
   /**
    * Calls an Edge Function through the client, which adds the session's JWT and
@@ -91,32 +91,6 @@ export const useGoogleCalendar = () => {
     )
 
     return account
-  }
-
-  /** Loads the user's Google accounts once per session; pass `force` where a fresh list matters (settings). */
-  const fetchConnectedAccounts = async (options: { force?: boolean } = {}) => {
-    if (googleCalendarStore.accountsLoaded && !options.force) return
-
-    try {
-      googleCalendarStore.setLoading(true)
-
-      // Explicit column list: token columns are not readable by the browser.
-      const { data, error } = await supabase
-        .from('google_accounts')
-        .select(GOOGLE_ACCOUNT_SELECT)
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        showErrorToast({ title: 'Error', description: error.message })
-        return
-      }
-
-      googleCalendarStore.setAccounts(data ?? [])
-    } catch (error: any) {
-      showErrorToast({ title: 'Error', description: error.message })
-    } finally {
-      googleCalendarStore.setLoading(false)
-    }
   }
 
   /** Refreshes the `google_calendars` rows for one account from Google's calendarList. */

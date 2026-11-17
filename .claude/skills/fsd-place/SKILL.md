@@ -5,7 +5,7 @@ description: Decide which Feature-Sliced Design layer a new file belongs in (sha
 
 # Placing code in Planify's FSD layout
 
-Planify uses a three-layer Feature-Sliced Design under `app/`. Aliases are defined in `nuxt.config.ts`: `@shared`, `@entities`, `@features`, `@assets`. Pages live in `app/pages/`, layouts in `app/layouts/`, route guards in `app/middleware/`.
+Planify uses a four-layer Feature-Sliced Design under `app/`. Aliases are defined in `nuxt.config.ts`: `@shared`, `@entities`, `@features`, `@widgets`, `@assets`. `tests/unit/architecture.spec.ts` fails on any import that breaks the rules below. Pages live in `app/pages/`, layouts in `app/layouts/`, route guards in `app/middleware/`.
 
 ## The layers
 
@@ -14,15 +14,18 @@ Planify uses a three-layer Feature-Sliced Design under `app/`. Aliases are defin
 - `shared/ui/<component>/` — design-system components, prefixed `Supa*` (e.g. `SupaInput`, `SupaSplitSidebar`, `SupaDropdown`). Auto-registered globally via `nuxt.config.ts → components`.
 - `shared/api/supabase/` — Supabase client, generated `types/database.ts`, query helpers.
 - `shared/constants/` — `ROUTES`, `AUTH_VALIDATION_MESSAGES`, `public-routes.ts`. Anything referenced by 2+ features.
-- `shared/types/` — cross-cutting TS types (`google.ts`, `user.ts`).
+- `shared/types/` — cross-cutting TS types and table row aliases (`google.ts`, `user.ts`, `calendar-event.ts`, `note.ts`).
+- `shared/lib/` — cross-cutting logic with no domain: `toast` (`useToast`), `validation` (`validateForm`), `auto-focus`, `safe-storage`.
 - `shared/variants/` — tailwind-variants tokens (`size.ts`).
 
 A file belongs here if removing the project's domain (calendars, notes, auth) wouldn't change it.
 
 ### `app/entities/` — domain models the whole app shares
 
-- `entities/calendar/` — calendar event types, `useCalendar`, `useInternalEvents`, calendar store, helpers, calendar-event display components.
-- `entities/sidebar/` — `AppSidebar`, `useAppSidebar`, sidebar store.
+- `entities/calendar/` — calendar event types, `useCalendar`, `useInternalEvents`, calendar + filters stores, account colors, helpers, `EventDetailsPanel`, `CalendarSearch`.
+- `entities/user/` — `useUserStore`, `getUser`.
+- `entities/google-account/` — `useGoogleCalendarStore` (connected accounts + calendars), `useGoogleAccounts`.
+- `entities/sidebar/` — `useAppSidebar`, sidebar types, `AppSidebarContent` and link components.
 
 Standard subfolders: `components/`, `composables/`, `stores/`, `types/`, `helpers/`.
 
@@ -30,21 +33,31 @@ A file belongs here if multiple features need it AND it represents a domain noun
 
 ### `app/features/` — user-facing flows
 
-- `features/auth/` — signup, login, logout, `useUserStore`, `useInitApp`.
+- `features/auth/` — signup, login, logout, `useInitApp`.
 - `features/notes/` — note CRUD, `NotesForm`, `useNotes`, note schemas.
 - `features/integrations/google-calendar/` — Google OAuth + sync flow (composables, stores, components, types).
 - `features/settings/` — user preferences, color picker, validation schemas.
-- `features/notification/` — toast/notification system.
-- `features/validation/` — `validateForm`, Zod-schema runner.
+- `features/demo-tour/`, `features/landing/` — landing page and the scripted demo tour.
 
 Standard subfolders: `components/`, `composables/`, `stores/`, `schemas/`, `types/`, `constants/`.
 
 A file belongs here if it implements a verb the user does ("log in", "create a note", "connect Google Calendar").
 
+### `app/widgets/` — blocks composed from several features
+
+- `widgets/calendar/` — `useCalendarApp`, `useEventSidebar`, `EventSidebar`.
+- `widgets/app-sidebar/` — `AppSidebar` (nav + calendars list + logout).
+- `widgets/dashboard/` — `useDashboard`.
+- `widgets/settings/` — `useSettingsPage`.
+
+A file belongs here if it needs two or more features to do its job.
+
 ## Import direction (strict)
 
 ```
-pages / layouts / middleware
+pages / layouts / middleware / plugins
+        ↓
+     widgets
         ↓
      features
         ↓
@@ -63,20 +76,24 @@ A layer may **only** import from itself or layers below it.
 | `entities` → `shared` | ✅ |
 | `features` → `entities` | ✅ |
 | `features` → `shared` | ✅ |
-| `features` → other `features` | ⚠️ avoid; usually means the shared bit belongs in `entities` or a feature should re-export through its public api |
+| `widgets` → `features` / `entities` / `shared` | ✅ |
+| `features` → other `features` | ❌ never; move the shared model down to `entities` or the composition up to `widgets` |
+| `widgets` → other `widgets` | ❌ never |
+| `entities` → other `entities` | ✅ through the barrel only |
 | pages → anything below | ✅ |
 
 If you find yourself wanting to import upward, the file is in the wrong layer — move it down.
 
 ## Public-api convention
 
-Each slice has an `index.ts` barrel. Prefer `import { Note } from '@features/notes'` over deep paths like `@features/notes/types/note.ts` for everything intended to be consumed externally. Deep imports are fine *within* the same slice.
+Each slice has an `index.ts` barrel. Imports from another slice must use it (`import { useNotes } from '@features/notes'`, never `@features/notes/composables/notes`). Deep imports are fine *within* the same slice, in unit tests, and in `app/plugins` (lazy chunks).
 
 ## Decision checklist (run this before `Write`)
 
 1. **Does it know about a domain noun?** (calendar event, note, user, sidebar) — if no, it goes in `shared`.
-2. **Is it a user flow / orchestration?** (signup, sync events, create note) — `features/<flow>/`.
+2. **Is it a user flow?** (signup, sync events, create note) — `features/<flow>/`.
 3. **Is it a domain model used by 2+ features?** — `entities/<noun>/`.
+3b. **Does it need two or more features?** — `widgets/<block>/`.
 4. **Which subfolder?** — match existing convention: `components/` (`.vue`), `composables/` (`use*.ts`), `stores/` (Pinia), `types/`, `schemas/` (Zod), `constants/`, `helpers/`.
 5. **Pick the alias.** Always prefer `@shared/@entities/@features` over relative paths that cross slices.
 6. **Sanity-check imports.** Open the new file's imports — every one must point to the same layer or below.

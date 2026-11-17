@@ -1,6 +1,6 @@
 import { getCurrentScope, onScopeDispose, shallowRef } from 'vue'
 import type { Ref } from 'vue'
-import type { Note } from '@features/notes'
+import type { Note } from '@shared/types/note'
 import type { CalendarEventDisplay } from '../types'
 
 /**

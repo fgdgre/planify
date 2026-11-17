@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ScheduleXCalendar } from '@schedule-x/vue'
-import { useCalendarApp } from '@entities/calendar'
-import CalendarSearch from '@entities/calendar/components/CalendarSearch.vue'
+import { useCalendarApp } from '@widgets/calendar'
+import { CalendarSearch } from '@entities/calendar'
 import type { CalendarEventDisplay } from '@entities/calendar'
 import { useTourTarget } from '@shared/api/demo'
 

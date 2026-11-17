@@ -1,10 +1,10 @@
 import { useDb } from '@shared/api/supabase'
-import { useNotification } from "@features/notification";
+import { useToast } from "@shared/lib/toast";
 import { ROUTES } from "@shared/constants/routes";
 
 export const useGoogleAuth = () => {
   const supabase = useDb()
-  const { showErrorToast } = useNotification()
+  const { showErrorToast } = useToast()
 
   const loading = ref(false)
 

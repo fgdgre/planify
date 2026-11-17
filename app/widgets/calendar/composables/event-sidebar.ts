@@ -1,13 +1,11 @@
 import { useDb } from '@shared/api/supabase'
 import { useStorage } from '@vueuse/core'
 import { getSafeStorage } from '@shared/lib/safe-storage'
-import { useUserStore } from '@features/auth'
-import { useNotes, type Note } from '@features/notes'
-import { mapCalendarEventRowToDisplay } from '../helpers'
-import { useCalendar } from './calendar'
-import { eventSidebarControls, registerControls } from './tour-controls'
-import { useInternalEvents } from './useInternalEvents'
-import type { CalendarEventDisplay } from '../types'
+import { useUserStore } from '@entities/user'
+import { useNotes } from '@features/notes'
+import { type Note } from '@shared/types/note'
+import { eventSidebarControls, mapCalendarEventRowToDisplay, registerControls, useCalendar, useInternalEvents } from '@entities/calendar'
+import type { CalendarEventDisplay } from '@entities/calendar'
 
 type EventSidebarMode = 'view' | 'edit' | 'create'
 

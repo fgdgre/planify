@@ -1,7 +1,7 @@
-import { useNotificationsStore } from '../stores/notificationStore'
+import { useToastStore } from '../stores/toast'
 
-export const useNotification = () => {
-  const store = useNotificationsStore()
+export const useToast = () => {
+  const store = useToastStore()
 
   return {
     toasts: computed(() => store.toasts),

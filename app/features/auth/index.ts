@@ -5,5 +5,3 @@ export { useForgotPassword } from './composables/forgot-password';
 export { useGoogleAuth } from './composables/google-auth';
 export { useResetPassword } from './composables/reset-password';
 export { useSignup } from './composables/signup';
-export { getUser } from './composables/user';
-export { useUserStore } from './stores/user';

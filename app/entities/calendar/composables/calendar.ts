@@ -1,11 +1,11 @@
 import { useDb } from '@shared/api/supabase'
 import { useCalendarStore } from '../stores/calendar'
 import { groupEventsBySource } from '../helpers/events'
-import { useGoogleCalendarStore } from '@features/integrations/google-calendar'
-import { useUserStore } from '@features/auth/stores/user'
-import { useNotification } from '@features/notification'
+import { useGoogleCalendarStore } from '@entities/google-account'
+import { useUserStore } from '@entities/user'
+import { useToast } from '@shared/lib/toast'
 import type { CalendarEventDisplay, ViewDateRange } from '../types'
-import type { CalendarEvent } from '@features/integrations/google-calendar'
+import type { CalendarEvent } from '@shared/types/calendar-event'
 
 const mapEventToDisplay = (event: CalendarEvent): CalendarEventDisplay => ({
   id: event.id,
@@ -27,7 +27,7 @@ export const useCalendar = () => {
   const googleCalendarStore = useGoogleCalendarStore()
   const userStore = useUserStore()
   const { allEvents } = storeToRefs(googleCalendarStore)
-  const { showErrorToast } = useNotification()
+  const { showErrorToast } = useToast()
 
   /**
    * One query for everything the user can see in `range`: internal events and

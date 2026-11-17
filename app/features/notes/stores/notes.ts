@@ -1,4 +1,4 @@
-import type { Note } from '../types'
+import type { Note } from '@shared/types/note'
 
 export type NotesLinkedFilter = 'all' | 'linked' | 'unlinked'
 

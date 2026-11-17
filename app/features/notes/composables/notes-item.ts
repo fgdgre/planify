@@ -1,6 +1,6 @@
 import { useDb } from '@shared/api/supabase'
 import type { Ref } from 'vue'
-import type { Note } from '../types'
+import type { Note } from '@shared/types/note'
 
 export const useNotesItem = (note: Ref<Note>) => {
   const supabase = useDb()

@@ -1,7 +1,7 @@
 import { useCalendarStore } from '../stores/calendar'
 import { useCalendarFiltersStore } from '../stores/calendar-filters'
 import { isEventVisible, eventMatchesSearch } from '../helpers/filters'
-import { useGoogleCalendarStore } from '@features/integrations/google-calendar'
+import { useGoogleCalendarStore } from '@entities/google-account'
 import type { CalendarEventDisplay } from '../types'
 
 export const useCalendarFilters = () => {

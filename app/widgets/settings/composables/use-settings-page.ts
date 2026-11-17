@@ -1,12 +1,8 @@
-import {
-  useGoogleCalendar,
-  useGoogleCalendarStore,
-  EdgeFunctionError,
-  getGoogleConnectErrorMessage,
-} from '@features/integrations/google-calendar'
-import { useUserStore } from '@features/auth/stores/user'
-import { useSettings } from '@features/settings/composables/settings'
-import { useNotification } from '@features/notification'
+import { useGoogleCalendar, EdgeFunctionError, getGoogleConnectErrorMessage } from '@features/integrations/google-calendar'
+import { useGoogleCalendarStore } from '@entities/google-account'
+import { useUserStore } from '@entities/user'
+import { useSettings } from '@features/settings'
+import { useToast } from '@shared/lib/toast'
 import { isDemoMode } from '@shared/api/demo'
 
 const GOOGLE_QUERY_KEYS = ['google_code', 'google_state', 'google_error', 'google_connected'] as const
@@ -16,7 +12,7 @@ export const useSettingsPage = () => {
   const router = useRouter()
   const { connectGoogle: startGoogleConnection, completeGoogleConnection, fetchConnectedAccounts, deleteAccount, syncAllAccounts } = useGoogleCalendar()
   const { getUserPreferences, syncAccountColors } = useSettings()
-  const { showToast, showSuccessToast, showErrorToast } = useNotification()
+  const { showToast, showSuccessToast, showErrorToast } = useToast()
   const googleCalendarStore = useGoogleCalendarStore()
   const userStore = useUserStore()
   const { accounts, isLoading } = storeToRefs(googleCalendarStore)

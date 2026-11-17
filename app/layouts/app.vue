@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { useAppSidebar, AppSidebar } from "@entities/sidebar";
-import EventSidebar from '@entities/calendar/components/EventSidebar.vue'
-import NoteSidebar from '@features/notes/components/NoteSidebar.vue'
+import { useAppSidebar } from "@entities/sidebar";
+import { AppSidebar } from "@widgets/app-sidebar";
+import { EventSidebar } from '@widgets/calendar'
+import { NoteSidebar } from '@features/notes'
 import { useTourTarget } from '@shared/api/demo'
 
 const route = useRoute()

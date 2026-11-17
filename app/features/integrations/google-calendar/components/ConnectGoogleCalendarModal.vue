@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useGoogleCalendar } from "@features/integrations/google-calendar/composables/useGoogleCalendar";
-import { useGoogleCalendarStore } from "@features/integrations/google-calendar/stores/google-calendar";
-import { useNotification } from "@features/notification";
+import { useGoogleCalendarStore } from "@entities/google-account";
+import { useToast } from "@shared/lib/toast";
 
 defineEmits<{
   close: [],

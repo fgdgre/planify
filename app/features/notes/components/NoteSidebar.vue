@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import EventDetailsPanel from '@entities/calendar/components/EventDetailsPanel.vue'
+import { EventDetailsPanel } from '@entities/calendar'
 import TabLinkedEvent from './TabLinkedEvent.vue'
 import { useNoteSidebar } from '../composables/note-sidebar'
 

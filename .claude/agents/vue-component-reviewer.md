@@ -58,7 +58,7 @@ You are a Vue 3 + Nuxt 4 reviewer for the Planify codebase. Your job is to catch
 
 ### Validation / Supabase
 
-- **Zod schema lives in `features/<x>/schemas/`** — runtime validation goes through `@features/validation`'s `validateForm`. Flag inline validation in components.
+- **Zod schema lives in `features/<x>/schemas/`** — runtime validation goes through `@shared/lib/validation`'s `validateForm`. Flag inline validation in components.
 - **RLS-sensitive queries** — any new Supabase query inside a component should be reviewed for whether it should live in a composable/store and whether RLS protects it.
 
 ## Output format

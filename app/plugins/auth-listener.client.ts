@@ -1,8 +1,8 @@
 import { onDbClientCreated } from '@shared/api/supabase'
-import { useUserStore } from '@features/auth'
-import { useGoogleCalendarStore } from '@features/integrations/google-calendar'
+import { useUserStore } from '@entities/user'
+import { useGoogleCalendarStore } from '@entities/google-account'
 import { useSettingsStore } from '@features/settings'
-import { useCalendarFiltersStore } from '@entities/calendar/stores/calendar-filters'
+import { useCalendarFiltersStore } from '@entities/calendar'
 import { ROUTES } from '@shared/constants/routes'
 
 export default defineNuxtPlugin(() => {

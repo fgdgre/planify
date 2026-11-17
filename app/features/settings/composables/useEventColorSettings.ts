@@ -1,8 +1,8 @@
 import { useSettingsStore } from '@features/settings/stores/settings'
-import { useGoogleCalendarStore } from '@features/integrations/google-calendar'
-import { useUserStore } from '@features/auth/stores/user'
+import { useGoogleCalendarStore } from '@entities/google-account'
+import { useUserStore } from '@entities/user'
 import { useSettings } from '@features/settings/composables/settings'
-import { PRESET_COLORS, INTERNAL_CALENDAR_COLOR } from '@features/settings/constants/default-accounts-colors'
+import { PRESET_COLORS, INTERNAL_CALENDAR_COLOR } from '@entities/calendar'
 import type { EventColorConfig } from '@features/settings/types'
 
 export const useEventColorSettings = () => {

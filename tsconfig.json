@@ -18,7 +18,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@features/*": ["app/modules/*"],
+      "@widgets/*": ["app/widgets/*"],
+      "@features/*": ["app/features/*"],
       "@shared/*": ["app/shared/*"],
       "@assets/*": ["app/assets/*"],
       "@entities/*": ["app/entities/*"],

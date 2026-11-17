@@ -1,10 +1,10 @@
 import { useDb } from '@shared/api/supabase'
 import { useSettingsStore } from "@features/settings/stores/settings";
 import type { EventColorConfig, UserPreferences } from "@features/settings/types";
-import { PRESET_COLORS, INTERNAL_CALENDAR_COLOR } from '../constants/default-accounts-colors'
+import { PRESET_COLORS, INTERNAL_CALENDAR_COLOR } from '@entities/calendar'
 import { userPreferencesSchema } from "@features/settings/schemas/preferences";
 import { defaultPreferences } from "@features/settings/constants/preferences";
-import { useNotification } from "@features/notification";
+import { useToast } from "@shared/lib/toast";
 import type { GoogleAccount } from "@shared/types/google";
 
 export const useSettings = () => {
@@ -23,7 +23,7 @@ export const useSettings = () => {
     settingsStore.setLoading(false)
 
     if (error) {
-      useNotification().showErrorToast({ title: 'Error', description: error.message })
+      useToast().showErrorToast({ title: 'Error', description: error.message })
       return
     }
 
@@ -36,7 +36,7 @@ export const useSettings = () => {
     const parsed = userPreferencesSchema.safeParse(data?.preferences)
 
     if (!parsed.success) {
-      useNotification().showErrorToast({ title: 'Error', description: 'Invalid preferences' })
+      useToast().showErrorToast({ title: 'Error', description: 'Invalid preferences' })
       return
     }
 
@@ -58,11 +58,11 @@ export const useSettings = () => {
     settingsStore.setLoading(false)
 
     if (error) {
-      useNotification().showErrorToast({ title: 'Error', description: error.message })
+      useToast().showErrorToast({ title: 'Error', description: error.message })
       return
     }
 
-    useNotification().showSuccessToast({ title: 'Success', description: 'Preferences updated successfully' })
+    useToast().showSuccessToast({ title: 'Success', description: 'Preferences updated successfully' })
     settingsStore.setUserPreferences(parsed)
   }
 

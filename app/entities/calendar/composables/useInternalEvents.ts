@@ -1,12 +1,12 @@
 import { useDb } from '@shared/api/supabase'
-import { useNotification } from '@features/notification'
-import { useUserStore } from '@features/auth/stores/user'
-import type { CalendarEvent } from '@features/integrations/google-calendar'
+import { useToast } from '@shared/lib/toast'
+import { useUserStore } from '@entities/user'
+import type { CalendarEvent } from '@shared/types/calendar-event'
 
 export const useInternalEvents = () => {
   const supabase = useDb()
   const userStore = useUserStore()
-  const { showErrorToast, showSuccessToast } = useNotification()
+  const { showErrorToast, showSuccessToast } = useToast()
 
   const getUserId = () => {
     const id = userStore.user?.id

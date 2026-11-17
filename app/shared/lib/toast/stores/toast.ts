@@ -1,7 +1,7 @@
 import { ERROR_NOTIFICATION_DURATION, SUCCESS_NOTIFICATION_DURATION } from '../constants/duration'
 import type { Toast } from '../types'
 
-export const useNotificationsStore = defineStore('notification', () => {
+export const useToastStore = defineStore('toast', () => {
   const toasts = ref<Toast[]>([])
 
   const showToast = (toast: Omit<Toast, 'id'>) => {

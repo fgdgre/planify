@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 
 const userState = reactive<{ user: { id: string } | null }>({ user: null })
-vi.mock('@features/auth/stores/user', () => ({ useUserStore: () => userState }))
+vi.mock('@entities/user', () => ({ useUserStore: () => userState }))
 
 import { useCalendarFiltersStore } from '@entities/calendar/stores/calendar-filters'
 

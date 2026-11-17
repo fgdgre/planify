@@ -1,6 +1,7 @@
 import { getRouteAccess } from "@shared/constants/public-routes";
 import { ROUTES } from "@shared/constants/routes";
-import { useUserStore, useInitApp } from "@features/auth";
+import { useInitApp } from "@features/auth";
+import { useUserStore } from "@entities/user";
 
 export default defineNuxtRouteMiddleware(async (to) => {
   const access = getRouteAccess(to.path)
