@@ -1,6 +1,7 @@
 import { useDb } from '@shared/api/supabase'
 import type { Ref } from 'vue'
 import type { Note } from '@shared/types/note'
+import { API } from '@shared/constants/api'
 
 export const useNotesItem = (note: Ref<Note>) => {
   const supabase = useDb()
@@ -13,7 +14,7 @@ export const useNotesItem = (note: Ref<Note>) => {
     if (!note.value.calendar_event_id) return
 
     const { data } = await supabase
-      .from('calendar_events')
+      .from(API.TABLES.CALENDAR_EVENTS)
       .select('title, start_at')
       .eq('id', note.value.calendar_event_id)
       .single()

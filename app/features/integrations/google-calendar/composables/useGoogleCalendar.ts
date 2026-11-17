@@ -3,6 +3,7 @@ import { useDb } from '@shared/api/supabase'
 import { useToast } from "@shared/lib/toast";
 import { useGoogleAccounts, useGoogleCalendarStore } from "@entities/google-account";
 import { pickStaleAccountIds } from "@features/integrations/google-calendar/helpers/sync";
+import { API, type ApiFunction } from '@shared/constants/api'
 
 /** Error thrown when an Edge Function answers with a non-2xx status. */
 export class EdgeFunctionError extends Error {
@@ -52,7 +53,7 @@ export const useGoogleCalendar = () => {
    * HTTP failures surface as `EdgeFunctionError` carrying the server's `error` code.
    */
   const callEdgeFunction = async <T = Record<string, unknown>>(
-    name: string,
+    name: ApiFunction,
     { method = 'POST', query, body }: EdgeFunctionRequest = {},
   ): Promise<T> => {
     const path = query ? `${name}?${new URLSearchParams(query)}` : name
@@ -66,7 +67,7 @@ export const useGoogleCalendar = () => {
   }
 
   const connectGoogle = async () => {
-    const { url } = await callEdgeFunction<{ url?: string }>('google-oauth-start', {
+    const { url } = await callEdgeFunction<{ url?: string }>(API.FUNCTIONS.GOOGLE_OAUTH_START, {
       method: 'GET',
       query: { app_origin: window.location.origin },
     })
@@ -86,7 +87,7 @@ export const useGoogleCalendar = () => {
    */
   const completeGoogleConnection = async (code: string, state: string) => {
     const { account } = await callEdgeFunction<{ ok: true; account: { email: string; display_name: string | null } }>(
-      'google-oauth-complete',
+      API.FUNCTIONS.GOOGLE_OAUTH_COMPLETE,
       { body: { code, state } },
     )
 
@@ -96,7 +97,7 @@ export const useGoogleCalendar = () => {
   /** Refreshes the `google_calendars` rows for one account from Google's calendarList. */
   const listCalendars = async (googleAccountId: string) => {
     try {
-      await callEdgeFunction('google-list-calendars', { body: { googleAccountId } })
+      await callEdgeFunction(API.FUNCTIONS.GOOGLE_LIST_CALENDARS, { body: { googleAccountId } })
       googleCalendarStore.markCalendarsListed(googleAccountId)
       return true
     } catch (error: any) {
@@ -109,7 +110,7 @@ export const useGoogleCalendar = () => {
   /** Asks the edge function to pull one account's events from Google into `calendar_events`. */
   const syncEvents = async (googleAccountId: string) => {
     try {
-      await callEdgeFunction('google-sync-events', { body: { googleAccountId } })
+      await callEdgeFunction(API.FUNCTIONS.GOOGLE_SYNC_EVENTS, { body: { googleAccountId } })
       googleCalendarStore.markSynced(googleAccountId, Date.now())
       return true
     } catch (error: any) {
@@ -170,7 +171,7 @@ export const useGoogleCalendar = () => {
       googleCalendarStore.setLoading(true)
 
       const { error } = await supabase
-        .from('google_accounts')
+        .from(API.TABLES.GOOGLE_ACCOUNTS)
         .delete()
         .eq('id', accountId)
 
