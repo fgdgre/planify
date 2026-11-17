@@ -6,6 +6,7 @@ import { useNotes } from '@features/notes'
 import { type Note } from '@shared/types/note'
 import { eventSidebarControls, mapCalendarEventRowToDisplay, registerControls, useCalendar, useInternalEvents } from '@entities/calendar'
 import type { CalendarEventDisplay } from '@entities/calendar'
+import { API } from '@shared/constants/api'
 
 type EventSidebarMode = 'view' | 'edit' | 'create'
 
@@ -280,7 +281,7 @@ export const useEventSidebar = () => {
 
   const fetchEventById = async (id: string) => {
     const { data } = await supabase
-      .from('calendar_events')
+      .from(API.TABLES.CALENDAR_EVENTS)
       .select('*')
       .eq('id', id)
       .single()
@@ -290,7 +291,7 @@ export const useEventSidebar = () => {
 
   const fetchEventNotes = async (eventId: string) => {
     const { data } = await supabase
-      .from('notes')
+      .from(API.TABLES.NOTES)
       .select('*')
       .eq('calendar_event_id', eventId)
       .order('created_at', { ascending: false })

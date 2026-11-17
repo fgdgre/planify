@@ -3,6 +3,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 import { useDb } from '@shared/api/supabase'
 import type { AppNotification } from '@shared/types/notification'
 import { useNotificationsStore } from '../stores/notifications'
+import { API } from '@shared/constants/api'
 
 let channel: RealtimeChannel | null = null
 let subscribedUserId: string | null = null
@@ -14,7 +15,7 @@ export const useUnreadNotifications = () => {
 
   const refreshUnreadCount = async (userId: string) => {
     const { count, error } = await supabase
-      .from('notifications')
+      .from(API.TABLES.NOTIFICATIONS)
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .is('read_at', null)
@@ -34,10 +35,10 @@ export const useUnreadNotifications = () => {
     subscribedUserId = userId
 
     channel = supabase
-      .channel(`notifications:${userId}`)
+      .channel(API.CHANNELS.NOTIFICATIONS(userId))
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+        { event: 'INSERT', schema: 'public', table: API.TABLES.NOTIFICATIONS, filter: `user_id=eq.${userId}` },
         (payload) => store.receive(payload.new as AppNotification),
       )
       .subscribe()
@@ -49,7 +50,7 @@ export const useUnreadNotifications = () => {
     if (unreadCount.value === 0) return
 
     const { error } = await supabase
-      .from('notifications')
+      .from(API.TABLES.NOTIFICATIONS)
       .update({ read_at: new Date().toISOString() })
       .eq('user_id', userId)
       .is('read_at', null)

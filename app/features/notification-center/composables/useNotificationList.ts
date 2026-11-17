@@ -3,6 +3,7 @@ import { useToast } from '@shared/lib/toast'
 import { useUserStore } from '@entities/user'
 import { NOTIFICATIONS_PAGE_SIZE, useNotificationListStore } from '../stores/notification-list'
 import { notificationsResponseSchema } from '../schemas/notification'
+import { API } from '@shared/constants/api'
 
 const sanitizeSearchTerm = (raw: string) =>
   raw.replace(/[,()*%]/g, ' ').replace(/\s+/g, ' ').trim()
@@ -33,7 +34,7 @@ export const useNotificationList = () => {
     const to = from + NOTIFICATIONS_PAGE_SIZE - 1
 
     let query = supabase
-      .from('notifications')
+      .from(API.TABLES.NOTIFICATIONS)
       .select('*', { count: 'exact' })
       .eq('user_id', userId.value)
 
